@@ -26,7 +26,7 @@ public class PredictiveIndex {
         /*We get the global statistics of the collection (fetch from memory if present, compute them if the opposite)
         * and than build the pair-distance from memory.*/
         //superMagic();
-        superMagic2();
+        readVarByteClueWeb();
         //s2();
         //read();
         fetchInvertedIndex();
@@ -47,24 +47,25 @@ public class PredictiveIndex {
         ps.buildIndex();
     }
 
-    public static int[] decodeRawDoc(byte[] byteStream) {
-        /*int k = 0;
-        //int [] numbers = new int[docLen+5];*/
-        LinkedList<Integer> numbers = new LinkedList<Integer>();
+    /*0xff = 255 = 11111111 = u-byte*/
+
+    public static int[] decodeRawDoc(byte[] rawDoc, int docLen) {
+        int k = 0;
+        int [] numbers = new int[docLen];
         int n = 0;
-        for (byte b : byteStream) {
+        for (byte b : rawDoc) {
             if ((b & 0xff) < 128) {
                 n = 128 * n + b;
             } else {
                 int num = (128 * n + ((b - 128) & 0xff));
-                numbers.add(num);
-                /*numbers[k] = num;
-                k++;*/
+                numbers[k] = num;
+                k++;
                 n = 0;
             }
         }
-        //System.out.println("k: " + k + "\t Expected: " + docLen);
-        return Ints.toArray(numbers);
+        //System.out.println();
+        System.out.println("words: " + k + "\t Expected: " + docLen);
+        return numbers;
     }
 
     /* The file is stored in binary form with the firs bit as a continuation bit.
@@ -77,7 +78,7 @@ public class PredictiveIndex {
     *
     * The document length seems not to work*/
 
-    public static void superMagic2() throws IOException {
+    public static void readVarByteClueWeb() throws IOException {
         DataInputStream stream = new DataInputStream( new BufferedInputStream( new FileInputStream("/home/aalto/dio/compressedIndex")));
         BufferedReader br = new BufferedReader(new FileReader("/home/aalto/dio/docInfo"));
         String[] line = br.readLine().split(" ");
@@ -88,22 +89,12 @@ public class PredictiveIndex {
             for (int i = 0; i < rawDoc.length; i++) {
                 rawDoc[i] = stream.readByte();
             }
-            //System.out.println(String.format("%8s", Integer.toBinaryString(rawDoc[rawDoc.length-1] & 0xFF)).replace(' ', '0'));
-            //processDocument(line[1], decodeRawDoc(rawDoc, Integer.parseInt(line[4])));
-            for (int i : decodeRawDoc(rawDoc)
-                    ) {
-                System.out.print(i+",");
-            }
-            System.out.println();
-
+            decodeRawDoc(rawDoc, Integer.parseInt(line[4]));
             line = br.readLine().split(" ");
-            //break;
         }
-
-        //System.out.print(%2);
-
         System.exit(1);
     }
+
     public static void superMagic(){
         LinkedList<int[]> prova = new LinkedList<>();
         prova.add(new int[]{1,2});
