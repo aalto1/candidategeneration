@@ -188,12 +188,10 @@ public class InvertedIndex implements Serializable {
         return map;
     }
 
-
+    /*This function checks if the term is in our term-termID map. If a term is present it return the termID, if not
+    * adds a new entry to the hashmap. The termID is the number of unique words that we have encountered up to that
+    * moment.*/
     public int putWordIfAbstent(String word){
-        /*This function checks if the term is in our term-termID map. If a term is present it return the termID, if not
-        * adds a new entry to the hashmap. The termID is the number of unique words that we have encountered up to that
-        * moment.*/
-
         int termID;
         try{
             termID = getWId(word);
@@ -353,6 +351,16 @@ public class InvertedIndex implements Serializable {
         }
     }
 
+    public static long getPair(int a , int b){
+        return (long)a << 32 | b & 0xFFFFFFFFL;
+    }
+
+    public static int[] getTerms(long c){
+        int aBack = (int)(c >> 32);
+        int bBack = (int)c;
+        return new int[]{aBack,bBack};
+    }
+
     public int getBM25(int id, int docLen, int f) {
         /*global statistics for BM25*/
         int N = this.stats[0];
@@ -392,6 +400,7 @@ public class InvertedIndex implements Serializable {
         * we protect or truncate it.
         * WE CAN IMPROVE THIS FUNCTION BY USING AN HASMAP THAT SAVES FOR EACH PAIR HOW MANY ENTRIES IT HAS. I DON'T KNOW
         * HOW MUCH SPACE IT WOULD REQUIRE. IN THIS WAY WE COULD SCAN THE ARRAY JUST ONE TIME*/
+
         removed=0;
         int diff = 0;
         double aLength = 0;
@@ -438,15 +447,35 @@ public class InvertedIndex implements Serializable {
         System.out.println("Processing Time:" + (doc / (System.currentTimeMillis() - start)) * 1000 + " doc/s");
     }
 
+    public void storeSelectionStats(HashMap<Long,Integer> map) throws IOException {
+        int [] terms;
+        for(long pair : map.keySet())
+        {
+            terms = getTerms(pair);
+            this.invertedIndexFile.writeInt(terms[0]);
+            this.invertedIndexFile.writeInt(terms[1]);
+            this.invertedIndexFile.writeInt(-1);
+            this.invertedIndexFile.writeInt(map.get(pair));
+        }
+    }
+
     public void sampledNaturalSelection() throws IOException {
         System.out.println("TIME TO CLEAN. Processed docs: " + doc);
+        HashMap<Long,Integer> dumpCounter = new HashMap<>();
         now = System.currentTimeMillis();
         int threshold = getThreshold();
+        long pair;
         for (int k = 0; k < this.buffer.length; k++) {
             if(this.buffer[k][2] > threshold){
                 for(int elem : this.buffer[k]) this.invertedIndexFile.writeInt(elem);
+            }else{
+                pair = getPair(this.buffer[k][0],this.buffer[k][1]);
+                if(dumpCounter.putIfAbsent(pair,1) != null){
+                    dumpCounter.merge(pair, 1, Integer::sum);
+                }
             }
         }
+        storeSelectionStats(dumpCounter);
         System.out.println("Sampled Natural Selection:" + (System.currentTimeMillis() - now) + "ms. Threshold: " + threshold);
         System.out.println("Processing Time:" + (doc / (System.currentTimeMillis() - start)) * 1000 + " doc/s");
     }

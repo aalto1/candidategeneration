@@ -22,7 +22,8 @@ public class PredictiveIndex {
     public static void main(String [] args) throws IOException, ClassNotFoundException {
         /*We get the global statistics of the collection (fetch from memory if present, compute them if the opposite)
         * and than build the pair-distance from memory.*/
-        superMagic();
+        //superMagic();
+        superMagic2();
         //s2();
         //read();
         fetchInvertedIndex();
@@ -41,6 +42,12 @@ public class PredictiveIndex {
         }
         //ps.threads();
         ps.buildIndex();
+    }
+
+    public static void superMagic2() throws IOException {
+        DataInputStream stream = new DataInputStream( new BufferedInputStream( new FileInputStream("/home/aalto/dio/compressedIndex")));
+        System.out.println(Integer.toBinaryString(stream.readByte()));
+        System.exit(1);
 
     }
     public static void superMagic(){
@@ -68,6 +75,7 @@ public class PredictiveIndex {
         System.out.print(System.currentTimeMillis() - now);
         System.exit(1);
     }
+
 
     public static void s2(){
         double aux = 2.333345634335;
@@ -156,7 +164,7 @@ public class PredictiveIndex {
         return invertedIndex;
     }
 
-    static void combinationUtil(int arr[], int data[], int start,
+    static int[] combinationUtil(int arr[], int data[], int start,
                                 int end, int index, int r)
     {
         // Current combination is ready to be printed, print it
@@ -171,15 +179,18 @@ public class PredictiveIndex {
             data[index] = arr[i];
             combinationUtil(arr, data, i+1, end, index+1, r);
         }
+        return data;
     }
 
 
     public static int[] getQueryBigrams(String line){
         //this method return all the combination of the docID in the document
+
+
         String [] query = line.split(",");
         int [] queryInt = new int[query.length];
         for (int i = 0; i <  query.length; i++) {
-            queryInt[i] = termsMap.get(String);
+            queryInt[i] = 1; //termsMap.get(String);
         }
         return combinationUtil(queryInt, new int[2], 0, query.length-1, 0, 2 );
     }
@@ -233,15 +244,11 @@ public class PredictiveIndex {
     }
 
     public int getBucketLength(int size) {
-
-        switch (size) {
-            case size < 10:
-                return ;
-            case size >10
-        }
+        return 1;
     }
 
-    public int[][] qualityModel() throws IOException, ClassNotFoundException {
+
+    /*public int[][] qualityModel() throws IOException, ClassNotFoundException {
         HashMap<Integer,LinkedList<int[]>> queries = fetchQueries();
         int [][] qualityModel= new int[?][?];
         int [] aux;
@@ -254,13 +261,10 @@ public class PredictiveIndex {
                     System.out.println("Work in progress: " + percentage+ "% completed.");
                     //System.out.println("Expected time: " + (System.currentTimeMillis() - now)*(1/10*percentage));
                 }
-
                 IIPointer++;
                 auxPostingList.clear();
                 nowPair[0]= aux[0];
                 nowPair[1]= aux[1];
-                auxPostingList.addLast(aux[0]);
-                auxPostingList.addLast(aux[1]);
                 auxPostingList.addLast(aux[3]);
 
             }else if(aux[0]==-1){
@@ -269,14 +273,7 @@ public class PredictiveIndex {
                 auxPostingList.addLast(aux[3]);
             }
         }
-
-        }
-
-
-
-    }
-
-
+    }*/
 
 
 
