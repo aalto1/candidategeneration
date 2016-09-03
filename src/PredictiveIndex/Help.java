@@ -15,6 +15,53 @@ public class Help {
 
       /*
 
+      THIS CODE IS A BENCHMARK FOR SORTING ALGORITHMS OF RANDOM ARRAYS
+
+      public static void superMagic(){
+        LinkedList<int[]> prova = new LinkedList<>();
+        prova.add(new int[]{1,2});
+        for (int i : prova.getFirst()) {
+            System.out.print(i);
+        }
+        double[][] kickerNumbers = new double[50000000][2];
+        for (int i = 0; i < kickerNumbers.length; i++) {
+            for (int j = 0; j < kickerNumbers[0].length ; j++) {
+                kickerNumbers[i][j] = Math.random();
+            }
+        }
+        long now = System.currentTimeMillis();
+        java.util.Arrays.sort(kickerNumbers, new Comparator<double[]>() {
+            @Override
+            public int compare(double[] int1, double[] int2) {
+                //if we have the same doc ids sort them based on the bm25
+                if (int1[0] == int2[0]) {
+                    return Double.compare(int1[1], int2[1]) * -1;
+                } else return Double.compare(int1[0], int2[0]);
+            }
+        });
+        System.out.print(System.currentTimeMillis() - now);
+        System.exit(1);
+    }
+
+
+
+
+        THIS CODE COUNTS THE LINES IN A FILE
+
+        public static void readLinez() throws IOException {
+        BufferedReader br = new BufferedReader(new FileReader("/home/aalto/dio/docInfo"));
+        long k=0;
+        String line = br.readLine();
+        while(line != null){
+          line = br.readLine();
+            k++;
+
+        }
+        System.out.print(k);
+        System.exit(1);
+    }
+
+
       public static HashMap<Integer, LinkedList<int[]>> reformatQueryTrace(String file) throws IOException {
         //we read the query trace and covert it to a hasmap-integer[][] map1
         // I need the term-termID and doc-docID map
