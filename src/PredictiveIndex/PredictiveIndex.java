@@ -3,14 +3,14 @@ package PredictiveIndex;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.*;
 
 import com.google.common.primitives.Ints;
 import it.unimi.dsi.fastutil.Arrays;
 import it.unimi.dsi.fastutil.io.FastBufferedInputStream;
 import sun.nio.cs.Surrogate;
+
+import javax.sound.sampled.Line;
 
 import static PredictiveIndex.InvertedIndex.*;
 
@@ -30,6 +30,7 @@ public class PredictiveIndex {
         //s2();
         //read();
         //fetchInvertedIndex();
+        getBucketsRanges(1.1,1.4);
 
         String data = "/home/aalto/dio/docInfo";
         InvertedIndex ps;
@@ -44,7 +45,7 @@ public class PredictiveIndex {
             ps.readClueWeb(data,0);
         }
         //ps.threads();
-        ps.buildIndex();
+        ps.readClueWeb(data,1);
     }
 
 
@@ -75,13 +76,6 @@ public class PredictiveIndex {
         System.exit(1);
     }
 
-
-    public static void s2(){
-        double aux = 2.333345634335;
-        System.out.println(((float) aux*(Math.pow(10, String.valueOf(aux).length()-2))));
-        System.exit(1);
-    }
-
     public static void readLinez() throws IOException {
         BufferedReader br = new BufferedReader(new FileReader("/home/aalto/dio/docInfo"));
         long k=0;
@@ -93,26 +87,6 @@ public class PredictiveIndex {
         }
         System.out.print(k);
         System.exit(1);
-    }
-
-    public static void read() throws IOException {
-        DataInputStream aux = new DataInputStream( new FastBufferedInputStream(new FileInputStream("/home/aalto/IdeaProjects/PredictiveIndex/src/PredictiveIndex/tmp/dump/zio2.bin")));
-        int k=0;
-        long zio = aux.readLong();
-        while (true) {
-            try {
-                while (k < 3) {
-                    System.out.print(zio+"-");
-                    zio = aux.readLong();
-                    //TimeUnit.MILLISECONDS.sleep(100);
-                    k++;
-                }
-                k=0;
-                System.out.println();
-            }catch (Exception a){
-                break;
-            }
-        }System.exit(1);
     }
 
     public static int[] getEntry(DataInputStream dataStream) throws IOException {
@@ -130,8 +104,10 @@ public class PredictiveIndex {
         }
     }
 
-    public static int [][] fetchInvertedIndex() throws IOException {
-        // it is not necessary load the whole inverted index in main memory because that was exactly what we are trying to avoid.
+    public static int [][] compressInvertedIndex() throws IOException {
+        /* it is not necessary load the whole inverted index in main memory because that was exactly what we are trying to avoid.
+        * */
+
 
         int IIPointer = 0;
         int maxLength = 0;
@@ -176,116 +152,117 @@ public class PredictiveIndex {
         return invertedIndex;
     }
 
-    static int[] combinationUtil(int arr[], int data[], int start,
-                                int end, int index, int r)
-    {
-        // Current combination is ready to be printed, print it
-        if (index == r) return data;
-
-        // replace index with all possible elements. The condition
-        // "end-i+1 >= r-index" makes sure that including one element
-        // at index will make a combination with remaining elements
-        // at remaining positions
-        for (int i=start; i<=end && end-i+1 >= r-index; i++)
-        {
-            data[index] = arr[i];
-            combinationUtil(arr, data, i+1, end, index+1, r);
+    private static void getSubsets(List<Integer> superSet, int k, int idx, Set<Integer> current,List<Set<Integer>> solution) {
+        //successful stop clause
+        if (current.size() == k) {
+            solution.add(new HashSet<>(current));
+            return;
         }
-        return data;
+        //unseccessful stop clause
+        if (idx == superSet.size()) return;
+        Integer x = superSet.get(idx);
+        current.add(x);
+        //"guess" x is in the subset
+        getSubsets(superSet, k, idx+1, current, solution);
+        current.remove(x);
+        //"guess" x is not in the subset
+        getSubsets(superSet, k, idx+1, current, solution);
+    }
+
+    public static long[] getCombinations(List<Integer> superSet, int k) {
+        List<Set<Integer>> res = new ArrayList<>();
+        getSubsets(superSet, k, 0, new HashSet<Integer>(), res);
+        long [] combo = new long[res.size()];
+        int [] pair;
+        int p = 0;
+        for(Set set : res){
+            pair = Ints.toArray(set);
+            java.util.Arrays.parallelSort(pair);
+            combo[p] = getPair(pair[0],pair[1]);
+        }
+        return combo;
     }
 
 
-    public static int[] getQueryBigrams(String line){
+    public static long[] getQueryBigrams(String [] queryTerms){
         //this method return all the combination of the docID in the document
 
+        LinkedList<Integer> queryInt = new LinkedList<>();
 
-        String [] query = line.split(",");
-        int [] queryInt = new int[query.length];
-        for (int i = 0; i <  query.length; i++) {
-            queryInt[i] = 1; //termsMap.get(String);
+        // We convert our String [] to int [] using the term-termID map
+        for (int i = 0; i <  queryTerms.length; i++) {
+           queryInt.add(i); //termsMap.get(String);
         }
-        return combinationUtil(queryInt, new int[2], 0, query.length-1, 0, 2 );
+        //We take every combination of our query terms. We save them in a long array using bit-shifting
+        return getCombinations(queryInt,2);
     }
 
-    public static int[] getQueryTopkDocIDs(String line){
+    public static int[] getQueryTopkDocIDs(String [] topk){
         //declare a new object every time
+        int [] topkInt = new int[topk.length];
 
-        return new int[]{1,2};
-    }
-
-    public static HashMap<Integer, LinkedList<int[]>> reformatQueryTrace(String file) throws IOException {
-        //we read the query trace and covert it to a hasmap-integer[][] map1
-        // I need the term-termID and doc-docID map
-        //this is the best way because immediatly we would know statistics using length
-        //we scan the inverted index once and evry time we move in parallel on this structure to get what we have
-        //stopping rule would be an array make 0
-
-
-        HashMap<Integer, LinkedList<int[]>> queries = new HashMap<>();
-        BufferedReader br = new BufferedReader(new FileReader(file));
-        String line;
-        LinkedList<int []> auxLList;
-        int [] auxTopK;
-        int [] keys;
-        while((line = br.readLine()) != null){
-            auxTopK = getQueryTopkDocIDs(line);
-            keys = getQueryBigrams(line);
-            for(Integer key : keys) {
-                auxLList = queries.get(key);
-                if (auxLList == null) {
-                    auxLList = new LinkedList<> ();
-                    queries.put(key, auxLList);
-                }
-                auxLList.add(auxTopK);
-            }
-
+        // We convert our String [] to int [] using the term-termID map
+        for (int i = 0; i <  topk.length; i++) {
+            topkInt[i] = 1; //docIDmap.get(String);
         }
-        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream("ciao", true)));
-        out.writeObject(queries);
-        return queries;
+        return topkInt;
     }
 
-    public static HashMap<Integer,LinkedList<int[]>> fetchQueries() throws IOException, ClassNotFoundException {
 
-        if(Files.exists(Paths.get("path"))){
-            ObjectInputStream out = new ObjectInputStream(new BufferedInputStream(new FileInputStream("ciao")));
-            return (HashMap<Integer,LinkedList<int[]>>) out.readObject();
+    public void addTopK(HashMap<Integer, Integer> auxMap, int[] topK){
+        if(auxMap != null){
+            for (int doc: topK){
+                if(auxMap.putIfAbsent(doc,1) != null){
+                    auxMap.merge(doc,1,Integer::sum);
+                }
+            }
         }else{
-            return reformatQueryTrace("file");
+            auxMap = new HashMap<>();
+            for (int doc: topK) auxMap.put(doc,1);
         }
+        addTopK(auxMap, topK);
     }
 
-    public int getBucketLength(int size) {
-        return 1;
-    }
-
-
-    /*public int[][] qualityModel() throws IOException, ClassNotFoundException {
-        HashMap<Integer,LinkedList<int[]>> queries = fetchQueries();
-        int [][] qualityModel= new int[?][?];
-        int [] aux;
-        DataInputStream dataStream = new DataInputStream( new BufferedInputStream(new FileInputStream("/home/aalto/IdeaProjects/PredictiveIndex/data/dump/sortedInvertedIndex.dat")));
-        while(true){
-            aux = getEntry(dataStream);
-            if(aux[0] != nowPair[0] | aux[1] != nowPair[1]){
-                if(IIPointer++ % 10000000 == 0){
-                    percentage = (long) (IIPointer*100.0)/528184109;
-                    System.out.println("Work in progress: " + percentage+ "% completed.");
-                    //System.out.println("Expected time: " + (System.currentTimeMillis() - now)*(1/10*percentage));
-                }
-                IIPointer++;
-                auxPostingList.clear();
-                nowPair[0]= aux[0];
-                nowPair[1]= aux[1];
-                auxPostingList.addLast(aux[3]);
-
-            }else if(aux[0]==-1){
-                break;
-            }else{
-                auxPostingList.addLast(aux[3]);
+    public HashMap<Long, HashMap<Integer, Integer>> getfastQueryTrace() throws IOException {
+        BufferedReader br = new BufferedReader(new FileReader("f"));
+        HashMap<Long, HashMap<Integer, Integer>> fastQueryTrace = new HashMap<>();
+        HashMap<Integer, Integer> auxMap;
+        String [] line;
+        long [] queryBigrams;
+        int [] topK;
+        while((line = br.readLine().split("-")) != null) {
+            queryBigrams = getQueryBigrams(line[0].split(","));
+            topK = getQueryTopkDocIDs(line[1].split(","));
+            for (long bigram : queryBigrams) {
+                auxMap = fastQueryTrace.get(bigram);
+                addTopK(auxMap, topK);
             }
         }
-    }*/
+        //serialize fastQueryTrace to disk
+        return fastQueryTrace;
+    }
+
+    public static int[][] getBucketsRanges(double lenRule, double rankRule){
+        lenRule = 1.1;
+        rankRule = 1.4;
+        LinkedList<Integer> lenBuckets = new LinkedList<>();
+        LinkedList<Integer> rankBuckets = new LinkedList<>();
+        for (int i = 4; i < 50220423; i += i*lenRule) {
+            lenBuckets.addLast(i);
+        }
+        for (int i = 11; i < 100220423 ; i += i*rankRule) {
+            rankBuckets.addLast(i);
+        }
+        return new int[][]{Ints.toArray(lenBuckets),Ints.toArray(rankBuckets)};
+    }
+
+    public static int getLenBucket(int len, int[] lenBuckets){
+        int i;
+        for (i = 0; lenBuckets[i] < len; i++);
+        return i;
+    }
+
+
 
 
 

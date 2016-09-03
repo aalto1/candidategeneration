@@ -13,7 +13,69 @@ public class Help {
     }
 }
 
-      /*int [][] aux = new int[][] {
+      /*
+
+      public static HashMap<Integer, LinkedList<int[]>> reformatQueryTrace(String file) throws IOException {
+        //we read the query trace and covert it to a hasmap-integer[][] map1
+        // I need the term-termID and doc-docID map
+        //this is the best way because immediatly we would know statistics using length
+        //we scan the inverted index once and evry time we move in parallel on this structure to get what we have
+        //stopping rule would be an array make 0
+
+
+        HashMap<Integer, LinkedList<int[]>> queries = new HashMap<>();
+        BufferedReader br = new BufferedReader(new FileReader(file));
+        String line;
+        LinkedList<int []> auxLList;
+        int [] auxTopK;
+        int [] keys;
+        while((line = br.readLine()) != null){
+            auxTopK = getQueryTopkDocIDs(line);
+            keys = getQueryBigrams(line);
+            for(Integer key : keys) {
+                auxLList = queries.get(key);
+                if (auxLList == null) {
+                    auxLList = new LinkedList<> ();
+                    queries.put(key, auxLList);
+                }
+                auxLList.add(auxTopK);
+            }
+
+        }
+        ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream("ciao", true)));
+        out.writeObject(queries);
+        return queries;
+    }
+
+    public int[][] qualityModel() throws IOException, ClassNotFoundException {
+        HashMap<Integer,LinkedList<int[]>> queries = fetchQueries();
+        int [][] qualityModel= new int[?][?];
+        int [] aux;
+        DataInputStream dataStream = new DataInputStream( new BufferedInputStream(new FileInputStream("/home/aalto/IdeaProjects/PredictiveIndex/data/dump/sortedInvertedIndex.dat")));
+        while(true){
+            aux = getEntry(dataStream);
+            if(aux[0] != nowPair[0] | aux[1] != nowPair[1]){
+                if(IIPointer++ % 10000000 == 0){
+                    percentage = (long) (IIPointer*100.0)/528184109;
+                    System.out.println("Work in progress: " + percentage+ "% completed.");
+                    //System.out.println("Expected time: " + (System.currentTimeMillis() - now)*(1/10*percentage));
+                }
+                IIPointer++;
+                auxPostingList.clear();
+                nowPair[0]= aux[0];
+                nowPair[1]= aux[1];
+                auxPostingList.addLast(aux[3]);
+
+            }else if(aux[0]==-1){
+                break;
+            }else{
+                auxPostingList.addLast(aux[3]);
+            }
+        }
+    }
+
+
+      int [][] aux = new int[][] {
                 {3L,4L},
                 {1L,5L},
                 {3L,6L},
