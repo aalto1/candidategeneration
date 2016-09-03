@@ -77,8 +77,6 @@ public class InvertedIndex implements Serializable {
 
     public InvertedIndex(/*HashMap<String, Integer> termsMap*/ HashMap<Integer, Integer> freqTermDoc, /*HashMap<String, Integer> docsMap,*/ int[] stats) throws IOException {
         // Class constructor
-
-
         this.doc = 0;
         //this.buffer = new int[10000000][4];
         //this.termsMap = termsMap;
@@ -99,6 +97,98 @@ public class InvertedIndex implements Serializable {
     // *****************************************************************************************
 
     //PROCESS DATA TO GET INFO *****************************************************************************************
+
+
+    /*0xff = 255 = 11111111 = u-byte*/
+
+    public static int[] decodeRawDoc(byte[] rawDoc, int docLen) {
+        int k = 0;
+        int [] numbers = new int[docLen];
+        int n = 0;
+        for (byte b : rawDoc) {
+            if ((b & 0xff) < 128) {
+                n = 128 * n + b;
+            } else {
+                int num = (128 * n + ((b - 128) & 0xff));
+                //numbers[k] = num;
+                k++;
+                n = 0;
+            }
+        }
+        //System.out.println();
+        //System.out.println("words: " + k + "\t Expected: " + docLen);
+        return numbers;
+    }
+
+    /* The file is stored in binary form with the firs bit as a continuation bit.
+    *
+    * 0 - document title
+    * 1 - docID
+    * 2 - offset    (varbyte)
+    * 3 - size      (varbyte)
+    * 4 - docLength (#words)
+    *
+    * The document length seems not to work*/
+
+    public void readClueWeb(String data, int round) throws IOException, ClassNotFoundException, InterruptedException {
+        long percentage =0;
+        ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(new FileInputStream(fIndexPath + "/forwardIndex.dat")));
+        start = System.currentTimeMillis();
+        DataInputStream stream = new DataInputStream( new BufferedInputStream( new FileInputStream("/home/aalto/dio/compressedIndex")));
+        BufferedReader br = new BufferedReader(new FileReader(data));
+        String[] line = br.readLine().split(" ");
+        byte [] rawDoc;
+        int title;
+        int [] document;
+        while(line[0] != null){
+            rawDoc = new byte[Integer.parseInt(line[3])];
+            for (int i = 0; i < rawDoc.length; i++) {
+                rawDoc[i] = stream.readByte();
+            }
+            title = Integer.parseInt(line[1]);
+            document = decodeRawDoc(rawDoc, Integer.parseInt(line[4]));
+            switch(round){
+                case 0:
+                    //collecting metadata
+
+                    storeMetadata(document);
+                    break;
+                case 1:
+                    //building invertedindex
+
+                    bufferedIndex(document, title, arrayToHashMap((int[])  ois.readObject()));
+                    break;
+            }
+            line = br.readLine().split(" ");
+
+            doc++;
+            if (doc % 500000 == 0){
+                System.out.println("Processed docs: " + doc + "\tProcessing Time: " + (doc / (System.currentTimeMillis() - start)) * 1000 + " doc/s");
+                percentage = (long) (doc*100.0)/50220423;
+                System.out.println("Work in progress: " + percentage+ "% completed.");
+                //System.out.println(line[1]);
+            }
+        }
+        System.exit(1);
+    }
+
+    public void storeMetadata(int [] words) throws IOException {
+        /*this function process the single wrac files */
+        HashMap<Integer, Integer> position = new HashMap<>();
+        for (int k = 0; k<words.length-1; k++) {
+            if (position.putIfAbsent(words[k], 1) == null){
+                if(this.freqTermDoc.putIfAbsent(words[k], 1)!=null) {
+                    this.freqTermDoc.merge(words[k], 1, Integer::sum);
+                    this.stats[2]++;
+                }
+            }else{
+                position.merge(words[k], 1, Integer::sum);
+            }
+        }
+        //this.forwardIndexFile.writeObject(hashMapToArray(position));
+        this.stats[0]++;
+        this.stats[1] += words.length;
+    }
 
     public void getCollectionMetadata(String data) throws IOException {
         doc = 0;
@@ -127,6 +217,8 @@ public class InvertedIndex implements Serializable {
         }
         this.savePSMetadata();
     }
+
+
 
     public void processWARCRecord(String[] words, String title) throws IOException {
         /*this function process the single wrac files */

@@ -22,16 +22,16 @@ public class PredictiveIndex {
     static int counter = 1;
     static int counter2 = 1;
 
-    public static void main(String [] args) throws IOException, ClassNotFoundException {
+    public static void main(String [] args) throws IOException, ClassNotFoundException, InterruptedException {
         /*We get the global statistics of the collection (fetch from memory if present, compute them if the opposite)
         * and than build the pair-distance from memory.*/
         //superMagic();
-        readVarByteClueWeb();
+        //readLinez();
         //s2();
         //read();
-        fetchInvertedIndex();
+        //fetchInvertedIndex();
 
-        String data = "/home/aalto/IdeaProjects/PredictiveIndex/data/en0000";
+        String data = "/home/aalto/dio/docInfo";
         InvertedIndex ps;
 
 
@@ -41,59 +41,13 @@ public class PredictiveIndex {
             System.out.println("Predictive Index Deserialized");
         }else {
             ps = new InvertedIndex();
-            ps.getCollectionMetadata(data);
+            ps.readClueWeb(data,0);
         }
         //ps.threads();
         ps.buildIndex();
     }
 
-    /*0xff = 255 = 11111111 = u-byte*/
 
-    public static int[] decodeRawDoc(byte[] rawDoc, int docLen) {
-        int k = 0;
-        int [] numbers = new int[docLen];
-        int n = 0;
-        for (byte b : rawDoc) {
-            if ((b & 0xff) < 128) {
-                n = 128 * n + b;
-            } else {
-                int num = (128 * n + ((b - 128) & 0xff));
-                numbers[k] = num;
-                k++;
-                n = 0;
-            }
-        }
-        //System.out.println();
-        System.out.println("words: " + k + "\t Expected: " + docLen);
-        return numbers;
-    }
-
-    /* The file is stored in binary form with the firs bit as a continuation bit.
-    *
-    * 0 - document title
-    * 1 - docID
-    * 2 - offset    (varbyte)
-    * 3 - size      (varbyte)
-    * 4 - docLength (#words)
-    *
-    * The document length seems not to work*/
-
-    public static void readVarByteClueWeb() throws IOException {
-        DataInputStream stream = new DataInputStream( new BufferedInputStream( new FileInputStream("/home/aalto/dio/compressedIndex")));
-        BufferedReader br = new BufferedReader(new FileReader("/home/aalto/dio/docInfo"));
-        String[] line = br.readLine().split(" ");
-        byte [] rawDoc;
-
-        while(line != null){
-            rawDoc = new byte[Integer.parseInt(line[3])];
-            for (int i = 0; i < rawDoc.length; i++) {
-                rawDoc[i] = stream.readByte();
-            }
-            decodeRawDoc(rawDoc, Integer.parseInt(line[4]));
-            line = br.readLine().split(" ");
-        }
-        System.exit(1);
-    }
 
     public static void superMagic(){
         LinkedList<int[]> prova = new LinkedList<>();
@@ -125,6 +79,19 @@ public class PredictiveIndex {
     public static void s2(){
         double aux = 2.333345634335;
         System.out.println(((float) aux*(Math.pow(10, String.valueOf(aux).length()-2))));
+        System.exit(1);
+    }
+
+    public static void readLinez() throws IOException {
+        BufferedReader br = new BufferedReader(new FileReader("/home/aalto/dio/docInfo"));
+        long k=0;
+        String line = br.readLine();
+        while(line != null){
+          line = br.readLine();
+            k++;
+
+        }
+        System.out.print(k);
         System.exit(1);
     }
 
