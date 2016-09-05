@@ -5,6 +5,9 @@ import com.google.common.collect.HashBiMap;
 import it.unimi.dsi.fastutil.Hash;
 
 import com.google.common.collect.BiMap;
+import me.lemire.integercompression.differential.IntegratedByteIntegerCODEC;
+import me.lemire.integercompression.IntWrapper;
+import me.lemire.integercompression.differential.IntegratedVariableByte;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -132,7 +135,7 @@ public class InvertedIndex implements Serializable {
 
     public void readClueWeb(String data, int round) throws IOException, ClassNotFoundException, InterruptedException {
         long percentage =0;
-        ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(new FileInputStream(fIndexPath + "/forwardIndex.dat")));
+        //ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(new FileInputStream(fIndexPath + "/forwardIndex.dat")));
         start = System.currentTimeMillis();
         DataInputStream stream = new DataInputStream( new BufferedInputStream( new FileInputStream("/home/aalto/dio/compressedIndex")));
         BufferedReader br = new BufferedReader(new FileReader(data));
@@ -141,12 +144,21 @@ public class InvertedIndex implements Serializable {
         int title;
         int [] document;
         while(line[0] != null){
+            int auxa=0;
             rawDoc = new byte[Integer.parseInt(line[3])];
             for (int i = 0; i < rawDoc.length; i++) {
                 rawDoc[i] = stream.readByte();
+                if(rawDoc[i]<0) auxa++;
             }
             title = Integer.parseInt(line[1]);
-            document = decodeRawDoc(rawDoc, Integer.parseInt(line[4]));
+            //document = decodeRawDoc(rawDoc, Integer.parseInt(line[4]));
+            document = new int[Integer.parseInt(line[4])];
+            IntegratedVariableByte codec = new IntegratedVariableByte();
+            codec.uncompress(rawDoc, new IntWrapper(0), Integer.parseInt(line[4]), document, new IntWrapper());
+            for (int i : document) {
+                System.out.println(auxa);
+            }
+            System.exit(1);
             switch(round){
                 case 0:
                     //collecting metadata
@@ -156,7 +168,7 @@ public class InvertedIndex implements Serializable {
                 case 1:
                     //building invertedindex
 
-                    bufferedIndex(document, title, arrayToHashMap((int[])  ois.readObject()));
+                    //bufferedIndex(document, title, arrayToHashMap((int[])  ois.readObject()));
                     break;
             }
             line = br.readLine().split(" ");

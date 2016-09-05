@@ -32,7 +32,7 @@ public class PredictiveIndex {
         //s2();
         //read();
         //fetchInvertedIndex();
-        getBucketsRanges(1.1,1.4);
+        //getBucketsRanges(1.1,1.4);
 
         String data = "/home/aalto/dio/docInfo";
         InvertedIndex ps;
@@ -272,8 +272,8 @@ public class PredictiveIndex {
     *
     * OPEN ISSUES:
     * - Load the fastQueryTrace in an appropriate way
-    * - Check if the while condition is always true*/
-
+    * - Check if the while condition is always true
+    * - Make it cleaner */
     public static int[][][] getQualityModel() throws IOException, ClassNotFoundException {
         int [][] bucketsRanges = getBucketsRanges(1.1,1.4);         //bucketsRanges[0] = Length Ranges - bucketsRanges[1] = Rank Ranges
         int [][][] qualityModel = new int[bucketsRanges[0].length][bucketsRanges[1].length][2];
