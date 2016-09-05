@@ -33,6 +33,7 @@ public class PredictiveIndex {
         //read();
         //fetchInvertedIndex();
         //getBucketsRanges(1.1,1.4);
+        provaSer();
 
         String data = "/home/aalto/dio/docInfo";
         InvertedIndex ps;
@@ -50,6 +51,25 @@ public class PredictiveIndex {
         ps.readClueWeb(data,1);
     }
 
+    /*Test class to cheeck if is possible to serialize and deserialize an Hashmap of Hashmaps*/
+
+    public static void provaSer() throws IOException, ClassNotFoundException {
+        HashMap<Long, HashMap<Integer, Integer>> mappa = new HashMap<>();
+        HashMap<Integer, Integer> mappetta1 = new HashMap<>();
+        mappetta1.put(10, 10);
+        mappetta1.put(20, 23);
+        HashMap<Integer, Integer> mappetta2 = new HashMap<>();
+        mappetta2.put(-114, 13);
+        mappetta2.put(-87, -423);
+        mappa.put((long) 1, mappetta1);
+        mappa.put((long) 2, mappetta2);
+        ObjectOutputStream oStream = new ObjectOutputStream(new FileOutputStream("out.bin"));
+        oStream.writeObject(mappa);
+        HashMap<Long, HashMap<Integer, Integer>> fastQueryTrace = (HashMap<Long, HashMap<Integer, Integer>>) (new ObjectInputStream(new FileInputStream("out.bin"))).readObject(); //**
+        //System.out.println(fastQueryTrace.get((long) 1).get(10));
+        System.out.println(fastQueryTrace.get((long) 2).get(-87));
+        System.exit(1);
+    }
 
     private static int[] getEntry(DataInputStream dataStream) throws IOException {
         //OK

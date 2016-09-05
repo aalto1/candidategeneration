@@ -617,11 +617,6 @@ public class InvertedIndex implements Serializable {
         java.util.Arrays.parallelSort(sample);
         return sample[(int) (sampleLength*0.8)];
     }
-
-
-
-
-
 }
 
 
