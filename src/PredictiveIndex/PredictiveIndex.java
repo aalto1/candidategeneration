@@ -218,7 +218,6 @@ public class PredictiveIndex {
     * compressed inverted index.
     *
     * OPEN ISSUES:
-    * - Save the fastQueryTrace and check if the conversion is possible while fetching it
     * - Check the format of the query trace in a way that you can see if the split is ok*/
 
     public HashMap<Long, HashMap<Integer, Integer>> getfastQueryTrace() throws IOException {
@@ -241,29 +240,29 @@ public class PredictiveIndex {
     }
 
 
-    /*This functions returns 2 arrays which are the buckets ranges given a length and rank rule.
-    * Default values are:
-    * 1) L-rule = 1.1
-    * 2) R-rule = 1.4
-    *
-    * The ranges-max is hardcoded.
-    *
-    * OPEN ISSUES:
-    * - Load the fastQueryTrace in an appropriate way */
+    /*This functions returns buckets ranges given a length. The ranges-max is hardcoded.*/
 
-    public static int[][] getBucketsRanges(double lenRule, double rankRule){
+    private static int[] computeLenRanges(double lenRule){
         lenRule = 1.1;
-        rankRule = 1.4;
         LinkedList<Integer> lenBuckets = new LinkedList<>();
-        LinkedList<Integer> rankBuckets = new LinkedList<>();
         for (int i = 4; i < 50220423; i += i*lenRule) {
             lenBuckets.addLast(i);
         }
+        return Ints.toArray(lenBuckets);
+    }
+
+    /*This functions returns buckets ranges given a rank. The ranges-max is hardcoded*/
+
+    private static int[] computeRankRanges(double rankRule){
+        rankRule = 1.4;
+        LinkedList<Integer> rankBuckets = new LinkedList<>();
         for (int i = 11; i < 100220423 ; i += i*rankRule) {
             rankBuckets.addLast(i);
         }
-        return new int[][]{Ints.toArray(lenBuckets),Ints.toArray(rankBuckets)};
+        return Ints.toArray(rankBuckets);
     }
+
+    /*Getter for the bucket length*/
 
     private static int getLenBucket(int len, int[] lenBuckets){
         int i;
@@ -277,7 +276,7 @@ public class PredictiveIndex {
      * if at this iteration we did not change bucket range the operation is almost free O(1).
      *
      * OPEN ISSUES:
-    * - Load the fastQueryTrace in an appropriate way */
+    * - */
 
     private static int getRankBucket(int nowRank, int rank, int[] rankBuckets){
         int i;
@@ -290,16 +289,19 @@ public class PredictiveIndex {
     * Y = Columns   = rank buckets
     * Z = Counters  = [0] hit counter - [1] touch counter (fixed size of 2)
     *
+    * 0) PairID
+    * 1) Number of Varbytes to read
+    * 2) Number of documents
+    *
     * OPEN ISSUES:
-    * - Load the fastQueryTrace in an appropriate way
-    * - Check if the while condition is always true
     * - Make it cleaner */
     public static int[][][] getQualityModel() throws IOException, ClassNotFoundException {
-        int [][] bucketsRanges = getBucketsRanges(1.1,1.4);         //bucketsRanges[0] = Length Ranges - bucketsRanges[1] = Rank Ranges
-        int [][][] qualityModel = new int[bucketsRanges[0].length][bucketsRanges[1].length][2];
+        int [] lenRanges = computeLenRanges(1.1);
+        int [] rankRanges = computeRankRanges(1.4);
+        int [][][] qualityModel = new int[lenRanges.length][rankRanges.length][2];
         BufferedReader br = new BufferedReader(new FileReader("readIndexInfo"));
         DataInputStream inStream = new DataInputStream( new BufferedInputStream(new FileInputStream("compressedSortedInvertedIndex")));
-        HashMap<Long, HashMap<Integer, Integer>> fastQueryTrace = (HashMap<Long, HashMap<Integer, Integer>>) (new ObjectInputStream(new FileInputStream(" fee"))).readObject(); //**
+        HashMap<Long, HashMap<Integer, Integer>> fastQueryTrace = (HashMap<Long, HashMap<Integer, Integer>>) (new ObjectInputStream(new FileInputStream(" fee"))).readObject(); //conversion seems to work
         String [] line;
         byte [] byteStream;
         int [] postingList;
@@ -309,15 +311,16 @@ public class PredictiveIndex {
         HashMap<Integer, Integer> aggregatedTopK;
         int increment;
         while((line = br.readLine().split(","))[0] != null){ //**
+            pair = Integer.valueOf(line[0]);
             byteStream = new byte[Integer.valueOf(line[1])];
             inStream.read(byteStream);
             postingList = decodeInterpolate(byteStream);
-            lenBucket = getLenBucket(Integer.valueOf(line[2]), bucketsRanges[0]);
-            pair = Integer.valueOf(line[1]);
+            lenBucket = getLenBucket(Integer.valueOf(line[2]), lenRanges);
+
             aggregatedTopK = fastQueryTrace.get(pair);
             for (int i = 0; i < postingList.length ; i += 2) {
                 increment = aggregatedTopK.get(postingList[i]);
-                rankBucket = getRankBucket(rankBucket, postingList[i+1], bucketsRanges[1]);
+                rankBucket = getRankBucket(rankBucket, postingList[i+1], rankRanges);
 
                 //bucket hit by this posting
                 qualityModel[lenBucket][rankBucket][0] += increment ;
