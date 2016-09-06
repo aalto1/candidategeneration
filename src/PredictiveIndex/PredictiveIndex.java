@@ -211,7 +211,6 @@ public class PredictiveIndex {
             auxMap = new HashMap<>();
             for (int doc: topK) auxMap.put(doc,1);
         }
-        addTopK(auxMap, topK);
     }
 
     /*We reformat the Query trace in a way that we can perform fast lookup while scanning the
@@ -220,7 +219,7 @@ public class PredictiveIndex {
     * OPEN ISSUES:
     * - Check the format of the query trace in a way that you can see if the split is ok*/
 
-    public HashMap<Long, HashMap<Integer, Integer>> getfastQueryTrace() throws IOException {
+    public HashMap<Long, HashMap<Integer, Integer>> buildFastQueryTrace() throws IOException {
         BufferedReader br = new BufferedReader(new FileReader("f"));
         HashMap<Long, HashMap<Integer, Integer>> fastQueryTrace = new HashMap<>();
         HashMap<Integer, Integer> auxMap;
