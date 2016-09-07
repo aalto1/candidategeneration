@@ -324,11 +324,9 @@ public class InvertedIndex implements Serializable {
         /**/
 
         try {
-            FileOutputStream fileOut = new FileOutputStream(new File(file + ser));
-            ObjectOutputStream out = new ObjectOutputStream(fileOut);
+            ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(new File(file + ser)));
             out.writeObject(e);
             out.close();
-            fileOut.close();
         } catch (IOException i) {
             i.printStackTrace();
         }

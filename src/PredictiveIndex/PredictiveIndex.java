@@ -5,12 +5,19 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import com.google.common.primitives.Ints;
+import com.koloboke.collect.map.hash.HashObjIntMap;
+import com.koloboke.collect.map.hash.HashObjIntMaps;
 import it.unimi.dsi.fastutil.Arrays;
 import it.unimi.dsi.fastutil.io.FastBufferedInputStream;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import sun.nio.cs.Surrogate;
 
 import javax.sound.sampled.Line;
+import com.koloboke.collect.map.hash.HashObjIntMaps.*;
 
 import static PredictiveIndex.InvertedIndex.*;
 import static PredictiveIndex.VariableByteCode.decodeInterpolate;
@@ -23,6 +30,7 @@ import static PredictiveIndex.VariableByteCode.encodeInterpolate;
 public class PredictiveIndex {
     static int counter = 1;
     static int counter2 = 1;
+    private static String metadata = "/home/aalto/IdeaProjects/PredictiveIndex/data/metadata/";
 
     public static void main(String [] args) throws IOException, ClassNotFoundException, InterruptedException {
         /*We get the global statistics of the collection (fetch from memory if present, compute them if the opposite)
@@ -33,7 +41,9 @@ public class PredictiveIndex {
         //read();
         //fetchInvertedIndex();
         //getBucketsRanges(1.1,1.4);
-        provaSer();
+        getTermMap();
+
+        System.exit(1);
 
         String data = "/home/aalto/dio/docInfo";
         InvertedIndex ps;
@@ -51,9 +61,10 @@ public class PredictiveIndex {
         ps.readClueWeb(data,1);
     }
 
-    /*Test class to cheeck if is possible to serialize and deserialize an Hashmap of Hashmaps*/
+    /* TEST CLASS
+    Test class to cheeck if is possible to serialize and deserialize an Hashmap of Hashmaps*/
 
-    public static void provaSer() throws IOException, ClassNotFoundException {
+    private static void provaSer() throws IOException, ClassNotFoundException {
         HashMap<Long, HashMap<Integer, Integer>> mappa = new HashMap<>();
         HashMap<Integer, Integer> mappetta1 = new HashMap<>();
         mappetta1.put(10, 10);
@@ -69,6 +80,42 @@ public class PredictiveIndex {
         //System.out.println(fastQueryTrace.get((long) 1).get(10));
         System.out.println(fastQueryTrace.get((long) 2).get(-87));
         System.exit(1);
+    }
+
+    private static Map<String, Integer> fetchTermMap() throws IOException {
+        BufferedReader br = new BufferedReader( new FileReader("/home/aalto/dio/termIDs"));
+        //BiMap termMap = HashBiMap.create();
+        //Map<String, Integer> termMap = HashObjIntMaps.newMutableMap();
+        Object2IntMap<String> termMap = new Object2IntOpenHashMap<>();
+
+        String line;
+        String [] splittedLine;
+        int k =1;
+        while((line = br.readLine()) != null){
+            splittedLine = line.split(" ");
+            termMap.put(splittedLine[1], k);
+            if(k % 10000000 == 0) System.out.println(k);
+            k++;
+        }
+        System.out.println("Map Completed. Serialization in progress...");
+        //DataInputStream dStream = new DataInputStream( new BufferedInputStream( new FileInputStream("/home/aalto/dio/compressedIndex")));
+
+        /*ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(metadata+"termMap.bin")));
+        for(String key : termMap.keySet()){
+            out.writeObject(key);
+            out.writeInt(termMap.get(key));
+        }
+        out.close();*/
+        return termMap;
+    }
+
+    private static Map<String, Integer> getTermMap() throws IOException, ClassNotFoundException {
+        if(Files.exists(Paths.get(metadata+"termMap.bin"))){
+            ObjectInputStream iStream = new ObjectInputStream(new FileInputStream(metadata+"termMap.bin"));
+            return (Map<String, Integer>) iStream.readObject();
+        }else{
+            return fetchTermMap();
+        }
     }
 
     private static int[] getEntry(DataInputStream dataStream) throws IOException {
