@@ -44,8 +44,8 @@ public class PredictiveIndex {
         //read();
         //fetchInvertedIndex();
         //getBucketsRanges(1.1,1.4);
-        //fetchTermMap();
-        //buildFastQueryTrace();
+        fetchTermMap();
+        buildFastQueryTrace();
         //metodo();
         System.exit(1);
 
@@ -171,7 +171,7 @@ public class PredictiveIndex {
         long [] combo = new long[res.size()];
         int [] pair;
         int p = 0;
-        System.out.println(res);
+        //System.out.println(res);
         for(Set set : res){
             pair = Ints.toArray(set);
             java.util.Arrays.parallelSort(pair);
@@ -213,11 +213,13 @@ public class PredictiveIndex {
     }
 
 
-    private static void addTopK(HashMap<Integer, Integer> auxMap, int[] topK){
+    private static void addTopK(HashMap<Long, HashMap<Integer, Integer>> fastQueryTrace, long bigram, int[] topK){
+        HashMap<Integer, Integer> auxMap = fastQueryTrace.get(bigram);
         if(auxMap != null){
             for (int doc: topK){
                 if(auxMap.putIfAbsent(doc,1) != null){
                     auxMap.merge(doc,1,Integer::sum);
+                    //System.out.println(auxMap.get(doc));
                 }
             }
         }else{
@@ -225,6 +227,7 @@ public class PredictiveIndex {
             for (int doc: topK){
                 auxMap.put(doc,1);
             }
+            fastQueryTrace.put(bigram, auxMap);
         }
     }
 
@@ -250,12 +253,15 @@ public class PredictiveIndex {
             //System.out.println(topK+"-"+Integer.valueOf(line[0]));
             if(topK!=null){
                 for (long bigram : queryBigrams) {
-                    auxMap = fastQueryTrace.get(bigram);
-                    addTopK(auxMap, topK);
+                    addTopK(fastQueryTrace, bigram, topK);
                 }
             }
-
         }
+        /*HashMap<Integer,Integer> mappa;
+        for ( long x: fastQueryTrace.keySet()) {
+            mappa = fastQueryTrace.get(x);
+            for(long y : mappa.keySet()) System.out.println("Pair: "+ x +". Key: " + y + ". Value: " + mappa.get(y));
+        }*/
         ObjectOutputStream oStream = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(metadata+"fastQueryTrace.bin")));
         oStream.writeObject(fastQueryTrace);
         oStream.close();
