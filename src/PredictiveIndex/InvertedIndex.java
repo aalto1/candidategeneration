@@ -5,10 +5,11 @@ import com.google.common.collect.HashBiMap;
 import it.unimi.dsi.fastutil.Hash;
 
 import com.google.common.collect.BiMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import me.lemire.integercompression.differential.IntegratedByteIntegerCODEC;
 import me.lemire.integercompression.IntWrapper;
 import me.lemire.integercompression.differential.IntegratedVariableByte;
-
+import it.unimi.dsi.fastutil.ints.*;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -56,12 +57,13 @@ public class InvertedIndex implements Serializable {
     final private int distance = 5;
     private int pointer = 0;
     //private long [][] buffer = it.unimi.dsi.fastutil.longs.LongBigArrays.newBigArray(50000000);
-    private int [][] buffer = new int[50000000][4];
+    private int [][] buffer = new int[30000000][4];
     private int[] stats;                                       //1-numberofdocs,2-wordcounter,3-unique words
     private int doc;
     private BiMap<String, Integer> termsMap;
     private BiMap<String, Integer> docsMap;
-    private HashMap<Integer, Integer> freqTermDoc;
+    //private HashMap<Integer, Integer> freqTermDoc;
+    private Int2IntMap freqTermDoc;
     String wracNowProcessing;
 
     public InvertedIndex() throws IOException {
@@ -69,29 +71,22 @@ public class InvertedIndex implements Serializable {
 
         this.doc = 0;
         this.termsMap = HashBiMap.create();
-        this.freqTermDoc = new HashMap<>();
-        this.docsMap = HashBiMap.create();
+        //this.freqTermDoc = new HashMap<>();
+        freqTermDoc = new Int2IntOpenHashMap();
         this.stats = new int[5];
-        this.forwardIndexFile = null;
-        //this.invertedIndexFile = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(dPath + "/II.dat", true)));
-        //this.invertedIndexFile = new FastBufferedOutputStream(new FileOutputStream(dPath + "/II.dat", true), 50*10^6);
-        this.invertedIndexFile = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(dPath + "/II.dat", true)));
+        this.forwardIndexFile = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(fIndexPath + "/forwardIndex" + doc + ".dat", true)));
+        this.invertedIndexFile = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(dPath + "/InvertedIndex.dat", true)));
     }
 
-    public InvertedIndex(/*HashMap<String, Integer> termsMap*/ HashMap<Integer, Integer> freqTermDoc, /*HashMap<String, Integer> docsMap,*/ int[] stats) throws IOException {
+    public InvertedIndex(Int2IntMap freqTermDoc, int[] stats) throws IOException {
         // Class constructor
         this.doc = 0;
-        //this.buffer = new int[10000000][4];
-        //this.termsMap = termsMap;
         this.freqTermDoc = freqTermDoc;
-        //this.docsMap = docsMap;
         this.stats = stats;
         this.lock = new ReentrantLock();
         //this.invertedIndexFile = new FastBufferedOutputStream(new ObjectOutputStream( new FileOutputStream(dPath + "/InvertedIndex.dat", true)));
         //this.invertedIndexFile = new FastBufferedOutputStream(new ObjectOutputStream( new FileOutputStream(dPath + "/InvertedIndex.dat", true)));
-        this.invertedIndexFile = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(dPath + "/II.dat", true)));
-        //this.invertedIndexFile = new ObjectOutputStream(new FileOutputStream(dPath + "/II.dat", true));
-
+        this.invertedIndexFile = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(dPath + "/InvertedIndex.dat", true)));
     }
 
 
@@ -109,17 +104,16 @@ public class InvertedIndex implements Serializable {
         int [] numbers = new int[docLen];
         int n = 0;
         for (byte b : rawDoc) {
-            if ((b & 0xff) < 128) {
-                n = 128 * n + b;
+            if ((b & 0xff) >= 128) {
+                n = 128 * n + (b & 0xff);
             } else {
                 int num = (128 * n + ((b - 128) & 0xff));
-                //numbers[k] = num;
+                numbers[k] = num;
+                if(num<0) System.out.println(num);
                 k++;
                 n = 0;
             }
         }
-        //System.out.println();
-        //System.out.println("words: " + k + "\t Expected: " + docLen);
         return numbers;
     }
 
@@ -131,62 +125,76 @@ public class InvertedIndex implements Serializable {
     * 3 - size      (varbyte)
     * 4 - docLength (#words)
     *
+    * EXAMPLE:
+    *
+    *   clueweb09-en0000-00-00000 1 0 208 102
+        clueweb09-en0000-00-00001 2 208 86 49
+        clueweb09-en0000-00-00002 3 294 81 47
+        clueweb09-en0000-00-00003 4 375 160 84
+        clueweb09-en0000-00-00004 5 535 284 153
+    *
     * The document length seems not to work*/
 
     public void readClueWeb(String data, int round) throws IOException, ClassNotFoundException, InterruptedException {
         long percentage =0;
-        //ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(new FileInputStream(fIndexPath + "/forwardIndex.dat")));
+        ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(new FileInputStream(fIndexPath + "/forwardIndex" + doc + ".dat")));
         start = System.currentTimeMillis();
         DataInputStream stream = new DataInputStream( new BufferedInputStream( new FileInputStream("/home/aalto/dio/compressedIndex")));
         BufferedReader br = new BufferedReader(new FileReader(data));
         String[] line = br.readLine().split(" ");
         byte [] rawDoc;
-        int title;
+        int docID;
+        int b2read;
+        int docLen;
         int [] document;
         while(line[0] != null){
-            int auxa=0;
-            rawDoc = new byte[Integer.parseInt(line[3])];
+            //System.out.println("-------------------------------");
+            docID = Integer.parseInt(line[1]);
+            b2read= Integer.parseInt(line[3]);
+            docLen= Integer.parseInt(line[4]);
+            //int flippedContinuationBit=0;
+            //int continuationBit= 0;
+            rawDoc = new byte[b2read];
             for (int i = 0; i < rawDoc.length; i++) {
                 rawDoc[i] = stream.readByte();
-                if(rawDoc[i]<0) auxa++;
             }
-            title = Integer.parseInt(line[1]);
-            //document = decodeRawDoc(rawDoc, Integer.parseInt(line[4]));
-            document = new int[Integer.parseInt(line[4])];
-            IntegratedVariableByte codec = new IntegratedVariableByte();
-            codec.uncompress(rawDoc, new IntWrapper(0), Integer.parseInt(line[4]), document, new IntWrapper());
-            for (int i : document) {
-                System.out.println(auxa);
-            }
-            System.exit(1);
-            switch(round){
-                case 0:
-                    //collecting metadata
+            //System.out.println(docLen);
+            document = decodeRawDoc(rawDoc, docLen);
+            /*
+            for (int i: document
+                 ) {
+                System.out.print(termMap.get(i)+" ");
 
-                    storeMetadata(document);
-                    break;
-                case 1:
-                    //building invertedindex
-
-                    //bufferedIndex(document, title, arrayToHashMap((int[])  ois.readObject()));
-                    break;
             }
+            System.out.println();
+            System.out.println();
+            */
+
+            //storeMetadata(document);
+            bufferedIndex(document, docID, arrayToHashMap((int[])  ois.readObject()));
+
+
             line = br.readLine().split(" ");
-
             doc++;
+
             if (doc % 500000 == 0){
                 System.out.println("Processed docs: " + doc + "\tProcessing Time: " + (doc / (System.currentTimeMillis() - start)) * 1000 + " doc/s");
                 percentage = (long) (doc*100.0)/50220423;
                 System.out.println("Work in progress: " + percentage+ "% completed.");
                 //System.out.println(line[1]);
             }
+            if (doc % 3500000 == 0) break;
         }
+        //this.forwardIndexFile.close();
+        //this.savePSMetadata();
+        sampledNaturalSelection();
+        this.invertedIndexFile.close();
         System.exit(1);
     }
 
     public void storeMetadata(int [] words) throws IOException {
         /*this function process the single wrac files */
-        HashMap<Integer, Integer> position = new HashMap<>();
+        Int2IntMap position = new Int2IntOpenHashMap();
         for (int k = 0; k<words.length-1; k++) {
             if (position.putIfAbsent(words[k], 1) == null){
                 if(this.freqTermDoc.putIfAbsent(words[k], 1)!=null) {
@@ -197,9 +205,9 @@ public class InvertedIndex implements Serializable {
                 position.merge(words[k], 1, Integer::sum);
             }
         }
-        //this.forwardIndexFile.writeObject(hashMapToArray(position));
+        this.forwardIndexFile.writeObject(hashMapToArray(position));
         this.stats[0]++;
-        this.stats[1] += words.length;
+        this.stats[1]+= words.length;
     }
 
     public void getCollectionMetadata(String data) throws IOException {
@@ -257,12 +265,12 @@ public class InvertedIndex implements Serializable {
             }
         }
         this.forwardIndexFile.writeObject(intWords);
-        this.forwardIndexFile.writeObject(hashMapToArray(position));
+        //this.forwardIndexFile.writeObject(hashMapToArray(position));
         this.stats[0]++;
         this.stats[1] += words.length;
     }
 
-    public static int [] hashMapToArray(HashMap<Integer,Integer> map){
+    public static int [] hashMapToArray(Int2IntMap map){
         /*This function convert an HashMap to an 1d array with the dimension doubled respect to the key-value pairs
         * with a value bigger than one*/
 
@@ -281,11 +289,11 @@ public class InvertedIndex implements Serializable {
         return Arrays.copyOf(array, k*2+1);
     }
 
-    public static HashMap<Integer, Integer> arrayToHashMap(int [] array){
+    public static Int2IntMap arrayToHashMap(int [] array){
         /*This function converst an 1d array to an hashmap. We use this function to get the term freq. for a specific
         * term within a doc*/
 
-        HashMap<Integer, Integer> map = new HashMap<>();
+        Int2IntMap map = new Int2IntOpenHashMap();
         for(int k = 0; k<array.length; k+=2){
             map.put(k, k+1);
         }
@@ -391,8 +399,9 @@ public class InvertedIndex implements Serializable {
                 ois = new ObjectInputStream(new BufferedInputStream(new FileInputStream(filename)));
                 while (true) {
                     int [] intWords = (int[])  ois.readObject();    //title + document
-                    HashMap<Integer,Integer> docTermsStats = arrayToHashMap((int[])  ois.readObject()); //docstats
-                    this.bufferedIndex(intWords, intWords[0], docTermsStats);
+                    //HashMap<Integer,Integer> docTermsStats = arrayToHashMap((int[])  ois.readObject()); //docstats
+                    //this.bufferedIndex(intWords, intWords[0], docTermsStats);
+                    this.bufferedIndex(intWords, intWords[0], (Int2IntMap) arrayToHashMap((int[])  ois.readObject()));
                     doc++;
                     //System.out.println(wordsCount/doc);
                 }
@@ -409,7 +418,7 @@ public class InvertedIndex implements Serializable {
         }
     }
 
-    public static int getTermFreq(HashMap<Integer,Integer> docStat, int termID){
+    public static int getTermFreq(Int2IntMap docStat, int termID){
         /*We try to get the frequency of a term using the termID-freq hashmap. If a NullPointerException error is raised
         * than it mean that the term freq is just 1.*/
 
@@ -420,7 +429,7 @@ public class InvertedIndex implements Serializable {
         }
     }
 
-    public void bufferedIndex(int[] words, int title, HashMap<Integer,Integer> docStat) throws IOException, ClassNotFoundException, InterruptedException {
+    public void bufferedIndex(int[] words, int title, Int2IntMap docStat) throws IOException, ClassNotFoundException, InterruptedException {
         /* For each document we take the pairs between documents within a distance. We add each entry to a buffer and
         * compute the BM25 for that specific term-pair*/
 
@@ -430,7 +439,7 @@ public class InvertedIndex implements Serializable {
         HashSet<Long> auxPair = new HashSet<>();
         //words = new int [] {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
         long pairID;
-        for (int wIx = 1; wIx < words.length - this.distance; wIx++) {
+        for (int wIx = 0; wIx < words.length - this.distance; wIx++) {
             for (int dIx = wIx+1; dIx < wIx + this.distance; dIx++) {
                 int [] pair = {words[wIx], words[dIx]};
                 Arrays.sort(pair);
@@ -562,22 +571,24 @@ public class InvertedIndex implements Serializable {
     }
 
     public void sampledNaturalSelection() throws IOException {
-        System.out.println("TIME TO CLEAN. Processed docs: " + doc);
-        HashMap<Long,Integer> dumpCounter = new HashMap<>();
-        now = System.currentTimeMillis();
-        int threshold = getThreshold();
-        long pair;
-        for (int k = 0; k < this.buffer.length; k++) {
-            if(this.buffer[k][2] > threshold){
-                for(int elem : this.buffer[k]) this.invertedIndexFile.writeInt(elem);
-            }else{
+        /*else{
                 pair = getPair(this.buffer[k][0],this.buffer[k][1]);
                 if(dumpCounter.putIfAbsent(pair,1) != null){
                     dumpCounter.merge(pair, 1, Integer::sum);
                 }
             }
         }
-        storeSelectionStats(dumpCounter);
+        storeSelectionStats(dumpCounter);*/
+        System.out.println("TIME TO CLEAN. Processed docs: " + doc);
+        HashMap<Long,Integer> dumpCounter = new HashMap<>();
+        now = System.currentTimeMillis();
+        int threshold = getThreshold();
+        long pair;
+        for (int k = 0; k < this.buffer.length; k++) {
+            if (this.buffer[k][2] > threshold) {
+                for (int elem : this.buffer[k]) this.invertedIndexFile.writeInt(elem);
+            }
+        }
         System.out.println("Sampled Natural Selection:" + (System.currentTimeMillis() - now) + "ms. Threshold: " + threshold);
         System.out.println("Processing Time:" + (doc / (System.currentTimeMillis() - start)) * 1000 + " doc/s");
     }
@@ -608,7 +619,7 @@ public class InvertedIndex implements Serializable {
         int sampleLength=10000;
         int[] sample = new int[sampleLength];
         for(int k = 0; k<sample.length; k++) {
-            rnd = ThreadLocalRandom.current().nextInt(0, 50000000 + 1);
+            rnd = ThreadLocalRandom.current().nextInt(0, 30000000 + 1);
             sample[k] = this.buffer[rnd][2];
             //System.out.println(this.buffer[rnd][2]);
         }

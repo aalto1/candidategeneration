@@ -11,6 +11,8 @@ import com.google.common.primitives.Ints;
 import com.koloboke.collect.map.hash.HashObjIntMap;
 import com.koloboke.collect.map.hash.HashObjIntMaps;
 import it.unimi.dsi.fastutil.Arrays;
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.io.FastBufferedInputStream;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
@@ -34,6 +36,8 @@ public class PredictiveIndex {
     private static String qi = "/home/aalto/dio/";
 
     private static Object2IntMap<String> termMap;
+    private static Int2ObjectOpenHashMap<String> termMap2;
+
 
     public static void main(String [] args) throws IOException, ClassNotFoundException, InterruptedException {
         /*We get the global statistics of the collection (fetch from memory if present, compute them if the opposite)
@@ -44,10 +48,10 @@ public class PredictiveIndex {
         //read();
         //fetchInvertedIndex();
         //getBucketsRanges(1.1,1.4);
-        fetchTermMap();
-        buildFastQueryTrace();
+        //fetchTermMap();
+        //buildFastQueryTrace();
         //metodo();
-        System.exit(1);
+        //System.exit(1);
 
         String data = "/home/aalto/dio/docInfo";
         InvertedIndex ps;
@@ -55,10 +59,12 @@ public class PredictiveIndex {
 
         if (Files.exists(Paths.get(tPath+ser))) {
             System.out.println("Deserializing Predictive Inverted...");
-            ps = new InvertedIndex((HashMap<Integer, Integer>) deserialize(fPath+ser), (int[]) deserialize(sPath+ser));
+            ps = new InvertedIndex((Int2IntMap) deserialize(fPath+ser), (int[]) deserialize(sPath+ser));
             System.out.println("Predictive Index Deserialized");
         }else {
             ps = new InvertedIndex();
+            //getTermMap();
+            //fetchTermMap2();
             ps.readClueWeb(data,0);
         }
         //ps.threads();
@@ -86,6 +92,23 @@ public class PredictiveIndex {
         System.exit(1);
     }
 
+    private static void fetchTermMap2() throws IOException {
+        BufferedReader br = new BufferedReader( new FileReader("/home/aalto/dio/termIDs"));
+        //BiMap termMap = HashBiMap.create();
+        //Map<String, Integer> termMap = HashObjIntMaps.newMutableMap();
+        termMap2 = new Int2ObjectOpenHashMap<>();
+        String line;
+        String [] splittedLine;
+        int k =1;
+        while((line = br.readLine()) != null){
+            splittedLine = line.split(" ");
+            termMap2.put(k, splittedLine[1]);
+            k++;
+            if(k % 10000000 == 0) System.out.println(k);
+        }
+        System.out.println("Map Completed.");
+    }
+
     private static void fetchTermMap() throws IOException {
         BufferedReader br = new BufferedReader( new FileReader("/home/aalto/dio/termIDs"));
         //BiMap termMap = HashBiMap.create();
@@ -102,15 +125,6 @@ public class PredictiveIndex {
             k++;
         }
         System.out.println("Map Completed.");
-        //DataInputStream dStream = new DataInputStream( new BufferedInputStream( new FileInputStream("/home/aalto/dio/compressedIndex")));
-
-        /*ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(metadata+"termMap.bin")));
-        for(String key : termMap.keySet()){
-            out.writeObject(key);
-            out.writeInt(termMap.get(key));
-        }
-        out.close();*/
-        //return termMap;
     }
 
     private static void getTermMap() throws IOException, ClassNotFoundException {

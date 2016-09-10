@@ -15,6 +15,30 @@ public class Help {
 
       /*
 
+          if((rawDoc[i] & 0xff)  >= 128){
+                    //System.out.println(rawDoc[i]);
+                    flippedContinuationBit++;
+                }else{
+                    continuationBit++;
+                }
+
+                    //System.out.println("#Byte>=128: " + (flippedContinuationBit) + ". Expected: " + (docLen) + ". #Bytes<128: " + continuationBit);
+                    //document = decodeRawDoc(rawDoc, docLen);
+
+       switch(round){
+                case 0:
+                    //collecting metadata
+
+                    storeMetadata(document);
+                    break;
+                case 1:
+                    //building invertedindex
+
+                    //bufferedIndex(document, title, arrayToHashMap((int[])  ois.readObject()));
+                    break;
+            }
+            line = br.readLine().split(" ");
+
       THIS CODE IS A BENCHMARK FOR SORTING ALGORITHMS OF RANDOM ARRAYS
 
       public static void superMagic(){
