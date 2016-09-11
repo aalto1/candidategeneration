@@ -10,13 +10,18 @@ import com.google.common.collect.HashBiMap;
 import com.google.common.primitives.Ints;
 import com.koloboke.collect.map.hash.HashObjIntMap;
 import com.koloboke.collect.map.hash.HashObjIntMaps;
-import it.unimi.dsi.fastutil.Arrays;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.io.FastBufferedInputStream;
+import it.unimi.dsi.fastutil.longs.Long2IntMap;
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import org.lemurproject.kstem.KrovetzStemmer;
+import org.lemurproject.kstem.Stemmer;
 import sun.nio.cs.Surrogate;
+import org.lemurproject.kstem.KrovetzStemmer.*;
+
 
 import javax.sound.sampled.Line;
 import com.koloboke.collect.map.hash.HashObjIntMaps.*;
@@ -48,10 +53,12 @@ public class PredictiveIndex {
         //read();
         //fetchInvertedIndex();
         //getBucketsRanges(1.1,1.4);
-        //fetchTermMap();
-        //buildFastQueryTrace();
+        fetchTermMap();
+        buildFastQueryTrace();
         //metodo();
-        //System.exit(1);
+        //getQualityModel();
+        //uniquePairs();
+        System.exit(1);
 
         String data = "/home/aalto/dio/docInfo";
         InvertedIndex ps;
@@ -70,6 +77,7 @@ public class PredictiveIndex {
         //ps.threads();
         ps.readClueWeb(data,1);
     }
+
 
     /* TEST CLASS
     Test class to cheeck if is possible to serialize and deserialize an Hashmap of Hashmaps*/
@@ -90,6 +98,26 @@ public class PredictiveIndex {
         //System.out.println(fastQueryTrace.get((long) 1).get(10));
         System.out.println(fastQueryTrace.get((long) 2).get(-87));
         System.exit(1);
+    }
+
+
+
+    public static void uniquePairs() throws IOException{
+        Long2IntMap map = new Long2IntOpenHashMap();
+        BufferedReader br = new BufferedReader(new FileReader("/home/aalto/dio/query/Q/million09_training"));
+        String[] line = br.readLine().split(":")[1].split(" ");
+        Integer [] terms ;
+        int unique=0;
+        while(line[0] != null){
+            terms = new Integer[line.length];
+            for(int i = 0; i< terms.length; i++) terms[i] = termMap.get(line[i]);
+            for (long i : getCombinations(new LinkedList<Integer>(java.util.Arrays.asList(terms)),2)) {
+                if(map.putIfAbsent(i,1)==null) unique++;
+            }
+            System.out.println(unique);
+            line = br.readLine().split(":")[1].split(" ");
+        }
+
     }
 
     private static void fetchTermMap2() throws IOException {
@@ -138,10 +166,8 @@ public class PredictiveIndex {
 
     /*This function parse the document and build an int[][] to get O(1) access to the top500 of each document*/
 
-    private static int[][] getTopKMatrix() throws IOException {
+    private static int[][] getTopKMatrix(int[][] topMatrix, BufferedReader br) throws IOException {
         System.out.println("Building TopK matrix...");
-        BufferedReader br = new BufferedReader( new FileReader("/home/aalto/dio/query2/complexRankerResultsTraining"));
-        int [][] topMatrix = new int[173800][];
         String line;
         String [] split;
         int query = 0;
@@ -181,6 +207,7 @@ public class PredictiveIndex {
 
     private static long[] getCombinations(List<Integer> superSet, int k) {
         List<Set<Integer>> res = new ArrayList<>();
+        superSet.removeIf(Objects::isNull);
         getSubsets(superSet, k, 0, new HashSet<>(), res);
         long [] combo = new long[res.size()];
         int [] pair;
@@ -190,6 +217,7 @@ public class PredictiveIndex {
             pair = Ints.toArray(set);
             java.util.Arrays.parallelSort(pair);
             combo[p] = getPair(pair[0],pair[1]);
+            p++;
         }
         return combo;
     }
@@ -200,16 +228,15 @@ public class PredictiveIndex {
 
         LinkedList<Integer> queryInt = new LinkedList<>();
         int termID;
+        String stemmedTerm;
+        KrovetzStemmer stemmer = new KrovetzStemmer();
 
         // We convert our String [] to int [] using the term-termID map
         for (int i = 0; i <  queryTerms.length; i++) {
-            try{
-                termID = termMap.get(queryTerms[i]);
-                queryInt.add(termID);
-            }catch (NullPointerException e){
-                e.getStackTrace();
-            }
-           //System.out.println(termMap.get(queryTerms[i]));
+            stemmedTerm = stemmer.stem(queryTerms[i]);
+            //termID = termMap.get(stemmedTerm);
+            //queryInt.add(termID);
+            if(termMap.get(stemmedTerm)==null) System.out.println(stemmedTerm+"-"+queryTerms[i]);
         }
         //We take every combination of our query terms. We save them in a long array using bit-shifting
         return getCombinations(queryInt,2);
@@ -252,8 +279,12 @@ public class PredictiveIndex {
     * - Check the format of the query trace in a way that you can see if the split is ok*/
 
     public static HashMap<Long, HashMap<Integer, Integer>> buildFastQueryTrace() throws IOException {
-        BufferedReader br = new BufferedReader(new FileReader("/home/aalto/dio/query/Q/million09_training"));
-        int [][] topKmatrix = getTopKMatrix();
+        int [][] topKMatrix = new int[173800][];
+        BufferedReader br = new BufferedReader( new FileReader("/home/aalto/dio/query2/complexRankerResultsTraining"));
+        getTopKMatrix(topKMatrix, br);
+        br =  new BufferedReader( new FileReader("/home/aalto/dio/query2/complexRankerResultsTesting"));
+        getTopKMatrix(topKMatrix, br);
+        br = new BufferedReader(new FileReader("/home/aalto/dio/query/Q/million09_training"));
         HashMap<Long, HashMap<Integer, Integer>> fastQueryTrace = new HashMap<>();
         HashMap<Integer, Integer> auxMap;
         String line;
@@ -263,7 +294,7 @@ public class PredictiveIndex {
         while((line = br.readLine()) != null) {
             splittedLine = line.split(":");
             queryBigrams = getQueryBigrams(splittedLine[1].split(" "));     //**
-            topK = topKmatrix[Integer.valueOf(splittedLine[0])];          //**
+            topK = topKMatrix[Integer.valueOf(splittedLine[0])];          //**
             //System.out.println(topK+"-"+Integer.valueOf(line[0]));
             if(topK!=null){
                 for (long bigram : queryBigrams) {
@@ -285,7 +316,7 @@ public class PredictiveIndex {
 
     /*This functions returns buckets ranges given a length. The ranges-max is hardcoded.*/
 
-    private static int[] computeLenRanges(double lenRule){
+    private static int[] computelRanges(double lenRule){
         lenRule = 1.1;
         LinkedList<Integer> lenBuckets = new LinkedList<>();
         for (int i = 4; i < 50220423; i += i*lenRule) {
@@ -296,10 +327,10 @@ public class PredictiveIndex {
 
     /*This functions returns buckets ranges given a rank. The ranges-max is hardcoded*/
 
-    private static int[] computeRankRanges(double rankRule){
+    private static int[] computerRanges(double rankRule){
         rankRule = 1.4;
         LinkedList<Integer> rankBuckets = new LinkedList<>();
-        for (int i = 11; i < 100220423 ; i += i*rankRule) {
+        for (int i = 11; i < 2147388309 ; i += i*rankRule) {
             rankBuckets.addLast(i);
         }
         return Ints.toArray(rankBuckets);
@@ -339,14 +370,21 @@ public class PredictiveIndex {
     * OPEN ISSUES:
     * - Make it cleaner */
     public static int[][][] getQualityModel() throws IOException, ClassNotFoundException {
-        int [] lenRanges = computeLenRanges(1.1);
-        int [] rankRanges = computeRankRanges(1.4);
-        int [][][] qualityModel = new int[lenRanges.length][rankRanges.length][2];
-        BufferedReader br = new BufferedReader(new FileReader("readIndexInfo"));
-        DataInputStream inStream = new DataInputStream( new BufferedInputStream(new FileInputStream("compressedSortedInvertedIndex")));
+        int hit =0;
+        int maxBM25 =0;
+        int minBM25=0;
+        int maxLength=0;
+        int [] lRanges = computelRanges(1.1);
+        int [] rRanges = computerRanges(1.4);
+        int [][][] qualityModel = new int[lRanges.length][rRanges.length][2];
+        //BufferedReader br = new BufferedReader(new FileReader("readIndexInfo"));
+        DataInputStream inStream = new DataInputStream( new BufferedInputStream(new FileInputStream(dPath + "/InvertedIndex.dat")));
         ObjectInputStream obInStream = new ObjectInputStream(new FileInputStream(metadata+"fastQueryTrace.bin"));
         HashMap<Long, HashMap<Integer, Integer>> fastQueryTrace = (HashMap<Long, HashMap<Integer, Integer>>) obInStream.readObject(); //conversion seems to work
+        LinkedList<Integer> auxPostingList = new LinkedList<>();
+        auxPostingList.add(3);
         String [] line;
+        long numberOfPostingLists = 0;
         byte [] byteStream;
         int [] postingList;
         long pair;
@@ -354,17 +392,41 @@ public class PredictiveIndex {
         int rankBucket = 0;
         HashMap<Integer, Integer> aggregatedTopK;
         int increment;
-        while((line = br.readLine().split(","))[0] != null){ //**
+        int [] posting;
+        int [] currentPair = new int[]{-1,-1};
+        while(true){
+            posting = getEntry(inStream);
+            if(posting[0] ==-1) break;
+            if(posting[0] != currentPair[0] | posting[1] != currentPair[1]){
+                if(maxBM25<posting[2]) maxBM25 = posting[2];
+                else if(minBM25 >posting[2]) minBM25= posting[2];
+                if(auxPostingList.size()>maxLength) maxLength = auxPostingList.size();
+
+                if(fastQueryTrace.get(getPair(currentPair[0], currentPair[1]))!=null){
+                    //System.out.println(fastQueryTrace.get(getPair(currentPair[0], currentPair[1]))+"");
+                    processPostingList(Ints.toArray(auxPostingList), qualityModel, fastQueryTrace.get(getPair(currentPair[0], currentPair[1])), rRanges, lRanges, hit);
+                }
+                //System.out.println(fastQueryTrace.keySet().size());
+
+                numberOfPostingLists++;
+                auxPostingList.clear();
+                currentPair[0]= posting[0];
+                currentPair[1]= posting[1];
+
+            }
+            auxPostingList.addLast(posting[3]); //docid
+            auxPostingList.addLast(posting[2]); //BM25
+        }
+        /*while((line = br.readLine().split(","))[0] != null){ //**
             pair = Integer.valueOf(line[0]);
             byteStream = new byte[Integer.valueOf(line[1])];
             inStream.read(byteStream);
             postingList = decodeInterpolate(byteStream);
-            lenBucket = getLenBucket(Integer.valueOf(line[2]), lenRanges);
-
+            lenBucket = getLenBucket(Integer.valueOf(line[2]), lRanges);
             aggregatedTopK = fastQueryTrace.get(pair);
             for (int i = 0; i < postingList.length ; i += 2) {
                 increment = aggregatedTopK.get(postingList[i]);
-                rankBucket = getRankBucket(rankBucket, postingList[i+1], rankRanges);
+                rankBucket = getRankBucket(rankBucket, postingList[i+1], rRanges);
 
                 //bucket hit by this posting
                 qualityModel[lenBucket][rankBucket][0] += increment ;
@@ -374,8 +436,39 @@ public class PredictiveIndex {
                 }
             }
 
-        }
+        }*/
+        System.out.println("Posting List: " + numberOfPostingLists);
+        System.out.println("max: " + maxBM25 + ". min: " + minBM25 + ". len: " + maxLength);
+        ObjectOutputStream oStream = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(metadata+"qualityModel.bin")));
+        oStream.writeObject(qualityModel);
         return qualityModel;
+    }
+
+    private static void processPostingList(int [] postingList, int[][][] qualityModel, HashMap<Integer, Integer> aggregatedTopK, int [] rRanges, int [] lRanges , int hit){
+        int lenBucket = getLenBucket(postingList.length, lRanges);
+        int rankBucket = 0;
+        for (int i = 0; i < postingList.length ; i += 2) {
+            try {
+                int increment = aggregatedTopK.get(postingList[i]);
+                hit++;
+                System.out.println(hit);
+                rankBucket = getRankBucket(rankBucket, postingList[i + 1], rRanges);
+                //bucket hit by this posting
+                qualityModel[lenBucket][rankBucket][0] += increment;
+                for (int j = 0; j < rankBucket + 1; j++) {
+                    //previous buckets hit by this posting
+                    qualityModel[lenBucket][j][1] += increment;
+                }
+            }catch (NullPointerException ex){
+            }
+        }
+    }
+    private static void checkProgress(int p){
+        if(p % 10000000 == 0){
+            long percentage = (long) (p*100.0)/528184109;
+            System.out.println("Work in progress: " + percentage+ "% completed.");
+            //System.out.println("Expected time: " + (System.currentTimeMillis() - now)*(1/10*percentage));
+        }
     }
 
     private static int[] getEntry(DataInputStream dataStream) throws IOException {
@@ -384,7 +477,7 @@ public class PredictiveIndex {
         try{
             for(int k = 0; k<aux.length; k++) aux[k] = dataStream.readInt();
             counter += 1;
-            if(counter % 200000000 == 0) System.out.println("Up to record #" + (counter));
+            if(counter % 200000000 == 0) System.out.println("Up to postings #" + (counter));
             return aux;
         }catch(EOFException exception){
             System.out.println("Fetching Time: " + (System.currentTimeMillis() - now) + "ms");
@@ -406,7 +499,6 @@ public class PredictiveIndex {
         PrintWriter totalIndexStats = new PrintWriter(path+"/totalStatsLength.csv", "UTF-8");
         int [] lengthStats = new int[5000000];
         long now = System.currentTimeMillis();
-        long percentage;
         DataInputStream dataStream = new DataInputStream( new BufferedInputStream(new FileInputStream("/home/aalto/IdeaProjects/PredictiveIndex/data/dump/sortedInvertedIndex.dat")));
         DataOutputStream outStream = new DataOutputStream( new BufferedOutputStream((new FileOutputStream("/home/aalto/IdeaProjects/PredictiveIndex/data/dump/compressedSortedInvertedIndex.dat"))));
         int [][] invertedIndex = new int[528184109][];
@@ -418,11 +510,7 @@ public class PredictiveIndex {
         while(true){
             aux = getEntry(dataStream);
             if(aux[0] != nowPair[0] | aux[1] != nowPair[1]){
-                if(p % 10000000 == 0){
-                    percentage = (long) (p*100.0)/528184109;
-                    System.out.println("Work in progress: " + percentage+ "% completed.");
-                    //System.out.println("Expected time: " + (System.currentTimeMillis() - now)*(1/10*percentage));
-                }
+                checkProgress(p);
                 if(auxPostingList.size()>maxLength) maxLength = auxPostingList.size();
                 //lengthStats[auxPostingList.size()]++;
                 //invertedIndex[p] = Ints.toArray(auxPostingList);

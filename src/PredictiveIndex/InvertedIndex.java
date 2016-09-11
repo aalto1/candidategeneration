@@ -2,6 +2,7 @@ package PredictiveIndex;
 
 
 import com.google.common.collect.HashBiMap;
+import com.google.common.collect.Sets;
 import it.unimi.dsi.fastutil.Hash;
 
 import com.google.common.collect.BiMap;
@@ -20,6 +21,8 @@ import java.util.zip.GZIPInputStream;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.ThreadLocalRandom;
+
+import static java.util.Arrays.asList;
 
 
 /**
@@ -49,6 +52,9 @@ public class InvertedIndex implements Serializable {
     private int protectList = 0;
     private int lists = 0;
     PrintWriter writer = new PrintWriter(path+"/file.csv", "UTF-8");
+    private int maxBM25 = 0;
+    private int minBM25 =2147388309;
+
 
     //private AppendingObjectOutputStream invertedIndexFile;
     private DataOutputStream invertedIndexFile;
@@ -57,7 +63,7 @@ public class InvertedIndex implements Serializable {
     final private int distance = 5;
     private int pointer = 0;
     //private long [][] buffer = it.unimi.dsi.fastutil.longs.LongBigArrays.newBigArray(50000000);
-    private int [][] buffer = new int[30000000][4];
+    private int [][] buffer = new int[10000000][4];
     private int[] stats;                                       //1-numberofdocs,2-wordcounter,3-unique words
     private int doc;
     private BiMap<String, Integer> termsMap;
@@ -483,7 +489,7 @@ public class InvertedIndex implements Serializable {
         double BM25 = (IDF * f * k + 1) / (f + k * (1 - b * docLen / avg));
         //return (long) (BM25*(Math.pow(10, String.valueOf(BM25).length()-2)));
         //System.out.println(BM25);
-        return (int) (BM25*Math.pow(10, 8));
+        return (int) (BM25*Math.pow(10, 5));
     }
 
     public int getWId(String word) {
@@ -586,9 +592,20 @@ public class InvertedIndex implements Serializable {
         long pair;
         for (int k = 0; k < this.buffer.length; k++) {
             if (this.buffer[k][2] > threshold) {
+                if(maxBM25<this.buffer[k][2]){
+                    maxBM25 = this.buffer[k][2];
+                    for (int i : this.buffer[k]
+                         ) {
+                        System.out.print(i+"-");
+                    }
+                    System.out.println();
+                }
+                else if(minBM25 >this.buffer[k][2]) minBM25= this.buffer[k][2];
                 for (int elem : this.buffer[k]) this.invertedIndexFile.writeInt(elem);
             }
         }
+        System.out.println("Max: "+ maxBM25 +". Min: " + minBM25);
+        maxBM25 = 0;
         System.out.println("Sampled Natural Selection:" + (System.currentTimeMillis() - now) + "ms. Threshold: " + threshold);
         System.out.println("Processing Time:" + (doc / (System.currentTimeMillis() - start)) * 1000 + " doc/s");
     }
@@ -619,7 +636,7 @@ public class InvertedIndex implements Serializable {
         int sampleLength=10000;
         int[] sample = new int[sampleLength];
         for(int k = 0; k<sample.length; k++) {
-            rnd = ThreadLocalRandom.current().nextInt(0, 30000000 + 1);
+            rnd = ThreadLocalRandom.current().nextInt(0, 10000000);
             sample[k] = this.buffer[rnd][2];
             //System.out.println(this.buffer[rnd][2]);
         }

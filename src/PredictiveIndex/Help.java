@@ -13,6 +13,30 @@ public class Help {
     }
 }
 
+
+
+/*
+        IMPORTANT THIS IS THE EFFICINET WAY TO READ THE INVERTED INDEX
+         while((line = br.readLine().split(","))[0] != null){ //**
+            pair = Integer.valueOf(line[0]);
+            byteStream = new byte[Integer.valueOf(line[1])];
+            inStream.read(byteStream);
+            postingList = decodeInterpolate(byteStream);
+            lenBucket = getLenBucket(Integer.valueOf(line[2]), lenRanges);
+            aggregatedTopK = fastQueryTrace.get(pair);
+            for (int i = 0; i < postingList.length ; i += 2) {
+                increment = aggregatedTopK.get(postingList[i]);
+                rankBucket = getRankBucket(rankBucket, postingList[i+1], rankRanges);
+
+                //bucket hit by this posting
+                qualityModel[lenBucket][rankBucket][0] += increment ;
+                for (int j = 0; j < rankBucket+1 ; j++) {
+                    //previous buckets hit by this posting
+                    qualityModel[lenBucket][j][1] += increment;
+                }
+            }
+
+        }*/
       /*
 
           if((rawDoc[i] & 0xff)  >= 128){
