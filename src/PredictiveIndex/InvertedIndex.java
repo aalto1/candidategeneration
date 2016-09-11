@@ -3,9 +3,12 @@ package PredictiveIndex;
 
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Sets;
+import it.unimi.di.big.mg4j.search.score.BM25Scorer;
 import it.unimi.dsi.fastutil.Hash;
 
 import com.google.common.collect.BiMap;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import me.lemire.integercompression.differential.IntegratedByteIntegerCODEC;
 import me.lemire.integercompression.IntWrapper;
@@ -21,6 +24,7 @@ import java.util.zip.GZIPInputStream;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.ThreadLocalRandom;
+import it.unimi.di.big.mg4j.search.score.BM25FScorer;
 
 import static java.util.Arrays.asList;
 
@@ -52,8 +56,8 @@ public class InvertedIndex implements Serializable {
     private int protectList = 0;
     private int lists = 0;
     PrintWriter writer = new PrintWriter(path+"/file.csv", "UTF-8");
-    private int maxBM25 = 0;
-    private int minBM25 =2147388309;
+    private double maxBM25 = 0;
+    private double minBM25 =2147388309;
 
 
     //private AppendingObjectOutputStream invertedIndexFile;
@@ -194,6 +198,7 @@ public class InvertedIndex implements Serializable {
         //this.forwardIndexFile.close();
         //this.savePSMetadata();
         sampledNaturalSelection();
+        System.out.println("Max BM25: " + maxBM25);
         this.invertedIndexFile.close();
         System.exit(1);
     }
@@ -435,24 +440,22 @@ public class InvertedIndex implements Serializable {
         }
     }
 
-    public void bufferedIndex(int[] words, int title, Int2IntMap docStat) throws IOException, ClassNotFoundException, InterruptedException {
+    public void bufferedIndex(int[] words, int title, Int2IntMap freqDocMap) throws IOException, ClassNotFoundException, InterruptedException {
         /* For each document we take the pairs between documents within a distance. We add each entry to a buffer and
         * compute the BM25 for that specific term-pair*/
 
         int f1;
         int f2;
         wordsCount += words.length;
-        HashSet<Long> auxPair = new HashSet<>();
+        LongSet auxPair = new LongOpenHashSet();
         //words = new int [] {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
-        long pairID;
         for (int wIx = 0; wIx < words.length - this.distance; wIx++) {
             for (int dIx = wIx+1; dIx < wIx + this.distance; dIx++) {
                 int [] pair = {words[wIx], words[dIx]};
                 Arrays.sort(pair);
-                f1 = getTermFreq(docStat, pair[0]);
-                f2 = getTermFreq(docStat, pair[1]);
-                pairID = Long.parseLong(pair[0] +""+ pair[1]);
-                if(auxPair.add(pairID) == true) {
+                f1 = freqDocMap.get(pair[0]);   //getTermFreq(docStat, pair[0]);
+                f2 = freqDocMap.get(pair[1]);   //getTermFreq(docStat, pair[1]);
+                if(auxPair.add(getPair(pair[0], pair[1]))) {
                     //System.out.println("pointer "+pointer+". doc "+ doc);
                     this.buffer[pointer] = new int[]{pair[0], pair[1], getBM25(pair[0], words.length, f1) + getBM25(pair[1], words.length, f2), title};
                     if (pointer == buffer.length - 1){
@@ -486,10 +489,10 @@ public class InvertedIndex implements Serializable {
         double k = 1.6;
         double b = 0.75;
         double IDF = java.lang.Math.log((N - n + 0.5 )/( n + 0.5));
-        double BM25 = (IDF * f * k + 1) / (f + k * (1 - b * docLen / avg));
+        double BM25 = (IDF * f * k + 1) / (f + k * (1 - b + (b* docLen / avg)));
         //return (long) (BM25*(Math.pow(10, String.valueOf(BM25).length()-2)));
         //System.out.println(BM25);
-        return (int) (BM25*Math.pow(10, 5));
+        return (int) (BM25*Math.pow(10, 8));
     }
 
     public int getWId(String word) {
@@ -592,20 +595,11 @@ public class InvertedIndex implements Serializable {
         long pair;
         for (int k = 0; k < this.buffer.length; k++) {
             if (this.buffer[k][2] > threshold) {
-                if(maxBM25<this.buffer[k][2]){
-                    maxBM25 = this.buffer[k][2];
-                    for (int i : this.buffer[k]
-                         ) {
-                        System.out.print(i+"-");
-                    }
-                    System.out.println();
-                }
-                else if(minBM25 >this.buffer[k][2]) minBM25= this.buffer[k][2];
+                if(maxBM25<this.buffer[k][2]) maxBM25 = this.buffer[k][2];
+
                 for (int elem : this.buffer[k]) this.invertedIndexFile.writeInt(elem);
             }
         }
-        System.out.println("Max: "+ maxBM25 +". Min: " + minBM25);
-        maxBM25 = 0;
         System.out.println("Sampled Natural Selection:" + (System.currentTimeMillis() - now) + "ms. Threshold: " + threshold);
         System.out.println("Processing Time:" + (doc / (System.currentTimeMillis() - start)) * 1000 + " doc/s");
     }

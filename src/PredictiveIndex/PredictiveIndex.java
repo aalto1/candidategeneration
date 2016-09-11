@@ -43,7 +43,13 @@ public class PredictiveIndex {
     private static Object2IntMap<String> termMap;
     private static Int2ObjectOpenHashMap<String> termMap2;
 
+    public static void stemma(){
+        KrovetzStemmer s = new KrovetzStemmer();
+        System.out.println(s.stem("cards"));
+    }
 
+
+    /*/home/aalto/IdeaProjects/PredictiveIndex/aux/sort/bin/binsort --size 16 --length 12 --block-size=900000000  ./InvertedIndex.dat ./sortedInvertedIndex.dat*/
     public static void main(String [] args) throws IOException, ClassNotFoundException, InterruptedException {
         /*We get the global statistics of the collection (fetch from memory if present, compute them if the opposite)
         * and than build the pair-distance from memory.*/
@@ -53,11 +59,12 @@ public class PredictiveIndex {
         //read();
         //fetchInvertedIndex();
         //getBucketsRanges(1.1,1.4);
-        fetchTermMap();
-        buildFastQueryTrace();
+        //fetchTermMap();
+        //buildFastQueryTrace();
         //metodo();
-        //getQualityModel();
+        getQualityModel();
         //uniquePairs();
+        //stemma();
         System.exit(1);
 
         String data = "/home/aalto/dio/docInfo";
@@ -100,8 +107,6 @@ public class PredictiveIndex {
         System.exit(1);
     }
 
-
-
     public static void uniquePairs() throws IOException{
         Long2IntMap map = new Long2IntOpenHashMap();
         BufferedReader br = new BufferedReader(new FileReader("/home/aalto/dio/query/Q/million09_training"));
@@ -120,7 +125,10 @@ public class PredictiveIndex {
 
     }
 
+    /*Fetching termID-term Map*/
+
     private static void fetchTermMap2() throws IOException {
+        System.out.println("Fetching TermID-Term map...");
         BufferedReader br = new BufferedReader( new FileReader("/home/aalto/dio/termIDs"));
         //BiMap termMap = HashBiMap.create();
         //Map<String, Integer> termMap = HashObjIntMaps.newMutableMap();
@@ -134,10 +142,13 @@ public class PredictiveIndex {
             k++;
             if(k % 10000000 == 0) System.out.println(k);
         }
-        System.out.println("Map Completed.");
+        System.out.println("Map Completed!");
     }
 
+    /*Fetching term-termID Map*/
+
     private static void fetchTermMap() throws IOException {
+        System.out.println("Fetching Term-TermID map...");
         BufferedReader br = new BufferedReader( new FileReader("/home/aalto/dio/termIDs"));
         //BiMap termMap = HashBiMap.create();
         //Map<String, Integer> termMap = HashObjIntMaps.newMutableMap();
@@ -152,7 +163,7 @@ public class PredictiveIndex {
             if(k % 10000000 == 0) System.out.println(k);
             k++;
         }
-        System.out.println("Map Completed.");
+        System.out.println("Map fetched!");
     }
 
     private static void getTermMap() throws IOException, ClassNotFoundException {
@@ -236,7 +247,7 @@ public class PredictiveIndex {
             stemmedTerm = stemmer.stem(queryTerms[i]);
             //termID = termMap.get(stemmedTerm);
             //queryInt.add(termID);
-            if(termMap.get(stemmedTerm)==null) System.out.println(stemmedTerm+"-"+queryTerms[i]);
+            if(termMap.get(stemmedTerm)!=null) queryInt.add(termMap.get(stemmedTerm));//System.out.println(stemmedTerm+"-"+queryTerms[i]);
         }
         //We take every combination of our query terms. We save them in a long array using bit-shifting
         return getCombinations(queryInt,2);
@@ -330,7 +341,7 @@ public class PredictiveIndex {
     private static int[] computerRanges(double rankRule){
         rankRule = 1.4;
         LinkedList<Integer> rankBuckets = new LinkedList<>();
-        for (int i = 11; i < 2147388309 ; i += i*rankRule) {
+        for (int i = 11; i < 108246173 ; i += i*rankRule) {
             rankBuckets.addLast(i);
         }
         return Ints.toArray(rankBuckets);
@@ -379,7 +390,9 @@ public class PredictiveIndex {
         int [][][] qualityModel = new int[lRanges.length][rRanges.length][2];
         //BufferedReader br = new BufferedReader(new FileReader("readIndexInfo"));
         DataInputStream inStream = new DataInputStream( new BufferedInputStream(new FileInputStream(dPath + "/InvertedIndex.dat")));
+        System.out.println("Fetching Fast Query Trace...");
         ObjectInputStream obInStream = new ObjectInputStream(new FileInputStream(metadata+"fastQueryTrace.bin"));
+        System.out.println("Fast Query Trace fetched!\nProcessing Inverted Index...");
         HashMap<Long, HashMap<Integer, Integer>> fastQueryTrace = (HashMap<Long, HashMap<Integer, Integer>>) obInStream.readObject(); //conversion seems to work
         LinkedList<Integer> auxPostingList = new LinkedList<>();
         auxPostingList.add(3);
@@ -398,12 +411,13 @@ public class PredictiveIndex {
             posting = getEntry(inStream);
             if(posting[0] ==-1) break;
             if(posting[0] != currentPair[0] | posting[1] != currentPair[1]){
-                if(maxBM25<posting[2]) maxBM25 = posting[2];
+
+                /*if(maxBM25<posting[2]) maxBM25 = posting[2];
                 else if(minBM25 >posting[2]) minBM25= posting[2];
-                if(auxPostingList.size()>maxLength) maxLength = auxPostingList.size();
+                if(auxPostingList.size()>maxLength) maxLength = auxPostingList.size();*/
 
                 if(fastQueryTrace.get(getPair(currentPair[0], currentPair[1]))!=null){
-                    //System.out.println(fastQueryTrace.get(getPair(currentPair[0], currentPair[1]))+"");
+                    //System.out.println(fastQueryTrace.get(getPair(currentPair[0], currentPair[1])).size());
                     processPostingList(Ints.toArray(auxPostingList), qualityModel, fastQueryTrace.get(getPair(currentPair[0], currentPair[1])), rRanges, lRanges, hit);
                 }
                 //System.out.println(fastQueryTrace.keySet().size());
@@ -414,8 +428,8 @@ public class PredictiveIndex {
                 currentPair[1]= posting[1];
 
             }
-            auxPostingList.addLast(posting[3]); //docid
             auxPostingList.addLast(posting[2]); //BM25
+            auxPostingList.addLast(posting[3]); //docid
         }
         /*while((line = br.readLine().split(","))[0] != null){ //**
             pair = Integer.valueOf(line[0]);
@@ -447,12 +461,16 @@ public class PredictiveIndex {
     private static void processPostingList(int [] postingList, int[][][] qualityModel, HashMap<Integer, Integer> aggregatedTopK, int [] rRanges, int [] lRanges , int hit){
         int lenBucket = getLenBucket(postingList.length, lRanges);
         int rankBucket = 0;
+        int score;
+        int term;
         for (int i = 0; i < postingList.length ; i += 2) {
             try {
-                int increment = aggregatedTopK.get(postingList[i]);
+                score = postingList[i];
+                term = postingList[i+1];
+                int increment = aggregatedTopK.get(term);
+                //System.out.println(hit);
                 hit++;
-                System.out.println(hit);
-                rankBucket = getRankBucket(rankBucket, postingList[i + 1], rRanges);
+                rankBucket = getRankBucket(rankBucket, score, rRanges);
                 //bucket hit by this posting
                 qualityModel[lenBucket][rankBucket][0] += increment;
                 for (int j = 0; j < rankBucket + 1; j++) {
@@ -460,6 +478,7 @@ public class PredictiveIndex {
                     qualityModel[lenBucket][j][1] += increment;
                 }
             }catch (NullPointerException ex){
+                //System.out.println(ex.getMessage());
             }
         }
     }
