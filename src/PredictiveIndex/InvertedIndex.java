@@ -33,13 +33,13 @@ public class InvertedIndex implements Serializable {
     static private double maxBM25 = 0;
     static private double minBM25 =2147388309;
     public static int totNumDocs = 50220423;
-    static final int testLimit = (int) (1*Math.pow(10,5));
-    static final int bufferSize = (int) (5*Math.pow(10,6));
+    static final int testLimit = (int) (5*Math.pow(10,6));
+    static final int bufferSize = (int) (1*Math.pow(10,7));
 
 
     private DataOutputStream invertedIndexFile;
     private ObjectOutputStream forwardIndexFile;
-    final private int distance = 5;
+    final private int distance = 10;
     private int pointer = 0;
     private int [][] buffer;
     private int[] globalStats;                                     //1-numberofdocs,2-wordcounter,3-unique words
@@ -75,23 +75,23 @@ public class InvertedIndex implements Serializable {
         int [] document;
         while(line[0] != null & checkProgress(doc, totNumDocs, 500000, start, testLimit)){
             document = readClueWebDocument(line, stream);
-            storeMetadata(document);
+            storeMetadata(document, Integer.parseInt(line[1]));
             line = br.readLine().split(" ");
             doc++;
         }
 
         serialize(this.globalFreqMap, fPath);
         serialize(this.globalStats, sPath);
-        this.invertedIndexFile.close();
         this.forwardIndexFile.close();
         System.out.println("ClueWeb09 global statistics collected!");
 
     }
 
-    private void storeMetadata(int [] words) throws IOException {
+    private void storeMetadata(int [] words, int docID) throws IOException {
         /*this function process the single wrac files */
         Int2IntMap position = new Int2IntOpenHashMap();
-        for (int k = 0; k<words.length-1; k++) {
+        int multipleOccurece = 0;
+        for (int k = 0; k<words.length; k++) {
             if (position.putIfAbsent(words[k], 1) == null){
                 if(this.globalFreqMap.putIfAbsent(words[k], 1)!=null) {
                     this.globalFreqMap.merge(words[k], 1, Integer::sum);
@@ -99,9 +99,11 @@ public class InvertedIndex implements Serializable {
                 }
             }else{
                 position.merge(words[k], 1, Integer::sum);
+                if(position.get(words[k]) ==2) multipleOccurece++;
             }
         }
-        this.forwardIndexFile.writeObject(hashMapToArray(position));
+        //System.out.print("Removed " + docID + "\t" + (position.keySet().size()-multipleOccurece));
+        this.forwardIndexFile.writeObject(hashMapToArray(position, multipleOccurece));
         this.globalStats[0]++;
         this.globalStats[1]+= words.length;
     }
@@ -136,19 +138,24 @@ public class InvertedIndex implements Serializable {
         wordsCount += words.length;
         int score1;
         int score2;
+        int ones=0;
+        int movingDistance = distance;
         LongSet auxPair = new LongOpenHashSet();
-        for (int wIx = 0; wIx < words.length - this.distance; wIx++) {
-            for (int dIx = wIx+1; dIx < wIx + this.distance; dIx++) {
+        for (int wIx = 0; wIx < words.length; wIx++) {
+            if(words.length - wIx < distance) movingDistance = (words.length - wIx);
+            for (int dIx = wIx+1; dIx < wIx + movingDistance; dIx++) {
                 int [] pair = {words[wIx], words[dIx]};
                 Arrays.sort(pair);
                 if(auxPair.add(getPair(pair[0], pair[1]))) {
+
                     score1 = getBM25(globalStats, words.length, getLocalFreq(localFreqMap, pair[0]), globalFreqMap.get(pair[0]));
                     score2 = getBM25(globalStats, words.length, getLocalFreq(localFreqMap, pair[1]), globalFreqMap.get(pair[1]));
                     this.buffer[pointer] = new int[]{pair[0], pair[1], score1+score2, title};
                     checkBuffer();
                 }
-            }
+            }//if(getLocalFreq(localFreqMap, words[wIx])==1) ones++;
         }
+        //System.out.println("Ones: " +title+ "\t" + ones);
     }
 
     private static int getLocalFreq(Int2IntMap docStat, int termID){
@@ -199,7 +206,8 @@ public class InvertedIndex implements Serializable {
                 for (int elem : this.buffer[k]) this.invertedIndexFile.writeInt(elem);
             }
         }
-        System.out.println("Sampled Natural Selection:" + (System.currentTimeMillis() - now) + "ms. Threshold: " + threshold);
+        System.out.println("Sampled Natural Selection:" + (System.currentTimeMillis() - now) + "ms.\tThreshold: " + threshold +"\t MaxBM25: " + maxBM25);
+        maxBM25 = 0;
         System.out.println("Processing Time:" + (doc / (System.currentTimeMillis() - start)) * 1000 + " doc/s");
     }
 

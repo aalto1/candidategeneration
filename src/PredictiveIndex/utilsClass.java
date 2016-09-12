@@ -19,27 +19,34 @@ class utilsClass {
         return decodeRawDoc(rawDoc, Integer.parseInt(line[4]));
     }
 
+    protected static int getBM25(int [] globalStats, int docLen, int f, int n) {
+        /*global statistics for BM25*/
+        int N = globalStats[0];
+        double avg = globalStats[1] / N;
+        double k = 1.6;
+        double b = 0.75;
+        double IDF = java.lang.Math.log((N - n + 0.5 )/( n + 0.5));
+        double BM25 = (IDF * f * k + 1) / (f + k * (1 - b + (b* docLen / avg)));
+        //if(BM25>100) System.out.println(BM25);
+        return (int) (BM25*Math.pow(10, 7));
+    }
 
 
-    static int [] hashMapToArray(Int2IntMap map){
+    static int [] hashMapToArray(Int2IntMap map, int multipleOccurence){
         /*This function convert an HashMap to an 1d array with the dimension doubled respect to the key-value pairs
         * with a value bigger than one*/
 
-        int [] array = new int[map.size()*2];
+        int [] array = new int[multipleOccurence*2];
         int value;
         int k = 0;
-        int ones =0;
         for(int key : map.keySet()){
             value = map.get(key);
             if((value)>1){                          //becasue we want to reduce the overhead (20% space saved per dump)
                 array[k*2] = key;
                 array[k*2+1] = value;
                 k++;
-            }else{
-                ones++;
             }
         }
-        System.out.println(ones);
         return Arrays.copyOf(array, k*2+1);
     }
 
@@ -48,8 +55,8 @@ class utilsClass {
         * term within a doc*/
 
         Int2IntMap map = new Int2IntOpenHashMap();
-        for(int k = 0; k<array.length; k+=2){
-            map.put(k, k+1);
+        for(int k = 0; k<array.length-1; k+=2){
+            map.put(array[k], array[k+1]);
         }
         return map;
     }
@@ -110,7 +117,7 @@ class utilsClass {
         if(p % rate == 0){
             int percentage = (int) (p*100.0)/max;
             System.out.println("Work in progress: " + percentage+ "%\tProcessing Time: " + (p / (System.currentTimeMillis() - start)) * 1000 + "doc/s. \tProcessed: " +p);
-            System.out.println("Expected Remaining Time: "+ (((System.currentTimeMillis() - start)/percentage)*(7-percentage))/60000 + " minutes");
+            System.out.println("Expected Remaining Time: "+ (((System.currentTimeMillis() - start)/percentage)*(10-percentage))/60000 + " minutes");
             //System.out.println("Expected time: " + (System.currentTimeMillis() - now)*(1/10*percentage));
         }
         if(p>limit) return false;
@@ -137,18 +144,7 @@ class utilsClass {
         return numbers;
     }
 
-    protected static int getBM25(int [] globalStats, int docLen, int f, int n) {
-        /*global statistics for BM25*/
-        int N = globalStats[0];
-        double avg = globalStats[1] / N;
-        double k = 1.6;
-        double b = 0.75;
-        double IDF = java.lang.Math.log((N - n + 0.5 )/( n + 0.5));
-        double BM25 = (IDF * f * k + 1) / (f + k * (1 - b + (b* docLen / avg)));
-        //System.out.println(N + "\t" +n+ "\t" +avg+ "\t" +IDF+ "\t" +BM25);
-        System.out.println(f);
-        return (int) (BM25*Math.pow(10, 8));
-    }
+
 
 
 }
