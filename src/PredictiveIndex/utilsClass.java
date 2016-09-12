@@ -11,6 +11,16 @@ import java.util.Arrays;
  */
 class utilsClass {
 
+    static int[] readClueWebDocument(String [] line, DataInputStream stream) throws IOException {
+        byte [] rawDoc = new byte[Integer.parseInt(line[3])];
+        for (int i = 0; i < rawDoc.length; i++) {
+            rawDoc[i] = stream.readByte();
+        }
+        return decodeRawDoc(rawDoc, Integer.parseInt(line[4]));
+    }
+
+
+
     static int [] hashMapToArray(Int2IntMap map){
         /*This function convert an HashMap to an 1d array with the dimension doubled respect to the key-value pairs
         * with a value bigger than one*/
@@ -18,14 +28,18 @@ class utilsClass {
         int [] array = new int[map.size()*2];
         int value;
         int k = 0;
+        int ones =0;
         for(int key : map.keySet()){
             value = map.get(key);
             if((value)>1){                          //becasue we want to reduce the overhead (20% space saved per dump)
                 array[k*2] = key;
                 array[k*2+1] = value;
                 k++;
+            }else{
+                ones++;
             }
         }
+        System.out.println(ones);
         return Arrays.copyOf(array, k*2+1);
     }
 
@@ -51,16 +65,14 @@ class utilsClass {
     }
 
     static ObjectInputStream getOIStream(String filename, boolean buffered) throws IOException {
-        ObjectInputStream OIStream;
-        if(buffered) return new ObjectInputStream(new FileInputStream(filename));
-        else return new ObjectInputStream( new BufferedInputStream(new FileInputStream(filename)));
+        if(buffered) return new ObjectInputStream(new FileInputStream(filename+".bin"));
+        else return new ObjectInputStream( new BufferedInputStream(new FileInputStream(filename+".bin")));
 
     }
 
     static ObjectOutputStream getOOStream(String filename, boolean buffered) throws IOException {
-        ObjectOutputStream IIStream;
-        if(buffered) return new ObjectOutputStream(new FileOutputStream(filename));
-        else return new ObjectOutputStream( new BufferedOutputStream(new FileOutputStream(filename)));
+        if(buffered) return new ObjectOutputStream(new FileOutputStream(filename+".bin"));
+        else return new ObjectOutputStream( new BufferedOutputStream(new FileOutputStream(filename+".bin")));
     }
 
     static void serialize(Object e, String filename) {
@@ -77,10 +89,10 @@ class utilsClass {
         System.out.print("Fetching: " + file + "...");
         Object e = null;
         try {
-            ObjectInputStream OIStream = getOIStream(file+".bin", true);
+            ObjectInputStream OIStream = getOIStream(file, true);
             e = OIStream.readObject();
             OIStream.close();
-            System.out.println(" fetched!");
+            System.out.println("\tfetched!");
             return e;
         } catch (IOException i) {
             i.printStackTrace();
@@ -94,13 +106,15 @@ class utilsClass {
     /*528184109
     * #documnets: 50220423
     * rate: 10000000*/
-    static void checkProgress(int p, int max, int rate, double start){
+    static boolean checkProgress(int p, int max, int rate, double start, int limit){
         if(p % rate == 0){
             int percentage = (int) (p*100.0)/max;
             System.out.println("Work in progress: " + percentage+ "%\tProcessing Time: " + (p / (System.currentTimeMillis() - start)) * 1000 + "doc/s. \tProcessed: " +p);
             System.out.println("Expected Remaining Time: "+ (((System.currentTimeMillis() - start)/percentage)*(7-percentage))/60000 + " minutes");
             //System.out.println("Expected time: " + (System.currentTimeMillis() - now)*(1/10*percentage));
         }
+        if(p>limit) return false;
+        else return true;
     }
 
     /*0xff = 255 = 11111111 = u-byte*/
@@ -121,6 +135,19 @@ class utilsClass {
             }
         }
         return numbers;
+    }
+
+    protected static int getBM25(int [] globalStats, int docLen, int f, int n) {
+        /*global statistics for BM25*/
+        int N = globalStats[0];
+        double avg = globalStats[1] / N;
+        double k = 1.6;
+        double b = 0.75;
+        double IDF = java.lang.Math.log((N - n + 0.5 )/( n + 0.5));
+        double BM25 = (IDF * f * k + 1) / (f + k * (1 - b + (b* docLen / avg)));
+        //System.out.println(N + "\t" +n+ "\t" +avg+ "\t" +IDF+ "\t" +BM25);
+        System.out.println(f);
+        return (int) (BM25*Math.pow(10, 8));
     }
 
 

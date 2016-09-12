@@ -55,25 +55,26 @@ public class PredictiveIndex {
     public static void main(String [] args) throws IOException, ClassNotFoundException, InterruptedException {
         /*We get the global statistics of the collection (fetch from memory if present, compute them if the opposite)
         * and than build the pair-distance from memory.*/
-        //fetchTermMap();
-        //buildFastQueryTrace();
-        getQualityModel();
-        System.exit(1);
 
-        String data = "/home/aalto/dio/docInfo";
+        //getQualityModel();
+        //System.exit(1);
+
+        String info = "/home/aalto/dio/docInfo";
         InvertedIndex ps;
 
 
         if (Files.exists(Paths.get(fPath+".bin"))) {
-            System.out.println("Deserializing Predictive Inverted...");
             ps = new InvertedIndex((Int2IntMap) deserialize(fPath), (int[]) deserialize(sPath));
-            System.out.println("Predictive Index Deserialized");
         }else {
             ps = new InvertedIndex();
-            ps.readClueWeb(data);
+            ps.getClueWebMetadata(info);
         }
         //ps.threads();
-        ps.readClueWeb(data);
+        ps.doc = 0;
+        ps.buildDBigramInvertedIndex(info);
+        //fetchTermMap();
+        //buildFastQueryTrace();
+
     }
 
 

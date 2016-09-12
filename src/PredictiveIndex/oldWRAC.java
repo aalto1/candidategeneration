@@ -35,6 +35,7 @@ import com.google.common.collect.HashBiMap;
 
 public class oldWRAC{
     /*
+
     static double deserializeTime = 0;
     static final int min = 50;
     static final int max = 500;
@@ -45,6 +46,46 @@ public class oldWRAC{
     private int protectList = 0;
     private int lists = 0;
     PrintWriter writer = new PrintWriter(path+"/file.csv", "UTF-8");
+
+
+    protected void readClueWeb(String data) throws IOException, ClassNotFoundException, InterruptedException {
+        start = System.currentTimeMillis();
+        ObjectInputStream OIStream = getOIStream(fIndexPath + "/forwardIndexMetadata" , true);
+        DataInputStream stream = new DataInputStream( new BufferedInputStream( new FileInputStream("/home/aalto/dio/compressedIndex")));
+        BufferedReader br = new BufferedReader(new FileReader(data));
+        String[] line = br.readLine().split(" ");
+        byte [] rawDoc;
+        int docID;
+        int b2read;
+        int docLen;
+        int [] document;
+        while(line[0] != null & checkProgress(doc, totNumDocs, 500000, start, 2)){
+
+            docID = Integer.parseInt(line[1]);
+            b2read= Integer.parseInt(line[3]);
+            docLen= Integer.parseInt(line[4]);
+            rawDoc = new byte[b2read];
+            for (int i = 0; i < rawDoc.length; i++) {
+                rawDoc[i] = stream.readByte();
+            }
+            document = decodeRawDoc(rawDoc, docLen);
+
+            //storeMetadata(document);
+            bufferedIndex(document, docID, arrayToHashMap((int[])  OIStream.readObject()));
+
+            line = br.readLine().split(" ");
+            doc++;
+        }
+
+        //serialize(this.freqTermDoc, fPath);
+        //serialize(this.stats, sPath);
+        //sampledNaturalSelection();
+        this.invertedIndexFile.close();
+        this.forwardIndexFile.close();
+        System.out.println(this.stats[0]);
+        System.out.println("Max BM25: " + maxBM25);
+        System.exit(1);
+    }
 
     public void getCollectionMetadata(String data) throws IOException {
         doc = 0;
