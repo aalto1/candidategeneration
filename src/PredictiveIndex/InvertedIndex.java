@@ -199,12 +199,28 @@ public class InvertedIndex implements Serializable {
         now = System.currentTimeMillis();
         int threshold = getThreshold();
         long pair;
+        int keep = 0;
         for (int k = 0; k < this.buffer.length; k++) {
             if (this.buffer[k][2] > threshold) {
+                this.buffer[keep] = this.buffer[k];
+                //for (int elem : this.buffer[k]) this.invertedIndexFile.writeInt(elem);
                 if(maxBM25<this.buffer[k][2]) maxBM25 = this.buffer[k][2];
-
-                for (int elem : this.buffer[k]) this.invertedIndexFile.writeInt(elem);
+                keep++;
             }
+        }
+        java.util.Arrays.parallelSort(this.buffer,0, keep, new Comparator<int[]>() {
+            @Override
+            public int compare(int[] int1, int[] int2) {
+                //if we have the same doc ids sort them based on the bm25
+                if (int1[0] == int2[0]) {
+                    if(int1[1] == int2[1]){
+                        return Integer.compare(int1[2], int2[2]) * -1;
+                    }else return Integer.compare(int1[1], int2[1]);
+                } else return Integer.compare(int1[0], int2[0]);
+            }
+        });
+        for (int k = 0; k < keep; k++) {
+            for (int elem : this.buffer[k]) this.invertedIndexFile.writeInt(elem);
         }
         System.out.println("Sampled Natural Selection:" + (System.currentTimeMillis() - now) + "ms.\tThreshold: " + threshold +"\t MaxBM25: " + maxBM25);
         maxBM25 = 0;

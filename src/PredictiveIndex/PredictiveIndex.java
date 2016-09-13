@@ -4,6 +4,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+
 import com.google.common.primitives.Ints;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
@@ -15,9 +16,11 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import org.lemurproject.kstem.KrovetzStemmer;
 import static PredictiveIndex.InvertedIndex.*;
+import com.google.code.externalsorting.*;
 import static PredictiveIndex.VariableByteCode.encodeInterpolate;
 
 import static PredictiveIndex.utilsClass.*;
+import static PredictiveIndex.ExternalSort.*;
 
 import org.lemurproject.kstem.Stemmer;
 import sun.nio.cs.Surrogate;
@@ -59,7 +62,13 @@ public class PredictiveIndex {
         //fetchTermMap();
         //buildFastQueryTrace();
         //getQualityModel();
+        //binaryMassiveSort(dPath + "/InvertedIndex.bin", dPath + "/tmp/", (int) (5*Math.pow(10,9)));
+        readFiles(new File("/home/aalto/IdeaProjects/PredictiveIndex/data/dump/tmp/"), "/home/aalto/IdeaProjects/PredictiveIndex/data/dump/sortedInvertedIndex.bin");
         //System.exit(1);
+
+        File f = new File("/file/to/sort");
+
+        System.exit(1);
 
         String info = "/home/aalto/dio/docInfo";
         InvertedIndex ps;

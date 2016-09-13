@@ -66,11 +66,29 @@ public class Help {
       THIS CODE IS A BENCHMARK FOR SORTING ALGORITHMS OF RANDOM ARRAYS
 
       public static void superMagic(){
-        LinkedList<int[]> prova = new LinkedList<>();
-        prova.add(new int[]{1,2});
-        for (int i : prova.getFirst()) {
-            System.out.print(i);
+        float[][] kickerNumbers = new float[50000000][4];
+        for (int i = 0; i < kickerNumbers.length; i++) {
+            for (int j = 0; j < kickerNumbers[0].length ; j++) {
+                kickerNumbers[i][j] = (float) Math.random();
+            }
         }
+        long now = System.currentTimeMillis();
+        java.util.Arrays.parallelSort(kickerNumbers, new Comparator<float[]>() {
+            @Override
+            public int compare(float[] int1, float[] int2) {
+                //if we have the same doc ids sort them based on the bm25
+                if (int1[0] == int2[0]) {
+                    if(int1[1] == int2[1]){
+                            return Float.compare(int1[2], int2[2]) * -1;
+                    }else return Float.compare(int1[1], int2[1]);
+                } else return Float.compare(int1[0], int2[0]);
+            }
+        });
+        System.out.print(System.currentTimeMillis() - now);
+        System.exit(1);
+    }
+
+    public static void superMagic2(){
         double[][] kickerNumbers = new double[50000000][2];
         for (int i = 0; i < kickerNumbers.length; i++) {
             for (int j = 0; j < kickerNumbers[0].length ; j++) {
@@ -78,7 +96,7 @@ public class Help {
             }
         }
         long now = System.currentTimeMillis();
-        java.util.Arrays.sort(kickerNumbers, new Comparator<double[]>() {
+        java.util.Arrays.parallelSort(kickerNumbers, new Comparator<double[]>() {
             @Override
             public int compare(double[] int1, double[] int2) {
                 //if we have the same doc ids sort them based on the bm25
