@@ -1,5 +1,8 @@
 package PredictiveIndex;
 
+import it.unimi.dsi.fastutil.ints.Int2LongOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+
 import java.io.*;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -124,6 +127,7 @@ public class ExternalSort {
         System.arraycopy(a, i, answer, k, (a.length -i));
         System.arraycopy(b, j, answer, k, (b.length -j));
         //if(step == 1) for (long  [] z : answer) System.out.print(z[1]);
+        //System.out.println("Last Element: " + answer[answer.length-1][0]);
         return answer;
     }
 
@@ -133,15 +137,18 @@ public class ExternalSort {
         LinkedList<long[][]> LL = new LinkedList<>();
         File [] files = folder.listFiles();
         DataOutputStream DOStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(output, true)));
-        int section =  50000000/(files.length+2);
-        long [][] bucketsAux = new long[section][2];
+        long [][] bucketsAux;
         LinkedList<DataInputStream> DIStreams = new LinkedList<>();
         for(int k =0; k< files.length; k++){
             DIStreams.addLast(new DataInputStream(new BufferedInputStream(new FileInputStream(files[k]))));
         }
+        Int2ObjectOpenHashMap<long[]> buffer = new Int2ObjectOpenHashMap<>();
+        buffer.defaultReturnValue(null);
         int step = 0;
-        long buffLong;
+        long [] buffLong;
+        int dumps =0;
         while(DIStreams.size()>1) {
+            int section =  50000000/(files.length+2);
             System.out.print("Loading data...");
             partialNow = System.currentTimeMillis();
             for (int i = 0; i < DIStreams.size(); i++ ) {
@@ -149,25 +156,37 @@ public class ExternalSort {
                 bucketsAux = new long[section][2];
                 for (int z = 0; z < section; z++) {
                     try{
-                        //bucketsAux[z][0] = DIStreams.get(i).readLong();
-                        buffLong = DIStreams.get(i).readLong();
-                        if(buffLong<maxData){
-                            bucketsAux[z][0] = buffLong;
+                        buffLong = buffer.get(i);
+                        if(buffLong == null){
+                            buffLong = new long[]{DIStreams.get(i).readLong(),DIStreams.get(i).readLong()};
+                        } else buffer.remove(i);
+                        if(buffLong[0]<=maxData){
+                            bucketsAux[z] = buffLong;
                         } else{
-                            bucketsAux = Arrays.copyOfRange(bucketsAux,0,z);
+                            buffer.put(i,buffLong);
+                            if(z!=0)
+                                bucketsAux = Arrays.copyOfRange(bucketsAux,0,z-1);
+                            else
+                                bucketsAux = null;
                             break;
                         }
-                        bucketsAux[z][1] = DIStreams.get(i).readLong();
                     }catch (EOFException e){
-                        bucketsAux = Arrays.copyOfRange(bucketsAux,0,z);
+                        if(z!=0) bucketsAux = Arrays.copyOfRange(bucketsAux,0,z-1);
+                        else  bucketsAux = null;
                         DIStreams.remove(i);
-                        System.out.println("List removed.");
+                        System.out.println(" - List " + i + " Removed -");
                         i--;
-                        if(i==-1) break;
+                        break;
                     }
                 }
-                LL.addLast(bucketsAux);
-                if(i == 0) maxData = bucketsAux[bucketsAux.length-1][0];
+                if(bucketsAux!=null){
+                    LL.addLast(bucketsAux);
+                    if(i == 0){
+                        if(bucketsAux[bucketsAux.length-1] != null) maxData = bucketsAux[bucketsAux.length-1][0];
+                        section= section*2;
+                    }
+                }
+
                 //System.out.println("-"+maxData+"-");
             }maxData = Long.MAX_VALUE;
             System.out.println("\t done: " + (System.currentTimeMillis() - partialNow)/1000 + "s");
@@ -181,48 +200,94 @@ public class ExternalSort {
                 LL.removeFirst();
                 LL.removeFirst();
             }
-            if(LL.size() ==2)
+            if(LL.size()==2)
                 writeMergeSortedMatrix(LL.get(0), LL.get(1), DOStream);
-            else
+            else if(LL.size() == 1){
                 for (long [] auxArr :LL.get(0)) for (long auxLong : auxArr) DOStream.writeLong(auxLong);
+            }
             LL.clear();
             System.out.println("\t done: " + (System.currentTimeMillis() - partialNow)/1000 + "s");
+            //if(dumps==3) break;
+            //else  dumps++;
             }
         DOStream.close();
     }
 
     public static void writeMergeSortedMatrix(long[][] a, long[][] b, DataOutputStream DOOStream) throws IOException {
         //for (long[] z : a)  System.out.println(z[0]);
+        //System.out.println(a.length+"-"+b.length);
         int i = 0, j = 0;
         while (i < a.length && j < b.length) {
             if (comp.compare(a[i], b[j])<0){
+                if(i==0 && j ==0) System.out.print("\t\tFirst Element: " + a[i][0]);
                 DOOStream.writeLong(a[i][0]);
                 DOOStream.writeLong(a[i++][1]);
             }
             else{
+                if(i==0 && j ==0) System.out.print("\t\tFirst Element: " + a[j][0]);
                 DOOStream.writeLong(b[j][0]);
                 DOOStream.writeLong(b[j++][1]);
             }
         }
         while (i < a.length){
+            if(i==a.length-1) System.out.print("\tLast Element:" + a[i][0]);
+            //System.out.println(i +" i - length" + a.length);
             DOOStream.writeLong(a[i][0]);
             DOOStream.writeLong(a[i++][1]);
         }
         while (j < b.length) {
+            //System.out.println(j +" j - lenght" + b.length);
+            if(j==b.length-1) System.out.print("\tLast Element:" + b[j][0]);
             DOOStream.writeLong(b[j][0]);
             DOOStream.writeLong(b[j++][1]);
         }
     }
 
     static void testMassiveBinaryMerge() throws IOException {
+        System.out.println("Testing...");
         DataInputStream DIStream= new DataInputStream(new BufferedInputStream(new FileInputStream("/home/aalto/IdeaProjects/PredictiveIndex/data/dump/sortedInvertedIndex.bin")));
-        long  uno =0;
-        long due = 0;
-        while(true){
-            uno = DIStream.readLong();
-            if(due-uno>0) System.out.println(due-uno+" - "+DIStream.readLong());
-            else DIStream.readLong();
-            due = uno;
+        long  nuovo;
+        long vecchio = 0;
+        long i;
+        for(i =0; true; i++){
+            try {
+                nuovo = DIStream.readLong();
+                if(vecchio-nuovo>0){
+                    System.out.println("Difference: "+ (vecchio-nuovo)+"\t Previous:\t"+vecchio);
+                    System.out.println("Pointer: "+i+ "\t\t New:\t\t"+nuovo);
+
+                }
+                DIStream.readLong();
+                vecchio = nuovo;
+            }catch (EOFException e){
+                break;
+            }
+
+        }
+        System.out.println("Totale" + i);
+    }
+
+
+    static void testMassiveBinaryMerge2(File folder) throws IOException {
+        File [] files = folder.listFiles();
+        long  nuovo =0;
+        long vecchio = 0;
+        DataInputStream DIStream;
+        for(int k =0; k< files.length; k++){
+            DIStream = new DataInputStream(new BufferedInputStream(new FileInputStream(files[k])));
+            System.out.println(files[k].getName() + "-" + k);
+            for(int i =0; true; i++){
+                //if(i%10000000==0) System.out.println(i);
+                try {
+                    nuovo = DIStream.readLong();
+                    if(vecchio-nuovo>0) System.out.println(vecchio-nuovo+"-"+vecchio+"-"+nuovo);
+                    DIStream.readLong();
+                    vecchio = nuovo;
+                }catch (EOFException e){
+                    break;
+                }
+            }
+
         }
     }
 

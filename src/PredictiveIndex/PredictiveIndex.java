@@ -9,9 +9,7 @@ import com.google.common.primitives.Ints;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.longs.Long2IntMap;
-import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
-import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.*;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import org.lemurproject.kstem.KrovetzStemmer;
@@ -61,11 +59,12 @@ public class PredictiveIndex {
         * and than build the pair-distance from memory.*/
         //fetchTermMap();
         //buildFastQueryTrace();
-        //getQualityModel();
+        getQualityModel();
         //binaryMassiveSort(dPath + "/InvertedIndex.bin", dPath + "/tmp/", (int) (5*Math.pow(10,9)));
         //readFiles(new File("/home/aalto/IdeaProjects/PredictiveIndex/data/dump/tmp/"), "/home/aalto/IdeaProjects/PredictiveIndex/data/dump/sortedInvertedIndex.bin");
-        massiveBinaryMerge(new File("/home/aalto/IdeaProjects/PredictiveIndex/data/dump/tmp/"), "/home/aalto/IdeaProjects/PredictiveIndex/data/dump/sortedInvertedIndex.bin");
+        //massiveBinaryMerge(new File("/home/aalto/IdeaProjects/PredictiveIndex/data/dump/tmp/"), "/home/aalto/IdeaProjects/PredictiveIndex/data/dump/sortedInvertedIndex.bin");
         //testMassiveBinaryMerge();
+        //testMassiveBinaryMerge2(new File("/home/aalto/IdeaProjects/PredictiveIndex/data/dump/tmp/"));
         System.exit(1);
 
         File f = new File("/file/to/sort");
@@ -341,10 +340,10 @@ public class PredictiveIndex {
     private static int[] computerRanges(double rankRule){
         rankRule = 1.4;
         LinkedList<Integer> rankBuckets = new LinkedList<>();
-        for (int i = 11; i < 2108246173 ; i += i*rankRule) {
+        for (int i = 11; i < Integer.MAX_VALUE ; i += i*rankRule) {
             rankBuckets.addLast(i);
         }
-        rankBuckets.addLast(2108246173);
+        rankBuckets.addLast(Integer.MAX_VALUE);
         return Ints.toArray(rankBuckets);
     }
 
@@ -396,6 +395,7 @@ public class PredictiveIndex {
         Long2ObjectOpenHashMap<Int2IntMap> fastQueryTrace = (Long2ObjectOpenHashMap<Int2IntMap>) obInStream.readObject(); //conversion seems to work
         LinkedList<Integer> auxPostingList = new LinkedList<>();
         auxPostingList.add(3);
+        LongSet duplicate= new LongOpenHashSet();
         long numberOfPostingLists = 0;
         int [] posting;
         int [] currentPair = new int[]{-1,-1};
@@ -403,10 +403,13 @@ public class PredictiveIndex {
             posting = getEntry(inStream);
             if(posting[0] ==-1) break;
             if(posting[0] != currentPair[0] | posting[1] != currentPair[1]){
+                //System.out.println(auxPostingList.size());
+                if(duplicate.contains(getPair(currentPair[0], currentPair[1]))) System.out.println(getPair(currentPair[0], currentPair[1]));
+                else duplicate.add(getPair(currentPair[0], currentPair[1]));
                 if(fastQueryTrace.get(getPair(currentPair[0], currentPair[1]))!=null){
-                    qualityModel = processPostingList(Ints.toArray(auxPostingList), qualityModel, fastQueryTrace.get(getPair(currentPair[0], currentPair[1])), rRanges, lRanges);
+                    //System.out.println(getPair(currentPair[0], currentPair[1]));
+                    //qualityModel = processPostingList(Ints.toArray(auxPostingList), qualityModel, fastQueryTrace.get(getPair(currentPair[0], currentPair[1])), rRanges, lRanges);
                     //System.out.println(fastQueryTrace.get(getPair(currentPair[0], currentPair[1])));
-                    //System.out.println(auxPostingList);
                 }
                 numberOfPostingLists++;
                 auxPostingList.clear();
@@ -429,12 +432,12 @@ public class PredictiveIndex {
         int score;
         int term;
         for (int i = 0; i < postingList.length ; i += 2) {
-            try {
-                score = postingList[i];
-                term = postingList[i+1];
-                int increment = aggregatedTopK.get(term);
-                System.out.println(hit);
-                hit++;
+            score = postingList[i];
+            term = postingList[i+1];
+            int increment = aggregatedTopK.get(term);
+            if(increment>0){
+                System.out.println(aggregatedTopK.get(term));
+                hit+=increment;
                 rankBucket = getRankBucket(rankBucket, score, rRanges);
                 //bucket hit by this posting
                 qualityModel[lenBucket][rankBucket][0] += increment;
@@ -442,9 +445,8 @@ public class PredictiveIndex {
                     //previous buckets hit by this posting
                     qualityModel[lenBucket][j][1] += increment;
                 }
-            }catch (NullPointerException ex){
-                //System.out.println(ex.getMessage());
             }
+
         }
         return qualityModel;
     }

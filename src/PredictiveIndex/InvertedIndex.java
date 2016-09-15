@@ -141,15 +141,15 @@ public class InvertedIndex implements Serializable {
         int ones=0;
         int movingDistance = distance;
         LongSet auxPair = new LongOpenHashSet();
+        localFreqMap.defaultReturnValue(1);
         for (int wIx = 0; wIx < words.length; wIx++) {
             if(words.length - wIx < distance) movingDistance = (words.length - wIx);
             for (int dIx = wIx+1; dIx < wIx + movingDistance; dIx++) {
                 int [] pair = {words[wIx], words[dIx]};
                 Arrays.sort(pair);
                 if(auxPair.add(getPair(pair[0], pair[1]))) {
-
-                    score1 = getBM25(globalStats, words.length, getLocalFreq(localFreqMap, pair[0]), globalFreqMap.get(pair[0]));
-                    score2 = getBM25(globalStats, words.length, getLocalFreq(localFreqMap, pair[1]), globalFreqMap.get(pair[1]));
+                    score1 = getBM25(globalStats, words.length, localFreqMap.get(pair[0]), globalFreqMap.get(pair[0]));
+                    score2 = getBM25(globalStats, words.length, localFreqMap.get(pair[1]), globalFreqMap.get(pair[1]));
                     this.buffer[pointer] = new int[]{pair[0], pair[1], score1+score2, title};
                     checkBuffer();
                 }
