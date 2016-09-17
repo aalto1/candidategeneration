@@ -124,7 +124,8 @@ class utilsClass {
         else return true;
     }
 
-    /*0xff = 255 = 11111111 = u-byte*/
+    /*  This function decompress the forward index using opposite variable byte decoding
+    0xff = 255 = 11111111 = u-byte */
 
     static int[] decodeRawDoc(byte[] rawDoc, int docLen) {
         int k = 0;
