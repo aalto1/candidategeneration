@@ -145,6 +145,15 @@ class utilsClass {
         return numbers;
     }
 
+    static void aggregateHITS(String file) throws IOException {
+        BufferedReader br = new BufferedReader(new FileReader(file));
+        String [] line = br.readLine().split(" ");
+        while (line[0] != null){
+
+        }
+
+    }
+
 
 
 
