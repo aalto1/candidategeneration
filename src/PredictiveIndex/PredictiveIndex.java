@@ -4,6 +4,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.ConcurrentMap;
 
 import com.google.common.primitives.Ints;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
@@ -59,17 +60,19 @@ public class PredictiveIndex {
         * and than build the pair-distance from memory.*/
         //fetchTermMap();
         //buildFastQueryTrace();
-        getQualityModel();
+        //aggregateHITS("/home/aalto/dio/hit/ben/cw09b.100K_AND2.csv.tar.gz");
+        //getQualityModel();
         //binaryMassiveSort(dPath + "/InvertedIndex.bin", dPath + "/tmp/", (int) (5*Math.pow(10,9)));
         //readFiles(new File("/home/aalto/IdeaProjects/PredictiveIndex/data/dump/tmp/"), "/home/aalto/IdeaProjects/PredictiveIndex/data/dump/sortedInvertedIndex.bin");
         //massiveBinaryMerge(new File("/home/aalto/IdeaProjects/PredictiveIndex/data/dump/tmp/"), "/home/aalto/IdeaProjects/PredictiveIndex/data/dump/sortedInvertedIndex.bin");
         //testMassiveBinaryMerge();
         //testMassiveBinaryMerge2(new File("/home/aalto/IdeaProjects/PredictiveIndex/data/dump/tmp/"));
-        System.exit(1);
+        //tryMap();
+        //System.exit(1);
 
         File f = new File("/file/to/sort");
 
-        System.exit(1);
+        //System.exit(1);
 
         String info = "/home/aalto/dio/docInfo";
         InvertedIndex ps;
