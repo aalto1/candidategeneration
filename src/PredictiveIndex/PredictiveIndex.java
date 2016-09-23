@@ -98,23 +98,20 @@ public class PredictiveIndex {
         //System.exit(1);/home/aalto/IdeaProjects/PredictiveIndex/data/global/rawInvertedIndex
         InvertedIndex i2 = new InvertedIndex(globalFold + "rawInvertedIndex/");
 
-        MultiThread a = new MultiThread(0,i2);
-        Thread zero = new Thread(a);
-        zero.start();
 
-        MultiThread b = new MultiThread(1, i2);
-        Thread one = new Thread(b);
-        one.start();
+        Thread [] threads = new Thread[4];
 
-        MultiThread c = new MultiThread(2, i2);
-        Thread two = new Thread(c);
-        two.start();
+        for(int i = 0; i < threads.length; i++){
+            threads[i] = new Thread(new MultiThread(i,i2));
+            threads[i].start();
+        }
 
-        MultiThread d = new MultiThread(3, i2);
-        Thread three = new Thread(d);
-        three.start();
+        for(int i = 0; i < threads.length; i++) {
+            threads[i].join();
+        }
 
-        serialize(i2.globalFreqMap, globalFold+"freqMap");
+
+            serialize(i2.globalFreqMap, globalFold+"freqMap");
         serialize(i2.globalStats, globalFold+"stats");
 
 

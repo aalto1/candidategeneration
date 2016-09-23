@@ -175,7 +175,7 @@ class utilsClass {
     * rate: 10000000*/
     static boolean checkProgress(long p, int max, int rate, double start, int limit){
         if(p % rate == 0){
-            long percentage = (int) (p*100.0)/max;
+            long percentage = (long) (p*100.0)/max;
             out.println("Work in progress: " + percentage+ "%\tProcessing Time: " + (p / (System.currentTimeMillis() - start)) * 1000 + "doc/s. \tProcessed: " +p);
             out.print("Expected Remaining Time: "+ (((System.currentTimeMillis() - start)/percentage)*(100-percentage)/60000) + " minutes");
             memoryStatistics();

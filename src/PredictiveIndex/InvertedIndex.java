@@ -47,7 +47,7 @@ public class InvertedIndex implements Serializable {
     private int pointer = 0;
     private int [][] buffer;
     public int[] globalStats;                                     //1-numberofdocs,2-wordcounter,3-unique words
-    public int doc = 0;
+    public long doc = 0;
     //private Int2IntMap globalFreqMap;
     short []  globalFreqMap;
     //private ConcurrentMap<Integer,Integer> globalFreqMap;
