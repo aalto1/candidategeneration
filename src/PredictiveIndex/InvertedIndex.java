@@ -43,7 +43,7 @@ public class InvertedIndex implements Serializable {
 
 
     private DataOutputStream invertedIndexFile;
-    private ObjectOutputStream forwardIndexFile;
+    private DataOutputStream forwardIndexFile;
     final private int distance = 10;
     private int pointer = 0;
     private int [][] buffer;
@@ -54,18 +54,12 @@ public class InvertedIndex implements Serializable {
     //private ConcurrentMap<Integer,Integer> globalFreqMap;
 
     InvertedIndex() throws IOException {
-        //globalFreqMap = new Int2IntOpenHashMap();
-        //DB db = DBMaker.fileDB("termFreq.db").fileMmapEnable().cleanerHackEnable().fileMmapPreclearDisable().make();
-        //globalFreqMap = db.hashMap("map", Serializer.INTEGER_DELTA, Serializer.INTEGER_DELTA).createOrOpen();
         this.globalStats = new int[3];
-        this.forwardIndexFile = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(fIndexPath + "/forwardIndexMetadata" + ".bin", true)));
+        this.forwardIndexFile = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(fIndexPath + "/forwardIndexMetadata" + ".bin", true)));
         this.invertedIndexFile = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(dPath + "/InvertedIndex.bin", true)));
     }
 
     InvertedIndex(Int2IntMap globalFreqMap, int[] globalStats) throws IOException {
-        //this.globalFreqMap = globalFreqMap;
-        //DB db = DBMaker.fileDB("termFreq.db").fileMmapEnable().cleanerHackEnable().fileMmapPreclearDisable().make();
-        //globalFreqMap = db.hashMap("map", Serializer.INTEGER_DELTA, Serializer.INTEGER_DELTA).createOrOpen();
         this.globalStats = globalStats;
         this.invertedIndexFile = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(dPath + "/InvertedIndex.bin", true)));
     }
@@ -85,13 +79,13 @@ public class InvertedIndex implements Serializable {
         String line = br.readLine();
         String [] record;
         Int2IntMap position = new Int2IntOpenHashMap();
-        int [] document = new int[127525];
+        int [] document = new int[127525*2];
         while(line != null & checkProgress(doc, totNumDocs, 500000, start, testLimit)){
             record = line.split(" ");
-            readClueWebDocument(record, stream, document);
-            //storeMetadata(readClueWebDocument(line, stream, document),Integer.parseInt(line[1]), position, Integer.parseInt(line[4]));
+            storeMetadata(readClueWebDocument(record, stream, document), Integer.parseInt(record[1]), position, Integer.parseInt(record[4]));
             position.clear();
             line = br.readLine();
+            if(doc%500000==0) this.forwardIndexFile.flush();
             doc++;
         }
 
@@ -126,15 +120,12 @@ public class InvertedIndex implements Serializable {
         int multipleOccurece = 0;
         for (int k = 0; k<docLen; k++) {
             if (position.putIfAbsent(words[k], 1) == null){
-                globalFreqMap[words[k]/10]++;
+                globalFreqMap[words[k]]++;
                 this.globalStats[2]++;
             }else{
-                if(position.merge(words[k], 1, Integer::sum)==2) multipleOccurece++;
-            }
+                if(position.merge(words[k], 1, Integer::sum)==2) multipleOccurece++;            }
         }
-        //if(globalFreqMap.size()%100000 ==0 ) System.out.println(globalFreqMap.size());
-        //System.out.print("Removed " + docID + "\t" + (position.keySet().size()-multipleOccurece));
-        //this.forwardIndexFile.writeObject(hashMapToArray(position, multipleOccurece));
+        storeHashMap(position, this.forwardIndexFile ,multipleOccurece);
         this.globalStats[0]++;
         this.globalStats[1]+= words.length;
     }
@@ -147,21 +138,19 @@ public class InvertedIndex implements Serializable {
         this.buffer = new int[bufferSize][4];
         DataInputStream stream = new DataInputStream( new BufferedInputStream( new FileInputStream("/home/aalto/dio/compressedIndex")));
         BufferedReader br = new BufferedReader(new FileReader(info));
-        ObjectInputStream OIStream = getOIStream(fIndexPath + "/forwardIndexMetadata" , true);
+        DataInputStream DIS = new DataInputStream(new BufferedInputStream(new FileInputStream(fIndexPath + "/forwardIndexMetadata")));
         String[] line = br.readLine().split(" ");
-        int [] document = new int[1000];
+        int [] document = new int[127525];
         Int2IntMap bufferMap = new Int2IntOpenHashMap();
         while(line[0] != null & checkProgress(doc, totNumDocs, 500000, start, testLimit)){
-            document = readClueWebDocument(line, stream, document);
-            arrayToHashMap((int[])  OIStream.readObject(), bufferMap);
-            bufferedIndex(document, Integer.parseInt(line[1]), bufferMap);
+            bufferedIndex(readClueWebDocument(line, stream, document), Integer.parseInt(line[1]), fetchHashMap(bufferMap, DIS));
             bufferMap.clear();
             line = br.readLine().split(" ");
             doc++;
         }
         sampledSelection();
         this.invertedIndexFile.close();
-        OIStream.close();
+        DIS.close();
         System.out.println("D-Bigram Inverted Index Built!");
     }
 
@@ -182,9 +171,9 @@ public class InvertedIndex implements Serializable {
                 int [] pair = {words[wIx], words[dIx]};
                 Arrays.sort(pair);
                 if(auxPair.add(getPair(pair[0], pair[1]))) {
-                    //score1 = getBM25(globalStats, words.length, localFreqMap.get(pair[0]), globalFreqMap.get(pair[0]));
-                    //score2 = getBM25(globalStats, words.length, localFreqMap.get(pair[1]), globalFreqMap.get(pair[1]));
-                    //this.buffer[pointer] = new int[]{pair[0], pair[1], score1+score2, title};
+                    score1 = getBM25(globalStats, words.length, localFreqMap.get(pair[0]), globalFreqMap[pair[0]]);
+                    score2 = getBM25(globalStats, words.length, localFreqMap.get(pair[1]), globalFreqMap[pair[1]]);
+                    this.buffer[pointer] = new int[]{pair[0], pair[1], score1+score2, title};
                     checkBuffer();
                 }
             }//if(getLocalFreq(localFreqMap, words[wIx])==1) ones++;
@@ -242,17 +231,16 @@ public class InvertedIndex implements Serializable {
                 keep++;
             }
         }
-        java.util.Arrays.parallelSort(this.buffer,0, keep, new Comparator<int[]>() {
+        /*java.util.Arrays.parallelSort(this.buffer,0, keep, new Comparator<int[]>() {
             @Override
             public int compare(int[] int1, int[] int2) {
-                //if we have the same doc ids sort them based on the bm25
                 if (int1[0] == int2[0]) {
                     if(int1[1] == int2[1]){
                         return Integer.compare(int1[2], int2[2]) * -1;
                     }else return Integer.compare(int1[1], int2[1]);
                 } else return Integer.compare(int1[0], int2[0]);
             }
-        });
+        });*/
         for (int k = 0; k < keep; k++) {
             for (int elem : this.buffer[k]) this.invertedIndexFile.writeInt(elem);
         }

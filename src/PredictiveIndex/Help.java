@@ -704,5 +704,7 @@ doc = 0;
     System.out.println("Sorting Time: " + (System.currentTimeMillis() - now) + "ms");
 }
 
-
+        //globalFreqMap = new Int2IntOpenHashMap();
+        //DB db = DBMaker.fileDB("termFreq.db").fileMmapEnable().cleanerHackEnable().fileMmapPreclearDisable().make();
+        //globalFreqMap = db.hashMap("map", Serializer.INTEGER_DELTA, Serializer.INTEGER_DELTA).createOrOpen();
     */

@@ -11,13 +11,21 @@ import java.io.*;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.concurrent.ConcurrentMap;
 import java.util.zip.GZIPInputStream;
+import me.lemire.integercompression.differential.*;
+
+import org.bouncycastle.asn1.dvcs.Data;
 import org.mapdb.*;
+import java.lang.System;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipFile.*;
 import java.util.zip.ZipInputStream;
+
+import static java.lang.System.exit;
+import static java.lang.System.out;
 
 /**
  * Created by aalto on 9/11/16.
@@ -38,19 +46,43 @@ class utilsClass {
     static int[] decodeRawDoc(byte[] rawDoc, int docLen, int[] document) {
         int k = 0;
         int n = 0;
+        //out.println(2<<1);
+        //exit(1);
+        int a = 0;
         for (byte b : rawDoc) {
             if ((b & 0xff) >= 128) {
-                n = 128 * n + (b & 0xff);
+                a = (b << 25);
+                n = n * 128 + (a >>> 25);
             } else {
-                int num = (128 * n + ((b - 128) & 0xff));
+                int num = n * 128 + b;
                 document[k] = num;
-                //if(num>87262395) System.out.println(num);
                 k++;
                 n = 0;
             }
         }
         return document;
     }
+
+
+
+    static void storeHashMap(Int2IntMap map, DataOutputStream DOS, int len) throws IOException {
+        DOS.writeInt(len*2);
+        for(int key : map.keySet()){
+            if(map.get(key)>1){
+                DOS.writeInt(key);
+                DOS.writeInt(map.get(key));
+            }
+        }
+    }
+
+    static Int2IntMap fetchHashMap(Int2IntMap map, DataInputStream DIS) throws IOException {
+        for (int i = 0; i < DIS.readInt(); i++) {
+            map.put(DIS.readInt(),DIS.readInt());
+        }
+        return map;
+    }
+
+
 
     protected static int getBM25(int [] globalStats, int docLen, int f, int n) {
         /*global statistics for BM25*/
@@ -65,22 +97,21 @@ class utilsClass {
     }
 
 
-    static int [] hashMapToArray(Int2IntMap map, int multipleOccurence){
+    static int [] hashMapToArray(Int2IntMap map, int [] array){
         /*This function convert an HashMap to an 1d array with the dimension doubled respect to the key-value pairs
         * with a value bigger than one*/
 
-        int [] array = new int[multipleOccurence*2];
         int value;
         int k = 0;
         for(int key : map.keySet()){
             value = map.get(key);
             if((value)>1){                          //becasue we want to reduce the overhead (20% space saved per dump)
-                array[k*2] = key;
-                array[k*2+1] = value;
-                k++;
+                array[k] = key;
+                array[k+1] = value;
+                k+=2;
             }
         }
-        return Arrays.copyOf(array, k*2+1);
+        return Arrays.copyOf(array, k);
     }
 
     static void arrayToHashMap(int [] array, Int2IntMap map){
@@ -124,19 +155,19 @@ class utilsClass {
     }
 
     static Object deserialize(String file) {
-        System.out.print("Fetching: " + file + "...");
+        out.print("Fetching: " + file + "...");
         Object e = null;
         try {
             ObjectInputStream OIStream = getOIStream(file, true);
             e = OIStream.readObject();
             OIStream.close();
-            System.out.println("\tfetched!");
+            out.println("\tfetched!");
             return e;
         } catch (IOException i) {
             i.printStackTrace();
             return null;
         } catch (ClassNotFoundException c) {
-            System.out.println("Object not found");
+            out.println("Object not found");
             c.printStackTrace();
             return null;
         }
@@ -147,8 +178,8 @@ class utilsClass {
     static boolean checkProgress(long p, int max, int rate, double start, int limit){
         if(p % rate == 0){
             int percentage = (int) (p*100.0)/max;
-            System.out.println("Work in progress: " + percentage+ "%\tProcessing Time: " + (p / (System.currentTimeMillis() - start)) * 1000 + "doc/s. \tProcessed: " +p);
-            System.out.print("Expected Remaining Time: "+ (((System.currentTimeMillis() - start)/percentage)*(100-percentage)/60000) + " minutes");
+            out.println("Work in progress: " + percentage+ "%\tProcessing Time: " + (p / (System.currentTimeMillis() - start)) * 1000 + "doc/s. \tProcessed: " +p);
+            out.print("Expected Remaining Time: "+ (((System.currentTimeMillis() - start)/percentage)*(100-percentage)/60000) + " minutes");
             memoryStatistics();
             //System.out.println("Expected time: " + (System.currentTimeMillis() - now)*(1/10*percentage));
         }
@@ -168,7 +199,7 @@ class utilsClass {
         Iterator<CSVRecord> it = reader.iterator();
         CSVRecord line = it.next();
         float [][] score = new float[50025796][2];
-        System.out.println("Computing Scores...\t");
+        out.println("Computing Scores...\t");
         for(int k=0; it.hasNext(); line = it.next(), k++){
             score[k][0]=k;
             for (int i = 1; i < line.size() ; i++) {
@@ -177,26 +208,26 @@ class utilsClass {
             }
             if(k % Math.pow(10,6)==0){
                 if(k % Math.pow(10,7)==0 && k!=0){
-                    System.out.println(" " + k);
-                }else System.out.print(" " + k);
+                    out.println(" " + k);
+                }else out.print(" " + k);
             }
 
         }
-        System.out.println("\tdone.");
-        System.out.print("Sorting...");
+        out.println("\tdone.");
+        out.print("Sorting...");
         Arrays.parallelSort(score, new Comparator<float[]>() {
             @Override
             public int compare(float[] o1, float[] o2) {
                 return Float.compare(o2[1],o1[1]);
             }
         });
-        System.out.println("\tdone.");
-        System.out.print("Writing on disk...");
+        out.println("\tdone.");
+        out.print("Writing on disk...");
         PrintStream ps = new PrintStream(new BufferedOutputStream(new FileOutputStream("globalscore.csv")));
         for (float [] a: score) {
             ps.println(((int)a[0])+","+a[1]);
         }
-        System.out.print("\tdone.");
+        out.print("\tdone.");
 
 
 
@@ -211,7 +242,7 @@ class utilsClass {
         for(int i =0; i<Integer.MAX_VALUE;i++){
             if(i%5000000==0){
                 //auxMap.put(i,i);
-                System.out.println(map.size());
+                out.println(map.size());
                 map.putAll(auxMap);
                 //map.putAll(auxMap);
                 //auxMap.clear();
@@ -231,7 +262,7 @@ class utilsClass {
         Runtime runtime = Runtime.getRuntime();
 
         //Print used memory
-        System.out.println("\tUsed Memory: "
+        out.println("\tUsed Memory: "
                 + (runtime.totalMemory() - runtime.freeMemory()) / mb + " mb");
     }
 
