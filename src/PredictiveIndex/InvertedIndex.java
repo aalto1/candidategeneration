@@ -43,25 +43,25 @@ public class InvertedIndex implements Serializable {
 
 
     private DataOutputStream invertedIndexFile;
-    private DataOutputStream forwardIndexFile;
     final private int distance = 10;
     private int pointer = 0;
     private int [][] buffer;
-    private int[] globalStats;                                     //1-numberofdocs,2-wordcounter,3-unique words
+    public int[] globalStats;                                     //1-numberofdocs,2-wordcounter,3-unique words
     public int doc = 0;
     //private Int2IntMap globalFreqMap;
-    short []  globalFreqMap = new short[87262395];
+    short []  globalFreqMap;
     //private ConcurrentMap<Integer,Integer> globalFreqMap;
 
-    InvertedIndex() throws IOException {
+    InvertedIndex(String fold) throws IOException {
         this.globalStats = new int[3];
-        this.forwardIndexFile = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(fIndexPath + "/forwardIndexMetadata" + ".bin", true)));
-        this.invertedIndexFile = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(dPath + "/InvertedIndex.bin", true)));
+        globalFreqMap = new short[87262395];
+        this.invertedIndexFile = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(fold + "InvertedIndex.bin")));
     }
 
-    InvertedIndex(Int2IntMap globalFreqMap, int[] globalStats) throws IOException {
+    InvertedIndex(short[] globalFreqMap, int[] globalStats, String fold) throws IOException {
+        this.globalFreqMap = globalFreqMap;
         this.globalStats = globalStats;
-        this.invertedIndexFile = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(dPath + "/InvertedIndex.bin", true)));
+        this.invertedIndexFile = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(fold + "InvertedIndex.bin")));
     }
 
 
@@ -71,51 +71,28 @@ public class InvertedIndex implements Serializable {
     * 0 - document title | 1 - docID | 2 - offset (varbyte) | 3 - size (varbyte) | 4 - docLength (#words)
     */
 
-    protected void getClueWebMetadata(String info) throws IOException, ClassNotFoundException, InterruptedException {
+    protected void getClueWebMetadata(String fold) throws IOException, ClassNotFoundException, InterruptedException {
         System.out.println("Collecting ClueWeb09 global statistics...");
         start = System.currentTimeMillis();
-        DataInputStream stream = new DataInputStream(new BufferedInputStream( new FileInputStream("/home/aalto/dio/compressedIndex")));
-        BufferedReader br = new BufferedReader(new FileReader(info));
+        DataOutputStream localMetadata = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(fold+"localTermStats.bin", false)));
+        DataInputStream stream = new DataInputStream(new BufferedInputStream( new FileInputStream(fold+"clueweb.bin")));
+        BufferedReader br = new BufferedReader(new FileReader(fold+"docInfo.csv"));
         String line = br.readLine();
         String [] record;
         Int2IntMap position = new Int2IntOpenHashMap();
         int [] document = new int[127525*2];
         while(line != null & checkProgress(doc, totNumDocs, 500000, start, testLimit)){
             record = line.split(" ");
-            storeMetadata(readClueWebDocument(record, stream, document), Integer.parseInt(record[1]), position, Integer.parseInt(record[4]));
+            storeMetadata(readClueWebDocument(record, stream, document), Integer.parseInt(record[1]), position, Integer.parseInt(record[4]), localMetadata);
             position.clear();
             line = br.readLine();
-            if(doc%500000==0) this.forwardIndexFile.flush();
             doc++;
         }
-
-        serialize(this.globalFreqMap, fPath);
-        serialize(this.globalStats, sPath);
-        this.forwardIndexFile.close();
+        localMetadata.close();
         System.out.println("ClueWeb09 global statistics collected! " + doc);
 
     }
-    /*this function process the single wrac files*/
-    /*private void storeMetadata(int [] words Int2IntMap position) throws IOException {
-        int multipleOccurece = 0;
-        for (int k = 0; k<words.length; k++) {
-            if (position.putIfAbsent(words[k], 1) == null){
-                if(this.globalFreqMap.putIfAbsent(words[k], 1)!=null) {
-                    this.globalFreqMap.merge(words[k], 1, Integer::sum);
-                    this.globalStats[2]++;
-                }
-            }else{
-                if(position.merge(words[k], 1, Integer::sum)==2) multipleOccurece++;
-            }
-        }
-        if(globalFreqMap.size()%100000 ==0 ) System.out.println(globalFreqMap.size());
-        System.out.print("Removed " + docID + "\t" + (position.keySet().size()-multipleOccurece));
-        this.forwardIndexFile.writeObject(hashMapToArray(position, multipleOccurece));
-        this.globalStats[0]++;
-        this.globalStats[1]+= words.length;
-    }*/
-
-    private void storeMetadata(int [] words, int docID, Int2IntMap position, int docLen) throws IOException {
+    private void storeMetadata(int [] words, int docID, Int2IntMap position, int docLen, DataOutputStream forwardIndexFile) throws IOException {
         /*this function process the single wrac files */
         int multipleOccurece = 0;
         for (int k = 0; k<docLen; k++) {
@@ -125,7 +102,7 @@ public class InvertedIndex implements Serializable {
             }else{
                 if(position.merge(words[k], 1, Integer::sum)==2) multipleOccurece++;            }
         }
-        storeHashMap(position, this.forwardIndexFile ,multipleOccurece);
+        storeHashMap(position, forwardIndexFile ,multipleOccurece);
         this.globalStats[0]++;
         this.globalStats[1]+= words.length;
     }

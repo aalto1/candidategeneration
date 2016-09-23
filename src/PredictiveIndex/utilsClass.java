@@ -46,9 +46,7 @@ class utilsClass {
     static int[] decodeRawDoc(byte[] rawDoc, int docLen, int[] document) {
         int k = 0;
         int n = 0;
-        //out.println(2<<1);
-        //exit(1);
-        int a = 0;
+        int a;
         for (byte b : rawDoc) {
             if ((b & 0xff) >= 128) {
                 a = (b << 25);
@@ -177,7 +175,7 @@ class utilsClass {
     * rate: 10000000*/
     static boolean checkProgress(long p, int max, int rate, double start, int limit){
         if(p % rate == 0){
-            int percentage = (int) (p*100.0)/max;
+            long percentage = (int) (p*100.0)/max;
             out.println("Work in progress: " + percentage+ "%\tProcessing Time: " + (p / (System.currentTimeMillis() - start)) * 1000 + "doc/s. \tProcessed: " +p);
             out.print("Expected Remaining Time: "+ (((System.currentTimeMillis() - start)/percentage)*(100-percentage)/60000) + " minutes");
             memoryStatistics();
@@ -266,6 +264,39 @@ class utilsClass {
                 + (runtime.totalMemory() - runtime.freeMemory()) / mb + " mb");
     }
 
+    static void splitCollection(String info) throws IOException {
+        int doc = 0;
+        int split = 0;
+        String folder = "/home/aalto/IdeaProjects/PredictiveIndex/data/clueweb/";
+        System.out.println("Splitting ClueWeb09...");
+        DataInputStream DIS = new DataInputStream(new BufferedInputStream( new FileInputStream("/home/aalto/dio/compressedIndex")));
+        DataOutputStream DOS = new DataOutputStream(new BufferedOutputStream( new FileOutputStream(folder + split + "/"+ split+".bin")));;
+        BufferedReader br = new BufferedReader(new FileReader(info));
+        BufferedWriter bw = new BufferedWriter(new FileWriter(folder + split + "/"+ "docInfo.csv"));
+        String line = br.readLine();
+        String [] record;
+        while(line != null){
+            record = line.split(" ");
+            if (doc%12555105==0 & doc!=0) {
+                out.println(doc);
+                DOS.close();
+                bw.close();
+                split++;
+                bw = new BufferedWriter(new FileWriter(folder + split + "/"+ "docInfo.csv"));
+                DOS = new DataOutputStream(new BufferedOutputStream( new FileOutputStream(folder + split + "/"+ split+".bin")));
+            }
+            for (int i = 0; i < Integer.parseInt(record[3]); i++) {
+                DOS.writeByte(DIS.readByte());
+            }
+            bw.write(line);
+            bw.newLine();
+            line = br.readLine();
+            doc++;
+        }
+        DOS.close();
+        DIS.close();
+        System.out.println("ClueWeb09 Splitted! " + doc);
+    }
 
 
 

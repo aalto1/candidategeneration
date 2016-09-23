@@ -708,3 +708,23 @@ doc = 0;
         //DB db = DBMaker.fileDB("termFreq.db").fileMmapEnable().cleanerHackEnable().fileMmapPreclearDisable().make();
         //globalFreqMap = db.hashMap("map", Serializer.INTEGER_DELTA, Serializer.INTEGER_DELTA).createOrOpen();
     */
+
+    /*this function process the single wrac files*/
+    /*private void storeMetadata(int [] words Int2IntMap position) throws IOException {
+        int multipleOccurece = 0;
+        for (int k = 0; k<words.length; k++) {
+            if (position.putIfAbsent(words[k], 1) == null){
+                if(this.globalFreqMap.putIfAbsent(words[k], 1)!=null) {
+                    this.globalFreqMap.merge(words[k], 1, Integer::sum);
+                    this.globalStats[2]++;
+                }
+            }else{
+                if(position.merge(words[k], 1, Integer::sum)==2) multipleOccurece++;
+            }
+        }
+        if(globalFreqMap.size()%100000 ==0 ) System.out.println(globalFreqMap.size());
+        System.out.print("Removed " + docID + "\t" + (position.keySet().size()-multipleOccurece));
+        this.forwardIndexFile.writeObject(hashMapToArray(position, multipleOccurece));
+        this.globalStats[0]++;
+        this.globalStats[1]+= words.length;
+    }*/

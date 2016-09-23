@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.RunnableFuture;
 
 import com.google.common.primitives.Ints;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
@@ -43,19 +44,40 @@ public class PredictiveIndex {
     static int counter2 = 1;
     private static String metadata = "/home/aalto/IdeaProjects/PredictiveIndex/data/metadata/";
     private static String qi = "/home/aalto/dio/";
+    static final String clueweb09 = "/home/aalto/IdeaProjects/PredictiveIndex/data/clueweb/";
+    static final String dataFold = "/home/aalto/IdeaProjects/PredictiveIndex/data/";
+    static final String globalFold = dataFold+"global/";
+
+
     static int hit = 0;
 
     private static Object2IntMap<String> termMap;
     private static Int2ObjectOpenHashMap<String> termMap2;
 
-    public static void stemma(){
-        KrovetzStemmer s = new KrovetzStemmer();
-        System.out.println(s.stem("cards"));
+    private static class MultiThread implements Runnable{
+        private int threadNum;
+        private InvertedIndex i2;
+
+        MultiThread(int threadNum, InvertedIndex i2){
+            this.threadNum = threadNum;
+            this.i2 = i2;
+        }
+
+        @Override
+        public void run() {
+            System.out.println("Thread " + threadNum + "Started");
+            try {
+                i2.getClueWebMetadata(dataFold+threadNum+"/");
+            } catch (IOException | ClassNotFoundException | InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 
     /*/home/aalto/IdeaProjects/PredictiveIndex/aux/sort/bin/binsort --size 16 --length 12 --block-size=900000000  ./InvertedIndex.dat ./sortedInvertedIndex.dat*/
     public static void main(String [] args) throws IOException, ClassNotFoundException, InterruptedException {
+        InvertedIndex ps;
         /*We get the global statistics of the collection (fetch from memory if present, compute them if the opposite)
         * and than build the pair-distance from memory.*/
         //fetchTermMap();
@@ -68,16 +90,36 @@ public class PredictiveIndex {
         //testMassiveBinaryMerge();
         //testMassiveBinaryMerge2(new File("/home/aalto/IdeaProjects/PredictiveIndex/data/dump/tmp/"));
         //tryMap();
+        //splitCollection(info);
         //System.exit(1);
 
         File f = new File("/file/to/sort");
 
-        //System.exit(1);
+        //System.exit(1);/home/aalto/IdeaProjects/PredictiveIndex/data/global/rawInvertedIndex
+        InvertedIndex i2 = new InvertedIndex(globalFold + "rawInvertedIndex/");
 
-        String info = "/home/aalto/dio/docInfo";
-        InvertedIndex ps;
+        MultiThread a = new MultiThread(0,i2);
+        Thread zero = new Thread(a);
+        zero.start();
+
+        MultiThread b = new MultiThread(1, i2);
+        Thread one = new Thread(b);
+        one.start();
+
+        MultiThread c = new MultiThread(2, i2);
+        Thread two = new Thread(c);
+        two.start();
+
+        MultiThread d = new MultiThread(3, i2);
+        Thread three = new Thread(d);
+        three.start();
+
+        serialize(i2.globalFreqMap, globalFold+"freqMap");
+        serialize(i2.globalStats, globalFold+"stats");
 
 
+
+        /*
         if (Files.exists(Paths.get(fPath+".bin"))) {
             ps = new InvertedIndex((Int2IntMap) deserialize(fPath), (int[]) deserialize(sPath));
         }else {
@@ -88,7 +130,7 @@ public class PredictiveIndex {
         ps.doc = 0;
         ps.buildDBigramInvertedIndex(info);
         //fetchTermMap();
-        //buildFastQueryTrace();
+        //buildFastQueryTrace();*/
 
     }
 
