@@ -57,18 +57,26 @@ public class PredictiveIndex {
     private static class MultiThread implements Runnable{
         private int threadNum;
         private InvertedIndex i2;
+        private int phase;
 
-        MultiThread(int threadNum, InvertedIndex i2){
+        MultiThread(int threadNum, InvertedIndex i2, int phase){
             this.threadNum = threadNum;
             this.i2 = i2;
+            this.phase = phase;
         }
+
 
         @Override
         public void run() {
+            String threadFold = dataFold+threadNum+"/";
             System.out.println("Thread " + threadNum + "Started");
             try {
-                i2.getClueWebMetadata(dataFold+threadNum+"/");
-            } catch (IOException | ClassNotFoundException | InterruptedException e) {
+                if(this.phase==0)
+                    i2.getClueWebMetadata(threadFold);
+                else
+                    i2.buildDBigramInvertedIndex(threadFold);
+
+            }catch (IOException | ClassNotFoundException | InterruptedException e) {
                 e.printStackTrace();
             }
         }
@@ -77,58 +85,29 @@ public class PredictiveIndex {
 
     /*/home/aalto/IdeaProjects/PredictiveIndex/aux/sort/bin/binsort --size 16 --length 12 --block-size=900000000  ./InvertedIndex.dat ./sortedInvertedIndex.dat*/
     public static void main(String [] args) throws IOException, ClassNotFoundException, InterruptedException {
-        InvertedIndex ps;
-        /*We get the global statistics of the collection (fetch from memory if present, compute them if the opposite)
-        * and than build the pair-distance from memory.*/
-        //fetchTermMap();
-        //buildFastQueryTrace();
-        //aggregateHITS("/home/aalto/dio/hit/ben/cw09b.100K_AND2.csv.tar.gz");
-        //getQualityModel();
-        //binaryMassiveSort(dPath + "/InvertedIndex.bin", dPath + "/tmp/", (int) (5*Math.pow(10,9)));
-        //readFiles(new File("/home/aalto/IdeaProjects/PredictiveIndex/data/dump/tmp/"), "/home/aalto/IdeaProjects/PredictiveIndex/data/dump/sortedInvertedIndex.bin");
-        //massiveBinaryMerge(new File("/home/aalto/IdeaProjects/PredictiveIndex/data/dump/tmp/"), "/home/aalto/IdeaProjects/PredictiveIndex/data/dump/sortedInvertedIndex.bin");
-        //testMassiveBinaryMerge();
-        //testMassiveBinaryMerge2(new File("/home/aalto/IdeaProjects/PredictiveIndex/data/dump/tmp/"));
-        //tryMap();
-        //splitCollection(info);
-        //System.exit(1);
+        InvertedIndex i2;
+        if (Files.exists(Paths.get(globalFold + "freqMap.bin"))) {
+            i2 = new InvertedIndex((short[]) deserialize(globalFold + "freqMap"), (int[]) deserialize(globalFold + "stats"), globalFold + "rawInvertedIndex/");
+        }else {
+            i2 = new InvertedIndex(globalFold + "rawInvertedIndex/");
+            startBatteria(i2,0);
+            serialize(i2.globalFreqMap, globalFold+"freqMap");
+            serialize(i2.globalStats, globalFold+"stats");
+        }
+        startBatteria(i2,1);
+    }
 
-        File f = new File("/file/to/sort");
-
-        //System.exit(1);/home/aalto/IdeaProjects/PredictiveIndex/data/global/rawInvertedIndex
-        InvertedIndex i2 = new InvertedIndex(globalFold + "rawInvertedIndex/");
-
-
+    static void startBatteria(InvertedIndex i2, int phase) throws InterruptedException {
+        System.out.println("Starting Batteria. Phase: " + phase);
         Thread [] threads = new Thread[4];
-
         for(int i = 0; i < threads.length; i++){
-            threads[i] = new Thread(new MultiThread(i,i2));
+            threads[i] = new Thread(new MultiThread(i,i2,phase));
             threads[i].start();
         }
 
         for(int i = 0; i < threads.length; i++) {
             threads[i].join();
         }
-
-
-            serialize(i2.globalFreqMap, globalFold+"freqMap");
-        serialize(i2.globalStats, globalFold+"stats");
-
-
-
-        /*
-        if (Files.exists(Paths.get(fPath+".bin"))) {
-            ps = new InvertedIndex((Int2IntMap) deserialize(fPath), (int[]) deserialize(sPath));
-        }else {
-            ps = new InvertedIndex();
-            ps.getClueWebMetadata(info);
-        }
-        //ps.threads();
-        ps.doc = 0;
-        ps.buildDBigramInvertedIndex(info);
-        //fetchTermMap();
-        //buildFastQueryTrace();*/
-
     }
 
 
@@ -516,4 +495,38 @@ public class PredictiveIndex {
 
 
 
+/*We get the global statistics of the collection (fetch from memory if present, compute them if the opposite)
+        * and than build the pair-distance from memory.*/
+//fetchTermMap();
+//buildFastQueryTrace();
+//aggregateHITS("/home/aalto/dio/hit/ben/cw09b.100K_AND2.csv.tar.gz");
+//getQualityModel();
+//binaryMassiveSort(dPath + "/InvertedIndex.bin", dPath + "/tmp/", (int) (5*Math.pow(10,9)));
+//readFiles(new File("/home/aalto/IdeaProjects/PredictiveIndex/data/dump/tmp/"), "/home/aalto/IdeaProjects/PredictiveIndex/data/dump/sortedInvertedIndex.bin");
+//massiveBinaryMerge(new File("/home/aalto/IdeaProjects/PredictiveIndex/data/dump/tmp/"), "/home/aalto/IdeaProjects/PredictiveIndex/data/dump/sortedInvertedIndex.bin");
+//testMassiveBinaryMerge();
+//testMassiveBinaryMerge2(new File("/home/aalto/IdeaProjects/PredictiveIndex/data/dump/tmp/"));
+//tryMap();
+//splitCollection(info);
+//System.exit(1);
 
+
+
+
+
+
+
+
+
+        /*
+        if (Files.exists(Paths.get(fPath+".bin"))) {
+            ps = new InvertedIndex((Int2IntMap) deserialize(fPath), (int[]) deserialize(sPath));
+        }else {
+            ps = new InvertedIndex();
+            ps.getClueWebMetadata(info);
+        }
+        //ps.threads();
+        ps.doc = 0;
+        ps.buildDBigramInvertedIndex(info);
+        //fetchTermMap();
+        //buildFastQueryTrace();*/

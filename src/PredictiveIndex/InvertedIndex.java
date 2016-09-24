@@ -2,6 +2,7 @@ package PredictiveIndex;
 
 
 
+import com.mchange.v2.async.ThreadPoolAsynchronousRunner;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -40,7 +41,8 @@ public class InvertedIndex implements Serializable {
     static private double minBM25 =2147388309;
     public static int totNumDocs = 50220423;
     static final int testLimit = (int) (5*Math.pow(10,8));
-    static final int bufferSize = (int) (1*Math.pow(10,7));
+    static final int bufferSize = (int) (5*Math.pow(10,7));
+    static final Object flag = new Object();
 
 
     private DataOutputStream invertedIndexFile;
@@ -62,6 +64,7 @@ public class InvertedIndex implements Serializable {
     InvertedIndex(short[] globalFreqMap, int[] globalStats, String fold) throws IOException {
         this.globalFreqMap = globalFreqMap;
         this.globalStats = globalStats;
+        this.buffer = new int[bufferSize][4];
         this.invertedIndexFile = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(fold + "InvertedIndex.bin")));
     }
 
@@ -113,16 +116,19 @@ public class InvertedIndex implements Serializable {
     protected void buildDBigramInvertedIndex(String fold) throws IOException, ClassNotFoundException, InterruptedException {
         start = System.currentTimeMillis();
         System.out.println("Building D-Bigram Inverted Index...");
-        this.buffer = new int[bufferSize][4];
         DataInputStream stream = new DataInputStream( new BufferedInputStream( new FileInputStream(fold + "clueweb.bin")));
         DataInputStream DIS = new DataInputStream(new BufferedInputStream(new FileInputStream(fold + "localTermStats.bin")));
         BufferedReader br = new BufferedReader(new FileReader(fold + "docInfo.csv"));
         String[] line = br.readLine().split(" ");
         int [] document = new int[127525];
         Int2IntMap bufferMap = new Int2IntOpenHashMap();
+        LongSet bufferSet = new LongOpenHashSet();
+        int [] buffPair = new int[2];
+        bufferMap.defaultReturnValue(1);
         while(line[0] != null & checkProgress(doc, totNumDocs, 500000, start, testLimit)){
-            bufferedIndex(readClueWebDocument(line, stream, document), Integer.parseInt(line[1]), fetchHashMap(bufferMap, DIS));
+            bufferedIndex(readClueWebDocument(line, stream, document), Integer.parseInt(line[1]), fetchHashMap(bufferMap, DIS), bufferSet, buffPair);
             bufferMap.clear();
+            bufferSet.clear();
             line = br.readLine().split(" ");
             doc++;
         }
@@ -132,42 +138,49 @@ public class InvertedIndex implements Serializable {
         System.out.println("D-Bigram Inverted Index Built!");
     }
 
-    public void bufferedIndex(int[] words, int title, Int2IntMap localFreqMap) throws IOException, ClassNotFoundException, InterruptedException {
+    public void bufferedIndex(int[] words, int title, Int2IntMap localFreqMap, LongSet bufferSet, int [] pair) throws IOException, ClassNotFoundException, InterruptedException {
         /* For each document we take the pairs between documents within a distance. We add each entry to a buffer and
         * compute the BM25 for that specific term-pair*/
 
         wordsCount += words.length;
         int score1;
         int score2;
-        int ones=0;
+        int threadPointer = 0;
         int movingDistance = distance;
-        LongSet auxPair = new LongOpenHashSet();
-        localFreqMap.defaultReturnValue(1);
         for (int wIx = 0; wIx < words.length; wIx++) {
             if(words.length - wIx < distance) movingDistance = (words.length - wIx);
             for (int dIx = wIx+1; dIx < wIx + movingDistance; dIx++) {
-                int [] pair = {words[wIx], words[dIx]};
+                pair[0] = words[wIx] ;
+                pair[1] = words[dIx] ;
                 Arrays.sort(pair);
-                if(auxPair.add(getPair(pair[0], pair[1]))) {
+                if(bufferSet.add(getPair(pair[0], pair[1]))) {
                     score1 = getBM25(globalStats, words.length, localFreqMap.get(pair[0]), globalFreqMap[pair[0]]);
                     score2 = getBM25(globalStats, words.length, localFreqMap.get(pair[1]), globalFreqMap[pair[1]]);
-                    this.buffer[pointer.getAndAdd(1)] = new int[]{pair[0], pair[1], score1+score2, title};
-                    if (pointer.get() == buffer.length - 1){
-                        sampledSelection();
-                        pointer.set(0);
+                    if (pointer.get()%10000000==0) System.out.println(pointer);
+
+                    if ((threadPointer = pointer.getAndAdd(1)) >= buffer.length ){
+                        synchronized (flag){
+                            if(threadPointer == buffer.length){
+                                sampledSelection();
+                                pointer.set(0);
+                                threadPointer = pointer.getAndAdd(1);
+                                flag.notifyAll();
+                            }else{
+                                System.out.println("Sleeping");
+                                flag.wait();
+                                threadPointer = pointer.getAndAdd(1);
+                                System.out.println("Awaken!");
+                            }
+                        }
                     }
+                    this.buffer[threadPointer][0] = pair[0];
+                    this.buffer[threadPointer][1] = pair[1];
+                    this.buffer[threadPointer][2] = score1 + score2;
+                    this.buffer[threadPointer][3] = title;
                 }
             }//if(getLocalFreq(localFreqMap, words[wIx])==1) ones++;
         }
         //System.out.println("Ones: " +title+ "\t" + ones);
-    }
-
-    private static int getLocalFreq(Int2IntMap docStat, int termID){
-        /*We try to get the frequency of a term using the termID-freq hashmap. If a NullPointerException error is raised
-        * than it mean that the term freq is just 1.*/
-        int freq = docStat.get(termID);
-        if(freq == 0) return 1;
-        else return freq;
     }
 
 
