@@ -14,6 +14,7 @@ import org.mapdb.Serializer;
 import java.io.*;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static PredictiveIndex.utilsClass.*;
 
@@ -44,7 +45,7 @@ public class InvertedIndex implements Serializable {
 
     private DataOutputStream invertedIndexFile;
     final private int distance = 10;
-    private int pointer = 0;
+    private AtomicInteger pointer = new AtomicInteger(0);
     private int [][] buffer;
     public int[] globalStats;                                     //1-numberofdocs,2-wordcounter,3-unique words
     public long doc = 0;
@@ -109,13 +110,13 @@ public class InvertedIndex implements Serializable {
 
     /** 2ND PHASE - BUILD INVERTED INDEX */
 
-    protected void buildDBigramInvertedIndex(String info) throws IOException, ClassNotFoundException, InterruptedException {
+    protected void buildDBigramInvertedIndex(String fold) throws IOException, ClassNotFoundException, InterruptedException {
         start = System.currentTimeMillis();
         System.out.println("Building D-Bigram Inverted Index...");
         this.buffer = new int[bufferSize][4];
-        DataInputStream stream = new DataInputStream( new BufferedInputStream( new FileInputStream("/home/aalto/dio/compressedIndex")));
-        BufferedReader br = new BufferedReader(new FileReader(info));
-        DataInputStream DIS = new DataInputStream(new BufferedInputStream(new FileInputStream(fIndexPath + "/forwardIndexMetadata")));
+        DataInputStream stream = new DataInputStream( new BufferedInputStream( new FileInputStream(fold + "clueweb.bin")));
+        DataInputStream DIS = new DataInputStream(new BufferedInputStream(new FileInputStream(fold + "localTermStats.bin")));
+        BufferedReader br = new BufferedReader(new FileReader(fold + "docInfo.csv"));
         String[] line = br.readLine().split(" ");
         int [] document = new int[127525];
         Int2IntMap bufferMap = new Int2IntOpenHashMap();
@@ -150,8 +151,11 @@ public class InvertedIndex implements Serializable {
                 if(auxPair.add(getPair(pair[0], pair[1]))) {
                     score1 = getBM25(globalStats, words.length, localFreqMap.get(pair[0]), globalFreqMap[pair[0]]);
                     score2 = getBM25(globalStats, words.length, localFreqMap.get(pair[1]), globalFreqMap[pair[1]]);
-                    this.buffer[pointer] = new int[]{pair[0], pair[1], score1+score2, title};
-                    checkBuffer();
+                    this.buffer[pointer.getAndAdd(1)] = new int[]{pair[0], pair[1], score1+score2, title};
+                    if (pointer.get() == buffer.length - 1){
+                        sampledSelection();
+                        pointer.set(0);
+                    }
                 }
             }//if(getLocalFreq(localFreqMap, words[wIx])==1) ones++;
         }
@@ -166,12 +170,6 @@ public class InvertedIndex implements Serializable {
         else return freq;
     }
 
-    private void checkBuffer() throws IOException {
-        if (pointer == buffer.length - 1){
-            sampledSelection();
-            pointer = 0;
-        }else pointer++;
-    }
 
     public void storeSelectionStats(Long2IntOpenHashMap map) throws IOException {
         int [] terms;
