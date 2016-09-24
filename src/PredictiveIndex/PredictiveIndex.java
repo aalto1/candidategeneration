@@ -65,7 +65,6 @@ public class PredictiveIndex {
             this.phase = phase;
         }
 
-
         @Override
         public void run() {
             String threadFold = dataFold+threadNum+"/";

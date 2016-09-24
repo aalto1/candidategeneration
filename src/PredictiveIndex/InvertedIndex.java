@@ -17,6 +17,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static PredictiveIndex.PredictiveIndex.globalFold;
 import static PredictiveIndex.utilsClass.*;
 
 /**
@@ -33,6 +34,7 @@ public class InvertedIndex implements Serializable {
     static final String sPath = path + "/stats";
     static final String dPath = path + "/dump";
     static final String fIndexPath = path + "/FI";
+    static final String globalI2 = "/home/aalto/IdeaProjects/PredictiveIndex/data/global/rawInvertedIndex/";
     static final String ser = ".ser";
     public static double start;
     public static double now;
@@ -41,14 +43,16 @@ public class InvertedIndex implements Serializable {
     static private double minBM25 =2147388309;
     public static int totNumDocs = 50220423;
     static final int testLimit = (int) (5*Math.pow(10,8));
-    static final int bufferSize = (int) (5*Math.pow(10,7));
+    static final int bufferSize = (int) (2*Math.pow(10,7));
     static final Object flag = new Object();
+    static AtomicInteger dump = new AtomicInteger(0);
 
 
     private DataOutputStream invertedIndexFile;
     final private int distance = 10;
-    private AtomicInteger pointer = new AtomicInteger(0);
-    private int [][] buffer;
+    //private AtomicInteger pointer = new AtomicInteger(0);
+    private int pointer =0;
+    //private int [][] buffer;
     public int[] globalStats;                                     //1-numberofdocs,2-wordcounter,3-unique words
     public long doc = 0;
     //private Int2IntMap globalFreqMap;
@@ -64,7 +68,7 @@ public class InvertedIndex implements Serializable {
     InvertedIndex(short[] globalFreqMap, int[] globalStats, String fold) throws IOException {
         this.globalFreqMap = globalFreqMap;
         this.globalStats = globalStats;
-        this.buffer = new int[bufferSize][4];
+        //buffer = new int[bufferSize][4];
         this.invertedIndexFile = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(fold + "InvertedIndex.bin")));
     }
 
@@ -115,10 +119,14 @@ public class InvertedIndex implements Serializable {
 
     protected void buildDBigramInvertedIndex(String fold) throws IOException, ClassNotFoundException, InterruptedException {
         start = System.currentTimeMillis();
+        int [][] buffer = new int[bufferSize][4];
+        int pointer = 0;
         System.out.println("Building D-Bigram Inverted Index...");
+        DataOutputStream DOS = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(globalI2+dump.getAndAdd(1), false)));
         DataInputStream stream = new DataInputStream( new BufferedInputStream( new FileInputStream(fold + "clueweb.bin")));
         DataInputStream DIS = new DataInputStream(new BufferedInputStream(new FileInputStream(fold + "localTermStats.bin")));
         BufferedReader br = new BufferedReader(new FileReader(fold + "docInfo.csv"));
+
         String[] line = br.readLine().split(" ");
         int [] document = new int[127525];
         Int2IntMap bufferMap = new Int2IntOpenHashMap();
@@ -126,26 +134,25 @@ public class InvertedIndex implements Serializable {
         int [] buffPair = new int[2];
         bufferMap.defaultReturnValue(1);
         while(line[0] != null & checkProgress(doc, totNumDocs, 500000, start, testLimit)){
-            bufferedIndex(readClueWebDocument(line, stream, document), Integer.parseInt(line[1]), fetchHashMap(bufferMap, DIS), bufferSet, buffPair);
+            pointer = bufferedIndex(readClueWebDocument(line, stream, document), Integer.parseInt(line[1]), fetchHashMap(bufferMap, DIS), bufferSet, buffPair, DOS, pointer, buffer);
             bufferMap.clear();
             bufferSet.clear();
             line = br.readLine().split(" ");
             doc++;
         }
-        sampledSelection();
+        sampledSelection(DOS, buffer);
         this.invertedIndexFile.close();
         DIS.close();
         System.out.println("D-Bigram Inverted Index Built!");
     }
 
-    public void bufferedIndex(int[] words, int title, Int2IntMap localFreqMap, LongSet bufferSet, int [] pair) throws IOException, ClassNotFoundException, InterruptedException {
+    public int bufferedIndex(int[] words, int title, Int2IntMap localFreqMap, LongSet bufferSet, int [] pair,  DataOutputStream DOS, int pointer, int[][] buffer) throws IOException, ClassNotFoundException, InterruptedException {
         /* For each document we take the pairs between documents within a distance. We add each entry to a buffer and
         * compute the BM25 for that specific term-pair*/
 
         wordsCount += words.length;
         int score1;
         int score2;
-        int threadPointer = 0;
         int movingDistance = distance;
         for (int wIx = 0; wIx < words.length; wIx++) {
             if(words.length - wIx < distance) movingDistance = (words.length - wIx);
@@ -156,30 +163,20 @@ public class InvertedIndex implements Serializable {
                 if(bufferSet.add(getPair(pair[0], pair[1]))) {
                     score1 = getBM25(globalStats, words.length, localFreqMap.get(pair[0]), globalFreqMap[pair[0]]);
                     score2 = getBM25(globalStats, words.length, localFreqMap.get(pair[1]), globalFreqMap[pair[1]]);
-                    if (pointer.get()%10000000==0) System.out.println(pointer);
-
-                    if ((threadPointer = pointer.getAndAdd(1)) >= buffer.length ){
-                        synchronized (flag){
-                            if(threadPointer == buffer.length){
-                                sampledSelection();
-                                pointer.set(0);
-                                threadPointer = pointer.getAndAdd(1);
-                                flag.notifyAll();
-                            }else{
-                                System.out.println("Sleeping");
-                                flag.wait();
-                                threadPointer = pointer.getAndAdd(1);
-                                System.out.println("Awaken!");
-                            }
-                        }
+                    if(pointer == buffer.length){
+                        sampledSelection(DOS, buffer);
+                        DOS = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(globalI2+dump.getAndAdd(1), false)));
+                        pointer = 0;
                     }
-                    this.buffer[threadPointer][0] = pair[0];
-                    this.buffer[threadPointer][1] = pair[1];
-                    this.buffer[threadPointer][2] = score1 + score2;
-                    this.buffer[threadPointer][3] = title;
+                    buffer[pointer][0] = pair[0];
+                    buffer[pointer][1] = pair[1];
+                    buffer[pointer][2] = score1 + score2;
+                    buffer[pointer][3] = title;
+                    pointer++;
                 }
             }//if(getLocalFreq(localFreqMap, words[wIx])==1) ones++;
         }
+        return pointer;
         //System.out.println("Ones: " +title+ "\t" + ones);
     }
 
@@ -197,29 +194,29 @@ public class InvertedIndex implements Serializable {
     }
 
     /*else{
-                pair = getPair(this.buffer[k][0],this.buffer[k][1]);
+                pair = getPair(buffer[k][0],buffer[k][1]);
                 if(dumpCounter.putIfAbsent(pair,1) != null){
                     dumpCounter.merge(pair, 1, Integer::sum);
                 }
             }
         }
         storeSelectionStats(dumpCounter);*/
-    private void sampledSelection() throws IOException {
+    private void sampledSelection(DataOutputStream DOS, int[][] buffer) throws IOException {
         System.out.println("TIME TO CLEAN. Processed docs: " + doc);
         Long2IntOpenHashMap dumpCounter = new Long2IntOpenHashMap();
         now = System.currentTimeMillis();
-        int threshold = getThreshold();
+        int threshold = getThreshold(buffer);
         long pair;
         int keep = 0;
-        for (int k = 0; k < this.buffer.length; k++) {
-            if (this.buffer[k][2] > threshold) {
-                this.buffer[keep] = this.buffer[k];
-                //for (int elem : this.buffer[k]) this.invertedIndexFile.writeInt(elem);
-                if(maxBM25<this.buffer[k][2]) maxBM25 = this.buffer[k][2];
+        for (int k = 0; k < buffer.length; k++) {
+            if (buffer[k][2] > threshold) {
+                buffer[keep] = buffer[k];
+                //for (int elem : buffer[k]) this.invertedIndexFile.writeInt(elem);
+                if(maxBM25<buffer[k][2]) maxBM25 = buffer[k][2];
                 keep++;
             }
         }
-        /*java.util.Arrays.parallelSort(this.buffer,0, keep, new Comparator<int[]>() {
+        java.util.Arrays.parallelSort(buffer,0, keep, new Comparator<int[]>() {
             @Override
             public int compare(int[] int1, int[] int2) {
                 if (int1[0] == int2[0]) {
@@ -228,16 +225,16 @@ public class InvertedIndex implements Serializable {
                     }else return Integer.compare(int1[1], int2[1]);
                 } else return Integer.compare(int1[0], int2[0]);
             }
-        });*/
+        });
         for (int k = 0; k < keep; k++) {
-            for (int elem : this.buffer[k]) this.invertedIndexFile.writeInt(elem);
+            for (int elem : buffer[k]) DOS.writeInt(elem);
         }
         System.out.println("Sampled Natural Selection:" + (System.currentTimeMillis() - now) + "ms.\tThreshold: " + threshold +"\t MaxBM25: " + maxBM25);
         maxBM25 = 0;
         System.out.println("Processing Time:" + (doc / (System.currentTimeMillis() - start)) * 1000 + " doc/s");
     }
 
-    private int getThreshold(){
+    private int getThreshold(int [][] buffer){
         int rnd;
         int sampleLength= (int) (bufferSize*0.002);
         //sampleLength= bufferSize;
@@ -245,8 +242,8 @@ public class InvertedIndex implements Serializable {
         int[] sample = new int[sampleLength];
         for(int k = 0; k<sample.length; k++) {
             rnd = ThreadLocalRandom.current().nextInt(0, bufferSize-1);
-            //System.out.println(this.buffer[rnd][2]);
-            sample[k] = this.buffer[rnd][2];
+            //System.out.println(buffer[rnd][2]);
+            sample[k] = buffer[rnd][2];
         }
         java.util.Arrays.parallelSort(sample);
         return sample[(int) (sampleLength*0.8)];
