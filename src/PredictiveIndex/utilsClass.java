@@ -74,7 +74,7 @@ class utilsClass {
     }
 
     static Int2IntMap fetchHashMap(Int2IntMap map, DataInputStream DIS) throws IOException {
-        for (int i = 0; i < DIS.readInt(); i++) {
+        for (int i = 0; i <DIS.readInt()/2; i++) {
             map.put(DIS.readInt(),DIS.readInt());
         }
         return map;
@@ -82,15 +82,16 @@ class utilsClass {
 
 
 
-    protected static int getBM25(int [] globalStats, int docLen, int f, int n) {
+
+    protected static int getBM25(long [] globalStats, int docLen, int f, int n) {
         /*global statistics for BM25*/
-        int N = globalStats[0];
+        long N = globalStats[0];
         double avg = globalStats[1] / N;
         double k = 1.6;
         double b = 0.75;
         double IDF = java.lang.Math.log((N - n + 0.5 )/( n + 0.5));
         double BM25 = (IDF * f * k + 1) / (f + k * (1 - b + (b* docLen / avg)));
-        //if(BM25>100) System.out.println(BM25);
+        //System.out.println(BM25);
         return (int) (BM25*Math.pow(10, 7));
     }
 
@@ -173,15 +174,14 @@ class utilsClass {
     /*528184109
     * #documnets: 50220423
     * rate: 10000000*/
-    static boolean checkProgress(long p, int max, int rate, double start, int limit){
-        if(p % rate == 0){
-            long percentage = (long) (p*100.0)/max;
-            out.println("Work in progress: " + percentage+ "%\tProcessing Time: " + (p / (System.currentTimeMillis() - start)) * 1000 + "doc/s. \tProcessed: " +p);
+    static boolean checkProgress(long now, int tot, int rate, double start, int testLimit){
+        if(now % rate == 0){
+            long percentage = (long) (now*100.0)/testLimit;
+            out.println("Work in progress: " + percentage+ "%\tProcessing Time: " + (now / (System.currentTimeMillis() - start)) * 1000 + "doc/s. \tProcessed: " +now);
             out.print("Expected Remaining Time: "+ (((System.currentTimeMillis() - start)/percentage)*(100-percentage)/60000) + " minutes");
             memoryStatistics();
-            //System.out.println("Expected time: " + (System.currentTimeMillis() - now)*(1/10*percentage));
         }
-        if(p>limit) return false;
+        if(now>testLimit) return false;
         else return true;
     }
 
@@ -267,26 +267,31 @@ class utilsClass {
     static void splitCollection(String info) throws IOException {
         int doc = 0;
         int split = 0;
-        String folder = "/home/aalto/IdeaProjects/PredictiveIndex/data/clueweb/";
+        long bytes = 0;
+        int flag = 0;
+        String folder = "/home/aalto/IdeaProjects/PredictiveIndex/data/";
         System.out.println("Splitting ClueWeb09...");
         DataInputStream DIS = new DataInputStream(new BufferedInputStream( new FileInputStream("/home/aalto/dio/compressedIndex")));
-        DataOutputStream DOS = new DataOutputStream(new BufferedOutputStream( new FileOutputStream(folder + split + "/"+ split+".bin")));;
+        DataOutputStream DOS = new DataOutputStream(new BufferedOutputStream( new FileOutputStream(folder + split + "/clueweb.bin")));;
         BufferedReader br = new BufferedReader(new FileReader(info));
         BufferedWriter bw = new BufferedWriter(new FileWriter(folder + split + "/"+ "docInfo.csv"));
         String line = br.readLine();
         String [] record;
         while(line != null){
             record = line.split(" ");
-            if (doc%12555105==0 & doc!=0) {
+            if (flag==1) {
                 out.println(doc);
                 DOS.close();
                 bw.close();
                 split++;
+                flag=0;
                 bw = new BufferedWriter(new FileWriter(folder + split + "/"+ "docInfo.csv"));
-                DOS = new DataOutputStream(new BufferedOutputStream( new FileOutputStream(folder + split + "/"+ split+".bin")));
+                DOS = new DataOutputStream(new BufferedOutputStream( new FileOutputStream(folder + split + "/clueweb.bin")));
             }
             for (int i = 0; i < Integer.parseInt(record[3]); i++) {
                 DOS.writeByte(DIS.readByte());
+                bytes++;
+                if(bytes % 13760033936L==0 & doc!=0) flag = 1;
             }
             bw.write(line);
             bw.newLine();

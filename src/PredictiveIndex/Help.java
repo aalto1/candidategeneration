@@ -1,7 +1,14 @@
 package PredictiveIndex;
 
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+
+import java.io.*;
 import java.util.HashMap;
 import java.util.HashSet;
+
+import static PredictiveIndex.utilsClass.getOOStream;
 
 /**
  * Created by aalto on 7/20/16.
@@ -727,4 +734,111 @@ doc = 0;
         this.forwardIndexFile.writeObject(hashMapToArray(position, multipleOccurece));
         this.globalStats[0]++;
         this.globalStats[1]+= words.length;
+    }*/
+
+
+    /*public static void binaryMassiveSort(String input, String output, int recordsNumber) throws IOException {
+        now = System.currentTimeMillis();
+        int p=0;
+        DataInputStream DIStream = new DataInputStream(new BufferedInputStream(new FileInputStream(input)));
+        System.out.print("Allocating space...\t");
+        partialNow = System.currentTimeMillis();
+        bucket = new long[250000000][2];
+        System.out.println("done: " + (System.currentTimeMillis() - partialNow) / 1000 + "s");
+        DataOutputStream DOStream;
+        for (int k = 1; true; k++) {
+            DOStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(output + k)));
+            System.out.print("Loading data...");
+            partialNow = System.currentTimeMillis();
+            try {
+                for (p = 0; p < bucket.length; p++) {
+                    bucket[p][0] = DIStream.readLong();
+                    bucket[p][1] = DIStream.readLong();
+                }
+            } catch (EOFException e) {
+                routine(DOStream, p+1);
+                break;
+            }
+            routine(DOStream, bucket.length);
+        }
+        System.out.print((System.currentTimeMillis() - now)/60000+"min");
+    }
+
+    static void routine(DataOutputStream DOStream, int p) throws IOException {
+        System.out.println("done: " + (System.currentTimeMillis() - partialNow)/1000 + "s");
+        System.out.print("Sorting...\t");
+        partialNow = System.currentTimeMillis();
+        java.util.Arrays.parallelSort(bucket, 0, p, comp);
+        System.out.println("done: " + (System.currentTimeMillis() - partialNow)/1000 + "s");
+        System.out.print("Writing on disk...\t");
+        partialNow = System.currentTimeMillis();
+        for(int x =0; x<p; x++) for (long entry: bucket[x]) DOStream.writeLong(entry);
+        DOStream.close();
+        System.out.println("done: " + (System.currentTimeMillis() - partialNow)/1000 + "s");
+    }
+
+    /*public static void readFiles(File folder, String output) throws IOException {
+        long [][][] bucketsA;
+        long [][][] bucketsB;
+        File [] files = folder.listFiles();
+        DataInputStream [] DIStreams = new DataInputStream[files.length];
+        DataOutputStream DOStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(output)));
+        int section =  250000000/(files.length+2);
+        bucketsA = new long[files.length][section][2];
+        for(int k =0; k< files.length; k++){
+            DIStreams[k] =  new DataInputStream(new BufferedInputStream(new FileInputStream(files[k])));
+        }
+        for(int y = 0; y< DIStreams.length; y++){
+            for(int z = 0; z < section; z++){
+                bucketsA[y][z][0] = DIStreams[y].readLong() ;
+                bucketsA[y][z][1] = DIStreams[y].readLong() ;
+            }
+        }
+        for (int x = files.length/2; bucketsA.length>2 ; x /=2) {
+            System.out.println("Merging " + x);
+            bucketsB = new long[x][section][2];
+            for (int i = 0; i < bucketsB.length ; i++) {
+                System.out.println("Merging " + x +"-"+i);
+                bucketsB[i] = mergeSortedMatrix(bucketsA[(i*2)], bucketsA[(i*2)+1]);
+                bucketsA[(i*2)]   = null;
+                bucketsA[(i*2)+1] = null;
+            }
+            x/=2;
+            if(bucketsB.length==2){
+                writeMergeSortedMatrix(bucketsB[0], bucketsB[1], DOStream);
+                break;
+            }
+            bucketsA = new long[x][section][2];
+            for (int i = 0; i < bucketsB.length ; i++) {
+                System.out.println("Merging:" + x +"-"+i);
+                bucketsA[i] = mergeSortedMatrix(bucketsB[(i*2)], bucketsB[(i*2)+1],);
+                bucketsB[(i*2)]   = null;
+                bucketsB[(i*2)+1] = null;
+            }
+        }
+        writeMergeSortedMatrix(bucketsA[0], bucketsA[1], DOStream);
+
+
+    }*/
+
+
+    /* TEST CLASS
+    Test class to cheeck if is possible to serialize and deserialize an Hashmap of Hashmaps
+
+    private static void provaSer() throws IOException, ClassNotFoundException {
+        Long2ObjectOpenHashMap<Int2IntMap> mappa = new Long2ObjectOpenHashMap<>();
+        Int2IntMap mappetta1 = new Int2IntOpenHashMap();
+        mappetta1.put(10, 10);
+        mappetta1.put(20, 23);
+        Int2IntMap mappetta2 = new Int2IntOpenHashMap();
+        mappetta2.put(-114, 13);
+        mappetta2.put(-87, -423);
+        mappa.put((long) 1, mappetta1);
+        mappa.put((long) 2, mappetta2);
+        ObjectOutputStream OOStream = getOOStream("out.bin", true);
+        OOStream.writeObject(mappa);
+        Long2ObjectOpenHashMap<Int2IntMap> fastQueryTrace = (Long2ObjectOpenHashMap<Int2IntMap>) (new ObjectInputStream(new FileInputStream("out.bin"))).readObject(); //**
+        //System.out.println(fastQueryTrace.get((long) 1).get(10));
+        System.out.println(fastQueryTrace.get((long) 2).get(-87));
+        System.exit(1);
     }*/

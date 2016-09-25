@@ -4,8 +4,6 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.RunnableFuture;
 
 import com.google.common.primitives.Ints;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
@@ -16,23 +14,9 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import org.lemurproject.kstem.KrovetzStemmer;
 import static PredictiveIndex.InvertedIndex.*;
-import com.google.code.externalsorting.*;
-import static PredictiveIndex.VariableByteCode.encodeInterpolate;
+
 
 import static PredictiveIndex.utilsClass.*;
-import static PredictiveIndex.ExternalSort.*;
-
-import org.lemurproject.kstem.Stemmer;
-import sun.nio.cs.Surrogate;
-import org.lemurproject.kstem.KrovetzStemmer.*;
-import com.koloboke.collect.map.hash.HashObjIntMap;
-import com.koloboke.collect.map.hash.HashObjIntMaps;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
-import javax.sound.sampled.Line;
-import com.koloboke.collect.map.hash.HashObjIntMaps.*;
-import static PredictiveIndex.VariableByteCode.decodeInterpolate;
-import it.unimi.dsi.fastutil.io.FastBufferedInputStream;
 
 
 
@@ -40,7 +24,7 @@ import it.unimi.dsi.fastutil.io.FastBufferedInputStream;
  * Created by aalto on 7/20/16.
  */
 public class PredictiveIndex {
-    static int counter = 1;
+    static long counter = 1;
     static int counter2 = 1;
     private static String metadata = "/home/aalto/IdeaProjects/PredictiveIndex/data/metadata/";
     private static String qi = "/home/aalto/dio/";
@@ -73,7 +57,7 @@ public class PredictiveIndex {
                 if(this.phase==0)
                     i2.getClueWebMetadata(threadFold);
                 else
-                    i2.buildDBigramInvertedIndex(threadFold);
+                    i2.buildDBigramInvertedIndex(threadFold, threadNum);
 
             }catch (IOException | ClassNotFoundException | InterruptedException e) {
                 e.printStackTrace();
@@ -84,9 +68,20 @@ public class PredictiveIndex {
 
     /*/home/aalto/IdeaProjects/PredictiveIndex/aux/sort/bin/binsort --size 16 --length 12 --block-size=900000000  ./InvertedIndex.dat ./sortedInvertedIndex.dat*/
     public static void main(String [] args) throws IOException, ClassNotFoundException, InterruptedException {
+        //splitCollection("/home/aalto/dio/docInfo");
+        //massiveBinaryMerge(new File(globalFold + "rawInvertedIndex/"),globalFold+"invertedIndex.bin");
+        //testMassiveBinaryMerge2(new File(globalFold + "rawInvertedIndex/"));
+        //getQualityModel(globalFold+"invertedIndex.bin");
+        //getTermMap();
+        //uniquePairs();
+        computelRanges(1);
+        computerRanges(2);
+
+        //printQualityModel(metadata+"qualityModel.bin");
+        System.exit(1);
         InvertedIndex i2;
         if (Files.exists(Paths.get(globalFold + "freqMap.bin"))) {
-            i2 = new InvertedIndex((short[]) deserialize(globalFold + "freqMap"), (int[]) deserialize(globalFold + "stats"), globalFold + "rawInvertedIndex/");
+            i2 = new InvertedIndex((int[]) deserialize(globalFold + "freqMap"), (long[]) deserialize(globalFold + "stats"), globalFold + "rawInvertedIndex/");
         }else {
             i2 = new InvertedIndex(globalFold + "rawInvertedIndex/");
             startBatteria(i2,0);
@@ -94,6 +89,16 @@ public class PredictiveIndex {
             serialize(i2.globalStats, globalFold+"stats");
         }
         startBatteria(i2,1);
+    }
+
+    private static void printQualityModel(String s) throws IOException, ClassNotFoundException {
+        int [][][] qm = (int[][][]) getOIStream(s,false).readObject();
+        for (int [][] x: qm){
+            System.out.print("[");
+            for (int [] y: x){
+                System.out.print(Arrays.toString(y)+"\t\t\t");
+            }System.out.println("]");
+        }
     }
 
     static void startBatteria(InvertedIndex i2, int phase) throws InterruptedException {
@@ -110,26 +115,7 @@ public class PredictiveIndex {
     }
 
 
-    /* TEST CLASS
-    Test class to cheeck if is possible to serialize and deserialize an Hashmap of Hashmaps*/
 
-    private static void provaSer() throws IOException, ClassNotFoundException {
-        Long2ObjectOpenHashMap<Int2IntMap> mappa = new Long2ObjectOpenHashMap<>();
-        Int2IntMap mappetta1 = new Int2IntOpenHashMap();
-        mappetta1.put(10, 10);
-        mappetta1.put(20, 23);
-        Int2IntMap mappetta2 = new Int2IntOpenHashMap();
-        mappetta2.put(-114, 13);
-        mappetta2.put(-87, -423);
-        mappa.put((long) 1, mappetta1);
-        mappa.put((long) 2, mappetta2);
-        ObjectOutputStream OOStream = getOOStream("out.bin", true);
-        OOStream.writeObject(mappa);
-        Long2ObjectOpenHashMap<Int2IntMap> fastQueryTrace = (Long2ObjectOpenHashMap<Int2IntMap>) (new ObjectInputStream(new FileInputStream("out.bin"))).readObject(); //**
-        //System.out.println(fastQueryTrace.get((long) 1).get(10));
-        System.out.println(fastQueryTrace.get((long) 2).get(-87));
-        System.exit(1);
-    }
 
     public static void uniquePairs() throws IOException{
         Long2IntMap map = new Long2IntOpenHashMap();
@@ -352,6 +338,7 @@ public class PredictiveIndex {
         for (int i = 4; i < 50220423; i += i*lenRule) {
             lenBuckets.addLast(i);
         }
+        System.out.println(lenBuckets);
         return Ints.toArray(lenBuckets);
     }
 
@@ -360,10 +347,10 @@ public class PredictiveIndex {
     private static int[] computerRanges(double rankRule){
         rankRule = 1.4;
         LinkedList<Integer> rankBuckets = new LinkedList<>();
-        for (int i = 11; i < Integer.MAX_VALUE ; i += i*rankRule) {
+        for (int i = 11; i < 20000 ; i += i*rankRule) {
             rankBuckets.addLast(i);
         }
-        rankBuckets.addLast(Integer.MAX_VALUE);
+        System.out.println(rankBuckets);
         return Ints.toArray(rankBuckets);
     }
 
@@ -401,7 +388,7 @@ public class PredictiveIndex {
     *
     * OPEN ISSUES:
     * - Make it cleaner */
-    public static int[][][] getQualityModel() throws IOException, ClassNotFoundException {
+    public static int[][][] getQualityModel(String I2) throws IOException, ClassNotFoundException {
         int maxBM25 =0;
         int minBM25=0;
         int maxLength=0;
@@ -409,7 +396,7 @@ public class PredictiveIndex {
         int [] rRanges = computerRanges(1.4);
         int [][][] qualityModel = new int[lRanges.length][rRanges.length][2];
         //BufferedReader br = new BufferedReader(new FileReader("readIndexInfo"));
-        DataInputStream inStream = new DataInputStream( new BufferedInputStream(new FileInputStream(dPath + "/sortedInvertedIndex.bin")));
+        DataInputStream inStream = new DataInputStream( new BufferedInputStream(new FileInputStream(I2)));
         ObjectInputStream obInStream = getOIStream(metadata+"fastQueryTrace", true);
         System.out.println("Fast Query Trace fetched!\nProcessing Inverted Index...");
         Long2ObjectOpenHashMap<Int2IntMap> fastQueryTrace = (Long2ObjectOpenHashMap<Int2IntMap>) obInStream.readObject(); //conversion seems to work
@@ -424,11 +411,11 @@ public class PredictiveIndex {
             if(posting[0] ==-1) break;
             if(posting[0] != currentPair[0] | posting[1] != currentPair[1]){
                 //System.out.println(auxPostingList.size());
-                if(duplicate.contains(getPair(currentPair[0], currentPair[1]))) System.out.println(getPair(currentPair[0], currentPair[1]));
-                else duplicate.add(getPair(currentPair[0], currentPair[1]));
+                //if(duplicate.contains(getPair(currentPair[0], currentPair[1]))) System.out.println(getPair(currentPair[0], currentPair[1]));
+                //else duplicate.add(getPair(currentPair[0], currentPair[1]));
                 if(fastQueryTrace.get(getPair(currentPair[0], currentPair[1]))!=null){
-                    //System.out.println(getPair(currentPair[0], currentPair[1]));
-                    //qualityModel = processPostingList(Ints.toArray(auxPostingList), qualityModel, fastQueryTrace.get(getPair(currentPair[0], currentPair[1])), rRanges, lRanges);
+                    //System.out.println(auxPostingList);
+                    qualityModel = processPostingList(Ints.toArray(auxPostingList), qualityModel, fastQueryTrace.get(getPair(currentPair[0], currentPair[1])), rRanges, lRanges);
                     //System.out.println(fastQueryTrace.get(getPair(currentPair[0], currentPair[1])));
                 }
                 numberOfPostingLists++;
@@ -456,9 +443,9 @@ public class PredictiveIndex {
             term = postingList[i+1];
             int increment = aggregatedTopK.get(term);
             if(increment>0){
-                System.out.println(aggregatedTopK.get(term));
-                hit+=increment;
-                rankBucket = getRankBucket(rankBucket, score, rRanges);
+                //System.out.println(aggregatedTopK.get(term));
+                System.out.println(hit+=increment);
+                rankBucket = getRankBucket(rankBucket, i/2, rRanges);
                 //bucket hit by this posting
                 qualityModel[lenBucket][rankBucket][0] += increment;
                 for (int j = 0; j < rankBucket + 1; j++) {
