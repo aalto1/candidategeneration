@@ -13,6 +13,9 @@ import it.unimi.dsi.fastutil.longs.*;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import org.lemurproject.kstem.KrovetzStemmer;
+
+import static PredictiveIndex.ExternalSort.massiveBinaryMerge;
+import static PredictiveIndex.ExternalSort.sortSmallInvertedIndex;
 import static PredictiveIndex.InvertedIndex.*;
 
 
@@ -74,10 +77,11 @@ public class PredictiveIndex {
         //getQualityModel(globalFold+"invertedIndex.bin");
         //getTermMap();
         //uniquePairs();
-        computelRanges(1);
-        computerRanges(2);
+        //computelRanges(1);
+        //computerRanges(2);
 
-        //printQualityModel(metadata+"qualityModel.bin");
+        printQualityModel(metadata+"qualityModel.bin");
+        //sortSmallInvertedIndex();
         System.exit(1);
         InvertedIndex i2;
         if (Files.exists(Paths.get(globalFold + "freqMap.bin"))) {
@@ -96,7 +100,7 @@ public class PredictiveIndex {
         for (int [][] x: qm){
             System.out.print("[");
             for (int [] y: x){
-                System.out.print(Arrays.toString(y)+"\t\t\t");
+                System.out.print(y[0]+"\t\t\t");
             }System.out.println("]");
         }
     }
@@ -118,20 +122,24 @@ public class PredictiveIndex {
 
 
     public static void uniquePairs() throws IOException{
-        Long2IntMap map = new Long2IntOpenHashMap();
+        LongSet uniquePairs = new LongOpenHashSet();
         BufferedReader br = new BufferedReader(new FileReader("/home/aalto/dio/query/Q/million09_training"));
-        String[] line = br.readLine().split(":")[1].split(" ");
+        String line;
+        String [] stringTerms;
         Integer [] terms ;
         int unique=0;
-        while(line[0] != null){
-            terms = new Integer[line.length];
-            for(int i = 0; i< terms.length; i++) terms[i] = termMap.get(line[i]);
-            for (long i : getCombinations(new LinkedList<Integer>(java.util.Arrays.asList(terms)),2)) {
-                if(map.putIfAbsent(i,1)==null) unique++;
+        for(line = br.readLine(); line!=null; line = br.readLine()){
+            stringTerms = line.split(":")[1].split(" ");
+            terms = new Integer[stringTerms.length];
+            for(int i = 0; i< terms.length; i++) terms[i] = termMap.get(stringTerms[i]);
+            for (long i : getCombinations(new LinkedList<>(java.util.Arrays.asList(terms)),2)) {
+                uniquePairs.add(i);
             }
-            System.out.println(unique);
-            line = br.readLine().split(":")[1].split(" ");
+            System.out.println(uniquePairs.size());
+
         }
+        serialize(uniquePairs, metadata+"uniquePairs");
+
 
     }
 
@@ -350,6 +358,7 @@ public class PredictiveIndex {
         for (int i = 11; i < 20000 ; i += i*rankRule) {
             rankBuckets.addLast(i);
         }
+        rankBuckets.addLast(Integer.MAX_VALUE);
         System.out.println(rankBuckets);
         return Ints.toArray(rankBuckets);
     }

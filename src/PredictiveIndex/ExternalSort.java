@@ -15,6 +15,11 @@ import static PredictiveIndex.utilsClass.getTerms;
  * Created by aalto on 9/12/16.
  */
 public class ExternalSort {
+    private static String metadata = "/home/aalto/IdeaProjects/PredictiveIndex/data/metadata/";
+    private static String qi = "/home/aalto/dio/";
+    static final String clueweb09 = "/home/aalto/IdeaProjects/PredictiveIndex/data/clueweb/";
+    static final String dataFold = "/home/aalto/IdeaProjects/PredictiveIndex/data/";
+    static final String globalFold = dataFold+"global/";
     static long [][] bucket;
     private static long now = System.currentTimeMillis();
     static long partialNow;
@@ -218,6 +223,35 @@ public class ExternalSort {
             }
 
         }
+    }
+
+    static void sortSmallInvertedIndex() throws IOException {
+        long [][] bucketsAux;
+        DataInputStream DIS;
+        long [][] i2= new long[300000000][2];
+        int i=0;
+        File folder = new File(globalFold + "rawInvertedIndex/");
+        File [] files = folder.listFiles();
+
+        for (File f:files) {
+            DIS = new DataInputStream(new BufferedInputStream(new FileInputStream(f)));
+            for (; i < i2.length; i++) {
+                try{
+                    i2[i][0] = DIS.readLong();
+                    i2[i][1] = DIS.readLong();
+                }catch (EOFException e){
+                    System.out.println(f.getName());
+                    break;
+                }
+            }
+        }
+        Arrays.parallelSort(i2,0,i,comp);
+        DataOutputStream DOS = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(globalFold+"invertedIndex.bin", true)));
+        for (long[] x : i2){
+            DOS.writeLong(x[0]);
+            DOS.writeLong(x[1]);
+        }
+        DOS.close();
     }
 
 

@@ -34,7 +34,10 @@ public class InvertedIndex implements Serializable {
     static final String sPath = path + "/stats";
     static final String dPath = path + "/dump";
     static final String fIndexPath = path + "/FI";
+
     static final String globalI2 = "/home/aalto/IdeaProjects/PredictiveIndex/data/global/rawInvertedIndex/";
+    private static String metadata = "/home/aalto/IdeaProjects/PredictiveIndex/data/metadata/";
+
     static final String ser = ".ser";
     public static double start;
     public static double now;
@@ -42,15 +45,16 @@ public class InvertedIndex implements Serializable {
     static private double maxBM25 = 0;
     static private double minBM25 =2147388309;
     public static int totNumDocs = 50220423;
-    static final int testLimit = (int) (5*Math.pow(10,6));
+    static final int testLimit = (int) (51*Math.pow(10,6));
     static final int bufferSize = (int) (2*Math.pow(10,7));
     static final Object flag = new Object();
     static AtomicInteger dump = new AtomicInteger(0);
     DataOutputStream [] DOS = new DataOutputStream[4];
+    final LongOpenHashSet relevantPairs = (LongOpenHashSet) getOIStream(metadata+"uniquePairs", true).readObject();
 
 
     private DataOutputStream invertedIndexFile;
-    final private int distance = 5;
+    final private int distance = 10;
     //private AtomicInteger pointer = new AtomicInteger(0);
     private int pointer =0;
     //private int [][] buffer;
@@ -60,13 +64,13 @@ public class InvertedIndex implements Serializable {
     int []  globalFreqMap;
     //private ConcurrentMap<Integer,Integer> globalFreqMap;
 
-    InvertedIndex(String fold) throws IOException {
+    InvertedIndex(String fold) throws IOException, ClassNotFoundException {
         this.globalStats = new long[3];
         globalFreqMap = new int[87262395];
         //this.invertedIndexFile = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(fold + "InvertedIndex.bin")));
     }
 
-    InvertedIndex(int[] globalFreqMap, long[] globalStats, String fold) throws IOException {
+    InvertedIndex(int[] globalFreqMap, long[] globalStats, String fold) throws IOException, ClassNotFoundException {
         this.globalFreqMap = globalFreqMap;
         this.globalStats = globalStats;
         //buffer = new int[bufferSize][4];
@@ -129,25 +133,26 @@ public class InvertedIndex implements Serializable {
         DataInputStream DIS = new DataInputStream(new BufferedInputStream(new FileInputStream(fold + "localTermStats.bin")));
         BufferedReader br = new BufferedReader(new FileReader(fold + "docInfo.csv"));
 
-        String[] line = br.readLine().split(" ");
+        String[] line;
+        String record;
         int [] document = new int[127525];
         Int2IntMap bufferMap = new Int2IntOpenHashMap();
         LongSet bufferSet = new LongOpenHashSet();
         int [] buffPair = new int[2];
         bufferMap.defaultReturnValue(1);
         int debug=0;
-        while(line[0] != null & checkProgress(doc, totNumDocs, 500000, start, testLimit)){
+        for(record = br.readLine(); record!=null & checkProgress(doc, totNumDocs, 500000, start, testLimit); record = br.readLine()){
+            line = record.split(" ");
             readClueWebDocument(line, stream, document);
             fetchHashMap(bufferMap, DIS);
             pointer = bufferedIndex(document, line, bufferMap , bufferSet, buffPair, pointer, buffer, tn);
             bufferMap.clear();
             bufferSet.clear();
-            line = br.readLine().split(" ");
             doc++;
         }
         sampledSelection(buffer, tn);
         DOS[tn].close();
-        this.invertedIndexFile.close();
+        //this.invertedIndexFile.close();
         DIS.close();
         System.out.println("D-Bigram Inverted Index Built!");
     }
@@ -167,7 +172,7 @@ public class InvertedIndex implements Serializable {
                 pair[0] = words[wIx] ;
                 pair[1] = words[dIx] ;
                 Arrays.sort(pair);
-                if(bufferSet.add(getPair(pair[0], pair[1]))) {
+                if((bufferSet.add(getPair(pair[0], pair[1])) & relevantPairs.contains(getPair(pair[0],pair[1])))) {
                     score1 = getBM25(globalStats, docLen, localFreqMap.get(pair[0]), globalFreqMap[pair[0]]);
                     score2 = getBM25(globalStats, docLen, localFreqMap.get(pair[1]), globalFreqMap[pair[1]]);
                     if(pointer == buffer.length){
@@ -219,7 +224,7 @@ public class InvertedIndex implements Serializable {
         for (int k = 0; k < buffer.length; k++) {
             if (buffer[k][2] > threshold) {
                 buffer[keep++] = buffer[k];
-                //for (int elem : buffer[k]) this.invertedIndexFile.writeInt(elem);
+                //for (int elem : buffer[k]) DOS[tn].writeInt(elem);
                 if(maxBM25<buffer[k][2]) maxBM25 = buffer[k][2];
             }
         }
