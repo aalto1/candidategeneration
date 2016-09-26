@@ -54,7 +54,7 @@ public class InvertedIndex implements Serializable {
 
 
     private DataOutputStream invertedIndexFile;
-    final private int distance = 10;
+    final private int distance = 5;
     //private AtomicInteger pointer = new AtomicInteger(0);
     private int pointer =0;
     //private int [][] buffer;

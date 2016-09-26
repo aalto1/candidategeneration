@@ -74,7 +74,7 @@ public class PredictiveIndex {
         //splitCollection("/home/aalto/dio/docInfo");
         //massiveBinaryMerge(new File(globalFold + "rawInvertedIndex/"),globalFold+"invertedIndex.bin");
         //testMassiveBinaryMerge2(new File(globalFold + "rawInvertedIndex/"));
-        //getQualityModel(globalFold+"invertedIndex.bin");
+        getQualityModel(globalFold+"invertedIndex.bin");
         //getTermMap();
         //uniquePairs();
         //computelRanges(1);
