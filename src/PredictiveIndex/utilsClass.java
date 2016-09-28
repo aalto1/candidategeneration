@@ -3,6 +3,7 @@ package PredictiveIndex;
 import it.unimi.dsi.fastutil.floats.Float2BooleanArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -24,6 +25,7 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipFile.*;
 import java.util.zip.ZipInputStream;
 
+import static PredictiveIndex.PredictiveIndex.globalFold;
 import static java.lang.System.exit;
 import static java.lang.System.out;
 
@@ -265,16 +267,24 @@ class utilsClass {
     }
 
     static void splitCollection(String info) throws IOException {
+        long stemmedQuarter = 13760033936L;
+        long nonStemmedQuarter = 14257479996L;
+        System.out.println("Splitting ClueWeb09...");
         int doc = 0;
         int split = 0;
         long bytes = 0;
         int flag = 0;
+
+        String docInfo = "/home/aalto/IdeaProjects/PredictiveIndex/data/source/docInfo";
+        String compressedIndex = "/home/aalto/IdeaProjects/PredictiveIndex/data/source/noStemmerIndex";
         String folder = "/home/aalto/IdeaProjects/PredictiveIndex/data/";
-        System.out.println("Splitting ClueWeb09...");
-        DataInputStream DIS = new DataInputStream(new BufferedInputStream( new FileInputStream("/home/aalto/dio/compressedIndex")));
+
+        DataInputStream DIS = new DataInputStream(new BufferedInputStream( new FileInputStream(compressedIndex)));
+        BufferedReader br = new BufferedReader(new FileReader(docInfo));
+
         DataOutputStream DOS = new DataOutputStream(new BufferedOutputStream( new FileOutputStream(folder + split + "/clueweb.bin")));;
-        BufferedReader br = new BufferedReader(new FileReader(info));
         BufferedWriter bw = new BufferedWriter(new FileWriter(folder + split + "/"+ "docInfo.csv"));
+
         String line = br.readLine();
         String [] record;
         while(line != null){
@@ -283,6 +293,7 @@ class utilsClass {
                 out.println(doc);
                 DOS.close();
                 bw.close();
+                System.exit(1);
                 split++;
                 flag=0;
                 bw = new BufferedWriter(new FileWriter(folder + split + "/"+ "docInfo.csv"));
@@ -291,7 +302,7 @@ class utilsClass {
             for (int i = 0; i < Integer.parseInt(record[3]); i++) {
                 DOS.writeByte(DIS.readByte());
                 bytes++;
-                if(bytes % 13760033936L==0 & doc!=0) flag = 1;
+                if(bytes % nonStemmedQuarter==0 & doc!=0) flag = 1;
             }
             bw.write(line);
             bw.newLine();
@@ -303,7 +314,22 @@ class utilsClass {
         System.out.println("ClueWeb09 Splitted! " + doc);
     }
 
+   static void greedySelection(){
+       
+   }
 
+   static void mergeDumps(){
+       Long2IntOpenHashMap merge = new Long2IntOpenHashMap();
+       Long2IntOpenHashMap aux;
+
+       for(File f: new File(globalFold+"/dumped/").listFiles()) {
+           aux = (Long2IntOpenHashMap) deserialize(f.getName());
+           for (long key: aux.keySet()) {
+               if(merge.putIfAbsent(key, aux.get(key)) != null) merge.merge(key, aux.get(key), Integer::sum);
+           }
+       }
+       serialize(merge, globalFold+"/dumped/final");
+   }
 
 
 }

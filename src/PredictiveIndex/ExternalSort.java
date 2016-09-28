@@ -225,6 +225,8 @@ public class ExternalSort {
         }
     }
 
+
+
     static void sortSmallInvertedIndex() throws IOException {
         long [][] bucketsAux;
         DataInputStream DIS;
@@ -253,6 +255,9 @@ public class ExternalSort {
         }
         DOS.close();
     }
+
+
+
 
 
 

@@ -9,6 +9,7 @@ import com.google.common.primitives.Ints;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntHash;
 import it.unimi.dsi.fastutil.longs.*;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
@@ -74,15 +75,17 @@ public class PredictiveIndex {
         //splitCollection("/home/aalto/dio/docInfo");
         //massiveBinaryMerge(new File(globalFold + "rawInvertedIndex/"),globalFold+"invertedIndex.bin");
         //testMassiveBinaryMerge2(new File(globalFold + "rawInvertedIndex/"));
-        getQualityModel(globalFold+"invertedIndex.bin");
+        //getQualityModel(globalFold+"invertedIndex.bin");
         //getTermMap();
+        //fetchTermMap();
         //uniquePairs();
         //computelRanges(1);
         //computerRanges(2);
 
-        printQualityModel(metadata+"qualityModel.bin");
+        //printQualityModel(metadata+"qualityModel.bin");
         //sortSmallInvertedIndex();
-        System.exit(1);
+        //buildFastQueryTrace();
+        //System.exit(1);
         InvertedIndex i2;
         if (Files.exists(Paths.get(globalFold + "freqMap.bin"))) {
             i2 = new InvertedIndex((int[]) deserialize(globalFold + "freqMap"), (long[]) deserialize(globalFold + "stats"), globalFold + "rawInvertedIndex/");
@@ -100,7 +103,7 @@ public class PredictiveIndex {
         for (int [][] x: qm){
             System.out.print("[");
             for (int [] y: x){
-                System.out.print(y[0]+"\t\t\t");
+                System.out.print((y[0]*1.0)/y[1]+"\t\t\t");
             }System.out.println("]");
         }
     }
@@ -122,23 +125,30 @@ public class PredictiveIndex {
 
 
     public static void uniquePairs() throws IOException{
-        LongSet uniquePairs = new LongOpenHashSet();
+        Long2IntOpenHashMap queryOccurences = new Long2IntOpenHashMap();
         BufferedReader br = new BufferedReader(new FileReader("/home/aalto/dio/query/Q/million09_training"));
         String line;
         String [] stringTerms;
-        Integer [] terms ;
-        int unique=0;
+        Integer term;
+        LinkedList<Integer> terms = new LinkedList<>();
+        KrovetzStemmer stemmer = new KrovetzStemmer();
         for(line = br.readLine(); line!=null; line = br.readLine()){
             stringTerms = line.split(":")[1].split(" ");
-            terms = new Integer[stringTerms.length];
-            for(int i = 0; i< terms.length; i++) terms[i] = termMap.get(stringTerms[i]);
-            for (long i : getCombinations(new LinkedList<>(java.util.Arrays.asList(terms)),2)) {
-                uniquePairs.add(i);
+            for(int i = 0; i< stringTerms.length; i++){
+                term = termMap.get(stringTerms[i]);
+                if(term !=null){
+                    terms.addLast(term);
+                    if (queryOccurences.putIfAbsent(Long.valueOf(term), 1) != null)
+                        queryOccurences.merge(Long.valueOf(term), 1, Integer::sum);
+                }
             }
-            System.out.println(uniquePairs.size());
-
+            for (long i : getCombinations(terms,2)) {
+                if (queryOccurences.putIfAbsent(i, 1) != null) queryOccurences.merge(i, 1, Integer::sum);
+            }
+            terms.clear();
+            //System.out.println(queryOccurences.size());
         }
-        serialize(uniquePairs, metadata+"uniquePairs");
+        serialize(queryOccurences,  metadata+"queryOccurences");
 
 
     }
@@ -167,7 +177,7 @@ public class PredictiveIndex {
 
     private static void fetchTermMap() throws IOException {
         System.out.println("Fetching Term-TermID map...");
-        BufferedReader br = new BufferedReader( new FileReader("/home/aalto/dio/termIDs"));
+        BufferedReader br = new BufferedReader( new FileReader("/home/aalto/IdeaProjects/PredictiveIndex/data/source/termIDs"));
         //BiMap termMap = HashBiMap.create();
         //Map<String, Integer> termMap = HashObjIntMaps.newMutableMap();
         termMap = new Object2IntOpenHashMap<>();
@@ -262,13 +272,20 @@ public class PredictiveIndex {
 
         // We convert our String [] to int [] using the term-termID map
         for (int i = 0; i <  queryTerms.length; i++) {
-            stemmedTerm = stemmer.stem(queryTerms[i]);
+            //stemmedTerm = stemmer.stem(queryTerms[i]);
             //termID = termMap.get(stemmedTerm);
             //queryInt.add(termID);
-            if(termMap.get(stemmedTerm)!=null) queryInt.add(termMap.get(stemmedTerm));//System.out.println(stemmedTerm+"-"+queryTerms[i]);
+            //if(termMap.get(stemmedTerm)!=null) queryInt.add(termMap.get(stemmedTerm));//System.out.println(stemmedTerm+"-"+queryTerms[i]);
+            queryInt.add(termMap.get(queryTerms[i]));
         }
         //We take every combination of our query terms. We save them in a long array using bit-shifting
         return getCombinations(queryInt,2);
+    }
+
+    private static int[] getQueryInts(String [] queryTerms){
+        int [] queryInt = new int[queryTerms.length];
+        for (int i = 0; i <  queryTerms.length; i++) queryInt[i] = termMap.get(queryTerms[i]);
+        return queryInt;
     }
 
     private static int[] getQueryTopkDocIDs(String [] topk){
@@ -282,12 +299,13 @@ public class PredictiveIndex {
         return topkInt;
     }
 
-    private static void addTopK(Long2ObjectOpenHashMap<Int2IntMap> fastQueryTrace, long bigram, int[] topK){
+    private static Long2ObjectOpenHashMap<Int2IntMap> addTopK(Long2ObjectOpenHashMap<Int2IntMap> fastQueryTrace, long bigram, int[] topK){
         Int2IntMap auxMap = fastQueryTrace.get(bigram);
         if(auxMap != null){
             for (int doc: topK){
                 if(auxMap.putIfAbsent(doc,1) != null){
                     auxMap.merge(doc,1,Integer::sum);
+                    fastQueryTrace.put(bigram, auxMap);
                     //System.out.println(auxMap.get(doc));
                 }
             }
@@ -298,6 +316,7 @@ public class PredictiveIndex {
             }
             fastQueryTrace.put(bigram, auxMap);
         }
+        return  fastQueryTrace;
     }
 
     /*We reformat the Query trace in a way that we can perform fast lookup while scanning the
@@ -324,7 +343,7 @@ public class PredictiveIndex {
             //System.out.println(topK+"-"+Integer.valueOf(line[0]));
             if(topK!=null){
                 for (long bigram : queryBigrams) {
-                    addTopK(fastQueryTrace, bigram, topK);
+                    fastQueryTrace = addTopK(fastQueryTrace, bigram, topK);
                 }
             }
         }
@@ -352,13 +371,13 @@ public class PredictiveIndex {
 
     /*This functions returns buckets ranges given a rank. The ranges-max is hardcoded*/
 
-    private static int[] computerRanges(double rankRule){
+    private static int[] computerRanges(double rankRule, int min, int max){
         rankRule = 1.4;
         LinkedList<Integer> rankBuckets = new LinkedList<>();
-        for (int i = 11; i < 20000 ; i += i*rankRule) {
+        for (int i = min; i < max ; i += i*rankRule) {
             rankBuckets.addLast(i);
         }
-        rankBuckets.addLast(Integer.MAX_VALUE);
+        rankBuckets.addLast(max);
         System.out.println(rankBuckets);
         return Ints.toArray(rankBuckets);
     }
@@ -398,13 +417,14 @@ public class PredictiveIndex {
     * OPEN ISSUES:
     * - Make it cleaner */
     public static int[][][] getQualityModel(String I2) throws IOException, ClassNotFoundException {
-        int maxBM25 =0;
-        int minBM25=0;
+        int maxBM25 =367041008;
+        int minBM25=80992396;
         int maxLength=0;
         int [] lRanges = computelRanges(1.1);
-        int [] rRanges = computerRanges(1.4);
+        int [] rRanges = computerRanges(1.4, minBM25, maxBM25);
         int [][][] qualityModel = new int[lRanges.length][rRanges.length][2];
         //BufferedReader br = new BufferedReader(new FileReader("readIndexInfo"));
+        final Long2IntOpenHashMap UBOcc = (Long2IntOpenHashMap) getOIStream(metadata+"queryOccurences", true).readObject();
         DataInputStream inStream = new DataInputStream( new BufferedInputStream(new FileInputStream(I2)));
         ObjectInputStream obInStream = getOIStream(metadata+"fastQueryTrace", true);
         System.out.println("Fast Query Trace fetched!\nProcessing Inverted Index...");
@@ -415,52 +435,69 @@ public class PredictiveIndex {
         long numberOfPostingLists = 0;
         int [] posting;
         int [] currentPair = new int[]{-1,-1};
+        long pair =-1;
+        int increment;
+        int size;
+        int range;
         while(true){
             posting = getEntry(inStream);
             if(posting[0] ==-1) break;
+
             if(posting[0] != currentPair[0] | posting[1] != currentPair[1]){
+                pair = getPair(currentPair[0], currentPair[1]);
                 //System.out.println(auxPostingList.size());
-                //if(duplicate.contains(getPair(currentPair[0], currentPair[1]))) System.out.println(getPair(currentPair[0], currentPair[1]));
-                //else duplicate.add(getPair(currentPair[0], currentPair[1]));
-                if(fastQueryTrace.get(getPair(currentPair[0], currentPair[1]))!=null){
-                    //System.out.println(auxPostingList);
-                    qualityModel = processPostingList(Ints.toArray(auxPostingList), qualityModel, fastQueryTrace.get(getPair(currentPair[0], currentPair[1])), rRanges, lRanges);
-                    //System.out.println(fastQueryTrace.get(getPair(currentPair[0], currentPair[1])));
+
+                if(fastQueryTrace.containsKey(pair)){
+                    size = getLenBucket(auxPostingList.size()/2,lRanges);
+                    increment = UBOcc.get(currentPair[0])+UBOcc.get(currentPair[1])+UBOcc.get(currentPair[0]);
+                    range = getRankBucket(0, auxPostingList.size()/2, rRanges);
+                    for(int k =0; k<range; k++) {
+                        //System.out.println(size);
+                        qualityModel[size][k][1] += increment;
+                    }
+                    qualityModel = processPostingList(Ints.toArray(auxPostingList), qualityModel, fastQueryTrace.get(pair), rRanges, lRanges);
+
                 }
+
                 numberOfPostingLists++;
                 auxPostingList.clear();
                 currentPair[0]= posting[0];
                 currentPair[1]= posting[1];
+            }/*
+            if(posting[2]< minBM25)
+                minBM25 = posting[2];
+            else if(posting[2]>maxBM25) {
+                maxBM25 = posting[2];
             }
+            */
             auxPostingList.addLast(posting[2]); //BM25
             auxPostingList.addLast(posting[3]); //docid
+
         }
         System.out.println("Posting List: " + numberOfPostingLists);
         System.out.println("max: " + maxBM25 + ". min: " + minBM25 + ". len: " + maxLength);
-        ObjectOutputStream oStream = getOOStream(metadata+"qualityModel.bin",true);
-        oStream.writeObject(qualityModel);
+        //ObjectOutputStream oStream = getOOStream(metadata+"qualityModel.bin",true);
+        //oStream.writeObject(qualityModel);
         return qualityModel;
     }
 
     private static int[][][] processPostingList(int [] postingList, int[][][] qualityModel, Int2IntMap aggregatedTopK, int [] rRanges, int [] lRanges){
-        int lenBucket = getLenBucket(postingList.length, lRanges);
+        int lenBucket = getLenBucket(postingList.length/2, lRanges);
         int rankBucket = 0;
         int score;
         int term;
-        for (int i = 0; i < postingList.length ; i += 2) {
+        for (int i = 0; i < postingList.length-1 ; i += 2) {
             score = postingList[i];
             term = postingList[i+1];
             int increment = aggregatedTopK.get(term);
             if(increment>0){
                 //System.out.println(aggregatedTopK.get(term));
-                System.out.println(hit+=increment);
+                hit+=increment;
+                if(hit%10000==0 & hit%100000!=0) System.out.print(hit+" ");
+                if(hit%100000==0) System.out.println(hit);
                 rankBucket = getRankBucket(rankBucket, i/2, rRanges);
                 //bucket hit by this posting
                 qualityModel[lenBucket][rankBucket][0] += increment;
-                for (int j = 0; j < rankBucket + 1; j++) {
-                    //previous buckets hit by this posting
-                    qualityModel[lenBucket][j][1] += increment;
-                }
             }
 
         }
