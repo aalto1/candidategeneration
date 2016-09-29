@@ -230,7 +230,7 @@ public class ExternalSort {
     static void sortSmallInvertedIndex() throws IOException {
         long [][] bucketsAux;
         DataInputStream DIS;
-        long [][] i2= new long[250000000][2];
+        long [][] i2= new long[280000000][2];
         int i=0;
         File folder = new File(globalFold + "rawInvertedIndex/");
         File [] files = folder.listFiles();

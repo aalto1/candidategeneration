@@ -155,7 +155,7 @@ public class InvertedIndex implements Serializable {
             doc++;
         }
         sampledSelection(buffer, tn);
-        serialize(dumpMap[tn], globalFold+"/dumped/"+dump );
+        serialize(dumpMap[tn], globalFold+"/dumped/"+tn );
         DOS[tn].close();
         //this.invertedIndexFile.close();
         DIS.close();
@@ -219,6 +219,7 @@ public class InvertedIndex implements Serializable {
             }
         }
         storeSelectionStats(dumpCounter);*/
+
     private void sampledSelection(int[][] buffer, int tn) throws IOException {
         System.out.println("TIME TO CLEAN. Processed docs: " + doc);
         now = System.currentTimeMillis();

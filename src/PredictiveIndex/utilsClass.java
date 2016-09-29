@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.floats.Float2BooleanArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -315,21 +316,29 @@ class utilsClass {
     }
 
    static void greedySelection(){
-       
+        Int2IntOpenHashMap model = new Int2IntOpenHashMap();
+
    }
 
-   static void mergeDumps(){
-       Long2IntOpenHashMap merge = new Long2IntOpenHashMap();
+   static void mergeDumps() throws IOException, ClassNotFoundException {
+       Long2IntOpenHashMap mergedMap = new Long2IntOpenHashMap();
        Long2IntOpenHashMap aux;
-
+       int k = 0;
        for(File f: new File(globalFold+"/dumped/").listFiles()) {
-           aux = (Long2IntOpenHashMap) deserialize(f.getName());
+           aux = (Long2IntOpenHashMap) new ObjectInputStream( new BufferedInputStream(new FileInputStream(f.getAbsoluteFile()))).readObject();
            for (long key: aux.keySet()) {
-               if(merge.putIfAbsent(key, aux.get(key)) != null) merge.merge(key, aux.get(key), Integer::sum);
+               if(mergedMap.putIfAbsent(key, aux.get(key)) != null) mergedMap.merge(key, aux.get(key), Integer::sum);
            }
        }
-       serialize(merge, globalFold+"/dumped/final");
+       serialize(mergedMap, globalFold+"/dumped/finalDump");
    }
 
+   static float[] scalarPerArray(float scalar, float[][] array){
+       float [] result = new float[array.length];
+       for (int i = 0; i < result.length; i++) {
+           result[i] = (array[i][0]/array[i][1])*scalar;
+       }
+       return result;
+   }
 
 }
