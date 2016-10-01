@@ -61,7 +61,7 @@ public class ExternalSort {
     public static void massiveBinaryMerge(File folder, String output) throws IOException {
         LinkedList<long[][]> LL = new LinkedList<>();
         File [] files = folder.listFiles();
-        DataOutputStream DOStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(output, true)));
+        DataOutputStream DOStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(output, false)));
         long [][] bucketsAux;
         LinkedList<DataInputStream> DIStreams = new LinkedList<>();
         for(int k =0; k< files.length; k++){
@@ -77,11 +77,11 @@ public class ExternalSort {
             System.out.print("Loading data...");
             partialNow = System.currentTimeMillis();
             for (int i = 0; i < DIStreams.size(); i++ ) {
-                /*if(LL.size()%50 !=0 & LL.size()!=0){
+                if(LL.size()%50 !=0 & LL.size()!=0){
                     System.out.print(" " + LL.size());
                 }else{
                     System.out.println(" "+LL.size());
-                }*/
+                }
                 bucketsAux = new long[section][2];
                 for (int z = 0; z < section; z++) {
                     try{
@@ -124,11 +124,11 @@ public class ExternalSort {
             System.out.print("Merging data... ");
             partialNow = System.currentTimeMillis();
             for (int i = 0; LL.size() > 2; ) {
-                /*if(LL.size()%50 !=0 & LL.size()!=386){
+                if(LL.size()%50 !=0 & LL.size()!=386){
                     System.out.print(" " + LL.size());
                 }else{
                     System.out.println(" "+LL.size());
-                }*/
+                }
                 LL.addLast(mergeSortedMatrix(LL.get(0), LL.get(1), LL.size(), step));
                 step++;
                 LL.removeFirst();

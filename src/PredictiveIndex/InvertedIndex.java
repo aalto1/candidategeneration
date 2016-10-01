@@ -47,19 +47,22 @@ public class InvertedIndex implements Serializable {
     static private double minBM25 =2147388309;
     public static int totNumDocs = 50220423;
     static final int testLimit = (int) (51*Math.pow(10,6));
-    static final int bufferSize = (int) (2*Math.pow(10,7));
+    static final int bufferSize = (int) (3*Math.pow(10,7));
     static final Object flag = new Object();
     static AtomicInteger dump = new AtomicInteger(0);
     DataOutputStream [] DOS = new DataOutputStream[4];
-    Long2IntOpenHashMap [] dumpMap = new Long2IntOpenHashMap[4];
-    final Long2IntOpenHashMap relevantPairs = (Long2IntOpenHashMap) getOIStream(metadata+"queryOccurences", true).readObject();
+    //Long2IntOpenHashMap [] dumpMap = new Long2IntOpenHashMap[4];
+    Long2IntOpenHashMap dumpMap = new Long2IntOpenHashMap();
+
+    final LongOpenHashSet relevantPairs = (LongOpenHashSet) deserialize(metadata+"relevantPairs");
 
 
     private DataOutputStream invertedIndexFile;
     final private int distance = 5;
-    //private AtomicInteger pointer = new AtomicInteger(0);
-    private int pointer =0;
+    //private AtomicInteger pointers[tn = new AtomicInteger(0);
     //private int [][] buffer;
+    int [] keepPointers = new int[]{0,0,0,0};
+    int [] pointers = new int[]{0,0,0,0};
     public long [] globalStats;                                     //1-numberofdocs,2-wordcounter,3-unique words
     public long doc = 0;
     //private Int2IntMap globalFreqMap;
@@ -128,10 +131,9 @@ public class InvertedIndex implements Serializable {
     protected void buildDBigramInvertedIndex(String fold, int tn) throws IOException, ClassNotFoundException, InterruptedException {
         start = System.currentTimeMillis();
         int [][] buffer = new int[bufferSize][4];
-        int pointer = 0;
         System.out.println("Building D-Bigram Inverted Index...");
 
-        dumpMap[tn] = new Long2IntOpenHashMap();
+        //dumpMap[tn] = new Long2IntOpenHashMap();
         DOS[tn] = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(globalI2+dump.getAndAdd(1), false)));
         DataInputStream stream = new DataInputStream( new BufferedInputStream( new FileInputStream(fold + "clueweb.bin")));
         DataInputStream DIS = new DataInputStream(new BufferedInputStream(new FileInputStream(fold + "localTermStats.bin")));
@@ -140,29 +142,28 @@ public class InvertedIndex implements Serializable {
         String[] line;
         String record;
         int [] document = new int[127525];
-        Int2IntMap bufferMap = new Int2IntOpenHashMap();
-        LongSet bufferSet = new LongOpenHashSet();
         int [] buffPair = new int[2];
+        Int2IntMap bufferMap = new Int2IntOpenHashMap();
         bufferMap.defaultReturnValue(1);
-        int debug=0;
+        LongSet bufferSet = new LongOpenHashSet();
+
+
         for(record = br.readLine(); record!=null & checkProgress(doc, totNumDocs, 500000, start, testLimit); record = br.readLine()){
             line = record.split(" ");
             readClueWebDocument(line, stream, document);
             fetchHashMap(bufferMap, DIS);
-            pointer = bufferedIndex(document, line, bufferMap , bufferSet, buffPair, pointer, buffer, tn);
+            bufferedIndex(document, line, bufferMap , bufferSet, buffPair, buffer, tn);
             bufferMap.clear();
             bufferSet.clear();
             doc++;
         }
         sampledSelection(buffer, tn);
-        serialize(dumpMap[tn], globalFold+"/dumped/"+tn );
         DOS[tn].close();
-        //this.invertedIndexFile.close();
         DIS.close();
         System.out.println("D-Bigram Inverted Index Built!");
     }
 
-    public int bufferedIndex(int[] words, String [] line, Int2IntMap localFreqMap, LongSet bufferSet, int [] pair, int pointer, int[][] buffer, int tn) throws IOException, ClassNotFoundException, InterruptedException {
+    public void bufferedIndex(int[] words, String [] line, Int2IntMap localFreqMap, LongSet bufferSet, int [] pair, int[][] buffer, int tn) throws IOException, ClassNotFoundException, InterruptedException {
         /* For each document we take the pairs between documents within a distance. We add each entry to a buffer and
         * compute the BM25 for that specific term-pair*/
 
@@ -177,91 +178,79 @@ public class InvertedIndex implements Serializable {
                 pair[0] = words[wIx] ;
                 pair[1] = words[dIx] ;
                 Arrays.sort(pair);
-                if((bufferSet.add(getPair(pair[0], pair[1])) & relevantPairs.containsKey(getPair(pair[0],pair[1])))) {
+                if((bufferSet.add(getPair(pair[0], pair[1])) & relevantPairs.contains(getPair(pair[0],pair[1])))) {
                     score1 = getBM25(globalStats, docLen, localFreqMap.get(pair[0]), globalFreqMap[pair[0]]);
                     score2 = getBM25(globalStats, docLen, localFreqMap.get(pair[1]), globalFreqMap[pair[1]]);
-                    if(pointer == buffer.length){
+                    if(pointers[tn] == buffer.length){
                         sampledSelection(buffer, tn);
-                        DOS[tn].close();
-                        DOS[tn] = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(globalI2+dump.getAndAdd(1), false)));
-                        pointer = 0;
+                        pointers[tn] = keepPointers[tn];
                     }
-                    buffer[pointer][0] = pair[0];
-                    buffer[pointer][1] = pair[1];
-                    buffer[pointer][2] = score1 + score2;
-                    buffer[pointer][3] = Integer.parseInt(line[1]);
-                    pointer++;
+                    buffer[pointers[tn]][0] = pair[0];
+                    buffer[pointers[tn]][1] = pair[1];
+                    buffer[pointers[tn]][2] = score1 + score2;
+                    buffer[pointers[tn]][3] = Integer.parseInt(line[1]);
+                    pointers[tn]++;
                 }
             }//if(getLocalFreq(localFreqMap, words[wIx])==1) ones++;
         }
-        return pointer;
         //System.out.println("Ones: " +title+ "\t" + ones);
     }
 
-
-    public void storeSelectionStats(Long2IntOpenHashMap map) throws IOException {
-        int [] terms;
-        for(long pair : map.keySet())
-        {
-            terms = getTerms(pair);
-            this.invertedIndexFile.writeInt(terms[0]);
-            this.invertedIndexFile.writeInt(terms[1]);
-            this.invertedIndexFile.writeInt(-1);
-            this.invertedIndexFile.writeInt(map.get(pair));
-        }
+    private synchronized void incrementMap(long pair){
+        dumpMap.addTo(pair, 1);
     }
-
-    /*else{
-                pair = getPair(buffer[k][0],buffer[k][1]);
-                if(dumpCounter.putIfAbsent(pair,1) != null){
-                    dumpCounter.merge(pair, 1, Integer::sum);
-                }
-            }
-        }
-        storeSelectionStats(dumpCounter);*/
 
     private void sampledSelection(int[][] buffer, int tn) throws IOException {
         System.out.println("TIME TO CLEAN. Processed docs: " + doc);
         now = System.currentTimeMillis();
-        int threshold = getThreshold(buffer);
+        int threshold = getThreshold(buffer, tn);
         long pair;
         int keep = 0;
-        for (int k = 0; k < buffer.length; k++) {
+        for (int k = keepPointers[tn]; k < buffer.length; k++) {
             if (buffer[k][2] > threshold) {
-                //buffer[keep++] = buffer[k];
-                for (int elem : buffer[k]) DOS[tn].writeInt(elem);
-                if(maxBM25<buffer[k][2]) maxBM25 = buffer[k][2];
+                buffer[keepPointers[tn]++] = buffer[k];
+                //for (int elem : buffer[k]) DOS[tn].writeInt(elem);
             }else
-                dumpMap[tn].addTo(getPair(buffer[k][0],buffer[k][1]), 1);
+                incrementMap(getPair(buffer[k][0], buffer[k][1]));
         }
+
         System.out.println(keep);
-        /*java.util.Arrays.sort(buffer,0, keep, new Comparator<int[]>() {
-            @Override
-            public int compare(int[] int1, int[] int2) {
-                if (int1[0] == int2[0]) {
-                    if(int1[1] == int2[1]){
-                        return Integer.compare(int1[2], int2[2]) * -1;
-                    }else return Integer.compare(int1[1], int2[1]);
-                } else return Integer.compare(int1[0], int2[0]);
+
+        if(keepPointers[tn] > (buffer.length/100)*90){
+            System.out.print("Flushing...\t");
+            java.util.Arrays.sort(buffer,0,keepPointers[tn], new Comparator<int[]>() {
+                @Override
+                public int compare(int[] int1, int[] int2) {
+                    if (int1[0] == int2[0]) {
+                        if(int1[1] == int2[1]){
+                            return Integer.compare(int1[2], int2[2]) * -1;
+                        }else return Integer.compare(int1[1], int2[1]);
+                    } else return Integer.compare(int1[0], int2[0]);
+                }
+            });
+            for (int k = 0; k < keepPointers[tn]; k++) {
+                for (int elem : buffer[k]) DOS[tn].writeInt(elem);
             }
-        });
-        for (int k = 0; k < keep; k++) {
-            for (int elem : buffer[k]) DOS[tn].writeInt(elem);
-        }*/
-        System.out.println("Sampled Natural Selection:" + (System.currentTimeMillis() - now) + "ms.\tThreshold: " + threshold +"\t MaxBM25: " + maxBM25);
+            System.out.println("Sampled Natural Selection:" + (System.currentTimeMillis() - now) + "ms.\tThreshold: " + threshold +"\t MaxBM25: " + maxBM25);
+            DOS[tn].close();
+            DOS[tn] = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(globalI2+dump.getAndAdd(1), false)));
+            keepPointers[tn] = 0;
+        }
+
+
         maxBM25 = 0;
-        System.out.println("Dump size "+ dump +" " +dumpMap[tn].size());
+        System.out.println("Dump size "+ dump +" " +dumpMap.size());
         System.out.println("Processing Time:" + (doc / (System.currentTimeMillis() - start)) * 1000 + " doc/s");
     }
 
-    private int getThreshold(int [][] buffer){
+    private int getThreshold(int [][] buffer, int tn){
         int rnd;
-        int sampleLength= (int) (bufferSize*0.002);
+        int sampleLength= (int) ((bufferSize-keepPointers[tn])*0.002);
         //sampleLength= bufferSize;
 
         int[] sample = new int[sampleLength];
         for(int k = 0; k<sample.length; k++) {
-            rnd = ThreadLocalRandom.current().nextInt(0, bufferSize-1);
+            rnd = ThreadLocalRandom.current().nextInt(keepPointers[tn], bufferSize-1);
             //System.out.println(buffer[rnd][2]);
             sample[k] = buffer[rnd][2];
         }

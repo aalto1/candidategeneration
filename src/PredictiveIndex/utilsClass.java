@@ -320,7 +320,7 @@ class utilsClass {
 
    }
 
-   static void mergeDumps() throws IOException, ClassNotFoundException {
+   static void mergeDumps() throws IOException, ClassNotFoundException { /***NO-Need***/
        Long2IntOpenHashMap mergedMap = new Long2IntOpenHashMap();
        Long2IntOpenHashMap aux;
        int k = 0;
@@ -333,10 +333,10 @@ class utilsClass {
        serialize(mergedMap, globalFold+"/dumped/finalDump");
    }
 
-   static float[] scalarPerArray(float scalar, float[][] array){
+   static float[] scalarPerArray(float scalar, float[] array){
        float [] result = new float[array.length];
        for (int i = 0; i < result.length; i++) {
-           result[i] = (array[i][0]/array[i][1])*scalar;
+           result[i] = array[i]*scalar;
        }
        return result;
    }
