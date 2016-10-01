@@ -92,7 +92,9 @@ public class PredictiveIndex {
 
         //convertProbabilities();
         //getFinalModel(globalFold+"invertedIndex.bin",metadata+"qualityModelfinal");
-        finalModel();
+        //finalModel();
+
+        greedySelection();
 
 
         System.exit(1);
@@ -112,64 +114,7 @@ public class PredictiveIndex {
 
     }
 
-    private static void printQualityModel(String s) throws IOException, ClassNotFoundException {
-        int[][][] qm = (int[][][]) getOIStream(s, false).readObject();
-        int [] rRange = computerRanges(1.4, 1, 400000000);
-        float HP;
-        float [][][] bufferQM = new float[qm.length][qm[0].length][2];
-        float [][] finalQM = new float[qm.length][qm[0].length];
-        long [][] bucketOrder = new long[bufferQM.length][bufferQM[0].length-1];
-        System.out.println(bufferQM[0].length);
 
-
-        int lowerBound =0;
-        int upperBound =0;
-        for (int i = 0; i < bufferQM.length; i++) {
-            for (int j = 0; j < bufferQM[0].length-1; j++) {
-                HP = (float) ((qm[i][j][0]*1.0)/(qm[i][j][1]));
-                //System.out.print(HP+"\t\t");
-                if(Float.isNaN(HP) | Float.isInfinite(HP))
-                    bufferQM[i][j][0] =0;
-                else
-                    bufferQM[i][j][0] =  HP;
-                bufferQM[i][j][1] = j;
-                //System.out.print(bufferQM[i][j][0] +"\t");
-            }
-
-
-            Arrays.sort(bufferQM[i], new Comparator<float[]>() {
-                @Override
-                public int compare(float[] o1, float[] o2) {
-                    return Float.compare(o2[0],o1[0]);
-                }
-            });
-
-            /***/
-
-            //System.out.println(Arrays.deepToString(bufferQM[i]));
-            int end = 0;
-            //System.out.println(rRange[0] +"," + rRange[1]);
-            for (int j = 0; j < bufferQM[i].length-1; j++) {
-
-                lowerBound = (int) bufferQM[i][j][1];
-                upperBound = (int) bufferQM[i][j][1]+1;
-                if(upperBound==22) end = 1;
-                if(upperBound < 22) {
-                    finalQM[i][j] = bufferQM[i][j][0];
-                    bucketOrder[i][j - end] = getPair(rRange[lowerBound], rRange[upperBound]);
-                    //System.out.println(rRange[lowerBound] +" , "+ rRange[upperBound]);
-                }
-            }
-            //System.out.println(Arrays.toString(bucketOrder[i]));
-            for (long a: bucketOrder[i]) System.out.print(Arrays.toString(getTerms(a)) +" ");
-            System.out.println();
-            //System.exit(1);
-
-        }
-
-        //serialize(bucketOrder,   s+"bucketOrder");
-        //serialize(finalQM,       s+"final");
-    }
 
     static void startBatteria(InvertedIndex i2, int phase) throws InterruptedException {
         System.out.println("Starting Batteria. Phase: " + phase);
@@ -413,11 +358,6 @@ public class PredictiveIndex {
                 }
             }
         }
-        /*HashMap<Integer,Integer> mappa;
-        for ( long x: fastQueryTrace.keySet()) {
-            mappa = fastQueryTrace.get(x);
-            for(long y : mappa.keySet()) System.out.println("Pair: "+ x +". Key: " + y + ". Value: " + mappa.get(y));
-        }*/
         serialize(fastQueryTrace, metadata + "fastQueryTrace");
         return fastQueryTrace;
     }
@@ -431,6 +371,7 @@ public class PredictiveIndex {
         for (int i = 4; i < 50220423; i += i * lenRule) {
             lenBuckets.addLast(i);
         }
+        lenBuckets.addLast(50220423);
         System.out.println(lenBuckets);
         return Ints.toArray(lenBuckets);
     }
@@ -453,6 +394,7 @@ public class PredictiveIndex {
 
     private static int getLenBucket(int len, int[] lenBuckets) {
         int i;
+        //System.out.println(len);
         for (i = 0; lenBuckets[i] < len; i++) ;
         return i;
     }
@@ -518,16 +460,15 @@ public class PredictiveIndex {
         int increment;
         int lbucket;
         int range;
-        DataOutputStream DOStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(metadata+"PLLength.bin")));
+        //DataOutputStream DOStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(metadata+"PLLength.bin")));
         while (true) {
             posting = getEntry(inStream);
             if (posting[0] == -1) break;
 
             if (posting[0] != currentPair[0] | posting[1] != currentPair[1]) {
                 pair = getPair(currentPair[0], currentPair[1]);
-                //System.out.println(auxPostingList.size());
 
-                /*if (fastQueryTrace.containsKey(pair)) {
+                if (fastQueryTrace.containsKey(pair)) {
                     lbucket = getLenBucket(auxPostingList.size() / 2 + dumped.get(pair), lRanges);
                     increment = UBOcc.get(currentPair[0]) + UBOcc.get(currentPair[1]) + UBOcc.get(currentPair[0]);
                     range = getRankBucket(0, auxPostingList.size() / 2, rRanges);
@@ -537,9 +478,9 @@ public class PredictiveIndex {
                     }
                     qualityModel = processPostingList(Ints.toArray(auxPostingList), qualityModel, fastQueryTrace.get(pair), rRanges, lbucket);
 
-                }*/
-                DOStream.writeLong(pair);
-                DOStream.writeInt(auxPostingList.size() / 2 + dumped.get(pair));
+                }
+                //DOStream.writeLong(pair);
+                //DOStream.writeInt(auxPostingList.size() / 2 + dumped.get(pair));
                 auxPostingList.clear();
                 currentPair[0] = posting[0];
                 currentPair[1] = posting[1];
@@ -555,7 +496,7 @@ public class PredictiveIndex {
             auxPostingList.addLast(posting[3]); //docid
 
         }
-        DOStream.close();
+        //DOStream.close();
         System.out.println("Posting List: " + numberOfPostingLists);
         System.out.println("max: " + maxBM25 + ". min: " + minBM25 + ". len: " + maxLength);
         serialize(qualityModel, metadata+"qualityModel");
@@ -637,44 +578,115 @@ public class PredictiveIndex {
         DOStream.close();
     }
 
-    static double getScore(float prob, int[] length, float[][] qualityModel){
-        return qualityModel[getLenBucket(length[0], )][length[1]] *prob ;
+
+    private static void printQualityModel(String s) throws IOException, ClassNotFoundException {
+        long[][][] qm = (long[][][]) deserialize(s);
+        int [] rRange = computerRanges(1.4, 1, 400000000);
+        float HP;
+        float [][][] bufferQM = new float[qm.length][qm[0].length][2];
+        float [][] finalQM = new float[qm.length][qm[0].length];
+        long [][] bucketOrder = new long[bufferQM.length][bufferQM[0].length-1];
+        System.out.println(bufferQM[0].length);
+
+
+        int lowerBound =0;
+        int upperBound =0;
+        for (int i = 0; i < bufferQM.length; i++) {
+            for (int j = 0; j < bufferQM[0].length-1; j++) {
+                HP = (float) ((qm[i][j][0]*1.0)/(qm[i][j][1]));
+                //System.out.print(HP+"\t\t");
+                if(Float.isNaN(HP) | Float.isInfinite(HP))
+                    bufferQM[i][j][0] =0;
+                else
+                    bufferQM[i][j][0] =  HP;
+                bufferQM[i][j][1] = j;
+                System.out.print(qm[i][j][0] +"\t");
+            }
+
+
+            Arrays.sort(bufferQM[i], new Comparator<float[]>() {
+                @Override
+                public int compare(float[] o1, float[] o2) {
+                    return Float.compare(o2[0],o1[0]);
+                }
+            });
+
+            /***/
+
+            //System.out.println(Arrays.deepToString(bufferQM[i]));
+            int end = 0;
+            //System.out.println(rRange[0] +"," + rRange[1]);
+            for (int j = 0; j < bufferQM[i].length-1; j++) {
+
+                lowerBound = (int) bufferQM[i][j][1];
+                upperBound = (int) bufferQM[i][j][1]+1;
+                if(upperBound==22) end = 1;
+                if(upperBound < 22) {
+                    finalQM[i][j] = bufferQM[i][j][0];
+                    bucketOrder[i][j - end] = getPair(rRange[lowerBound], rRange[upperBound]);
+                    //System.out.println(rRange[lowerBound] +" , "+ rRange[upperBound]);
+                }
+            }
+            //System.out.println(Arrays.toString(bucketOrder[i]));
+            //for (long a: bucketOrder[i]) System.out.print(Arrays.toString(getTerms(a)) +" ");
+            System.out.println();
+            //System.exit(1);
+
+        }
+
+        serialize(bucketOrder,   metadata+"bucketOrder");
+        serialize(finalQM,       metadata+"final");
+    }
+
+    private static int getRangeSize(long range){
+        return getTerms(range)[1]-getTerms(range)[0];
+    }
+
+    static double getScore(float prob, int[] info, float[][] qualityModel, int[] lRanges){
+        if(info[0] < 43167165)  return qualityModel[getLenBucket(info[0], lRanges)][info[1]] * prob ;
+        else return 0;
     }
 
     static void greedySelection() throws IOException {
         Long2IntOpenHashMap pairMap = new Long2IntOpenHashMap();
         long pair = 0;
-        float [] prob = new float[2000000];
-        int [][] info = new int[2000000][2];                                        //length,pointer
-        float [][] qualityModel = (float[][]) deserialize("qualitymodel");
-        int [][] ranges =  (int[][]) deserialize("ranges");
-        Double2LongRBTreeMap auxModel = new Double2LongRBTreeMap();
-        DataInputStream DIStream = new DataInputStream(new BufferedInputStream(new FileInputStream("model")));
+        float [] prob = new float[20000000];
+        int [][] info = new int[20000000][2];                                        //length,pointer
+        long [][] bucketOrder = (long [][]) deserialize(metadata+"bucketOrder");
+        float [][] qualityModel = (float[][]) deserialize(metadata+"final");
+
+        int [] lRanges = computelRanges(1.1);
+
+        Double2LongRBTreeMap auxSelection = new Double2LongRBTreeMap();
+        DataInputStream DIStream = new DataInputStream(new BufferedInputStream(new FileInputStream(globalFold+"finalModel.bin")));
         for(int k = 0; true; k++){
             try{
                 pair = DIStream.readLong();
                 pairMap.put(pair,k);
                 prob[k] = DIStream.readFloat();
                 info[k][0] = DIStream.readInt();
-                auxModel.put(getScore(prob[k],info[k], qualityModel), pair);
+                auxSelection.put(getScore(prob[k],info[k], qualityModel,lRanges), pair);
                 info[k][1]++;
             }catch (EOFException e){
                 break;
             }
         }
-        long maxBudget = 500000;
+        long maxBudget = 1000000;
         long budget = 0;
-        Double2LongRBTreeMap finalModel = new Double2LongRBTreeMap();
-        double firstPair;
+        LinkedList<long[]> finalModel = new LinkedList<>();
+        long firstPair;
         int firstPointer;
         long range;
+
         while(budget < maxBudget){
-            firstPair = auxModel.get(auxModel.firstDoubleKey());
+            firstPair = auxSelection.remove(auxSelection.firstDoubleKey());
             firstPointer = pairMap.get(firstPair);
-            range = getRange(info[firstPointer]);
-            info[firstPointer][1]++;
-            finalModel.put(firstPair, range );
-            budget += rangeSize(range);
+            //auxSelection.remove(auxSelection.firstDoubleKey());
+            range = bucketOrder[info[firstPointer][0]][info[firstPointer][1]++];
+            auxSelection.put(getScore(prob[firstPointer], info[firstPointer], qualityModel, lRanges), pair);
+            finalModel.addLast(new long[]{pair, range});
+            budget += getRangeSize(range);
+
         }
         serialize(finalModel, globalFold+"toPick");
     }
@@ -700,44 +712,11 @@ public class PredictiveIndex {
 
 
 
+
+
 }
 
 
 
 
 
-/*We get the global statistics of the collection (fetch from memory if present, compute them if the opposite)
-        * and than build the pair-distance from memory.*/
-//fetchTermMap();
-//buildFastQueryTrace();
-//aggregateHITS("/home/aalto/dio/hit/ben/cw09b.100K_AND2.csv.tar.gz");
-//getQualityModel();
-//binaryMassiveSort(dPath + "/InvertedIndex.bin", dPath + "/tmp/", (int) (5*Math.pow(10,9)));
-//readFiles(new File("/home/aalto/IdeaProjects/PredictiveIndex/data/dump/tmp/"), "/home/aalto/IdeaProjects/PredictiveIndex/data/dump/sortedInvertedIndex.bin");
-//massiveBinaryMerge(new File("/home/aalto/IdeaProjects/PredictiveIndex/data/dump/tmp/"), "/home/aalto/IdeaProjects/PredictiveIndex/data/dump/sortedInvertedIndex.bin");
-//testMassiveBinaryMerge();
-//testMassiveBinaryMerge2(new File("/home/aalto/IdeaProjects/PredictiveIndex/data/dump/tmp/"));
-//tryMap();
-//splitCollection(info);
-//System.exit(1);
-
-
-
-
-
-
-
-
-
-        /*
-        if (Files.exists(Paths.get(fPath+".bin"))) {
-            ps = new InvertedIndex((Int2IntMap) deserialize(fPath), (int[]) deserialize(sPath));
-        }else {
-            ps = new InvertedIndex();
-            ps.getClueWebMetadata(info);
-        }
-        //ps.threads();
-        ps.doc = 0;
-        ps.buildDBigramInvertedIndex(info);
-        //fetchTermMap();
-        //buildFastQueryTrace();*/
