@@ -8,6 +8,7 @@ import java.util.*;
 import com.google.common.primitives.Ints;
 import it.unimi.dsi.fastutil.doubles.Double2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.doubles.Double2FloatOpenHashMap;
+import it.unimi.dsi.fastutil.doubles.Double2LongRBTreeMap;
 import it.unimi.dsi.fastutil.ints.*;
 import it.unimi.dsi.fastutil.longs.*;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
@@ -86,11 +87,12 @@ public class PredictiveIndex {
 
         //computelRanges(1);
         //computerRanges(1.4, 1, 400000000);
-        getQualityModel(globalFold+"invertedIndex.bin");
+        //getQualityModel(globalFold+"invertedIndex.bin");
         //printQualityModel(metadata+"qualityModel");
 
         //convertProbabilities();
         //getFinalModel(globalFold+"invertedIndex.bin",metadata+"qualityModelfinal");
+        finalModel();
 
 
         System.exit(1);
@@ -597,29 +599,84 @@ public class PredictiveIndex {
         }
     }
 
-    static void convertProbabilities() throws IOException {
+    static Long2IntOpenHashMap fetchPPLength(DataInputStream DIStream) throws IOException {
+        Long2IntOpenHashMap PPLength = new Long2IntOpenHashMap();
+        while(true){
+            try{
+                PPLength.put(DIStream.readLong(),DIStream.readInt());
+            }catch (EOFException e ){
+                return PPLength;
+            }
+        }
+    }
+
+    static void finalModel() throws IOException {
+        DataInputStream DIStream = new DataInputStream(new BufferedInputStream(new FileInputStream(metadata+"PLLength.bin")));
+        Long2IntOpenHashMap PPLength = fetchPPLength(DIStream);
+
         String line;
         long pair =0;
         String [] records;
-        LongOpenHashSet relevantPairs = new LongOpenHashSet();
         BufferedReader br = new BufferedReader(new FileReader("/home/aalto/dio/query/LM/bigram_info_million09"));
-        BufferedWriter bw = new BufferedWriter(new FileWriter(metadata+"pm.csv"));
+        DataOutputStream DOStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(globalFold+"finalModel.bin")));
+
         fetchTermMap();
         for (line = br.readLine(); line != null; line = br.readLine()){
             records = line.split(" ");
             try{
                 pair = getPair(termMap.get(records[0]),termMap.get(records[1]));
-                bw.write(pair+","+records[3]);
-                bw.newLine();
-                relevantPairs.add(pair);
+                DOStream.writeLong(pair);
+                DOStream.writeDouble(Double.valueOf(records[3]));
+                DOStream.writeInt(PPLength.get(pair));
             }catch (NullPointerException e){
                 System.out.println(termMap.get(records[0])+","+termMap.get(records[1]));
             }
 
         }
-        serialize(relevantPairs, metadata+"relevantPairs");
-        bw.close();
         br.close();
+        DOStream.close();
+    }
+
+    static double getScore(float prob, int[] length, float[][] qualityModel){
+        return qualityModel[getLenBucket(length[0], )][length[1]] *prob ;
+    }
+
+    static void greedySelection() throws IOException {
+        Long2IntOpenHashMap pairMap = new Long2IntOpenHashMap();
+        long pair = 0;
+        float [] prob = new float[2000000];
+        int [][] info = new int[2000000][2];                                        //length,pointer
+        float [][] qualityModel = (float[][]) deserialize("qualitymodel");
+        int [][] ranges =  (int[][]) deserialize("ranges");
+        Double2LongRBTreeMap auxModel = new Double2LongRBTreeMap();
+        DataInputStream DIStream = new DataInputStream(new BufferedInputStream(new FileInputStream("model")));
+        for(int k = 0; true; k++){
+            try{
+                pair = DIStream.readLong();
+                pairMap.put(pair,k);
+                prob[k] = DIStream.readFloat();
+                info[k][0] = DIStream.readInt();
+                auxModel.put(getScore(prob[k],info[k], qualityModel), pair);
+                info[k][1]++;
+            }catch (EOFException e){
+                break;
+            }
+        }
+        long maxBudget = 500000;
+        long budget = 0;
+        Double2LongRBTreeMap finalModel = new Double2LongRBTreeMap();
+        double firstPair;
+        int firstPointer;
+        long range;
+        while(budget < maxBudget){
+            firstPair = auxModel.get(auxModel.firstDoubleKey());
+            firstPointer = pairMap.get(firstPair);
+            range = getRange(info[firstPointer]);
+            info[firstPointer][1]++;
+            finalModel.put(firstPair, range );
+            budget += rangeSize(range);
+        }
+        serialize(finalModel, globalFold+"toPick");
     }
 
     static Long2FloatOpenHashMap fetchBigramProbabilities() throws IOException {
@@ -636,74 +693,9 @@ public class PredictiveIndex {
         return probabilityModel;
     }
 
-    static void sortLM(){
-
-    }
-
-    static void pairLengthProbability() throws IOException {
-        BufferedReader br = new BufferedReader(new FileReader("/home/aalto/dio/query/LM/bigram_info_million09"));
-        BufferedWriter bw = new BufferedWriter(new FileWriter(metadata+"pm.csv"));
-        String line;
-        String [] records;
-        long pair;
-        for (line = br.readLine(); line != null; line = br.readLine()){
-            records = line.split(" ");
-
-        }
-    }
 
 
 
-    /*static Long2ObjectOpenHashMap<float[]> getFinalModel(String I2, String qualityModel) throws IOException, ClassNotFoundException {
-        int [] posting;
-        int pointer = 0;
-        int [] currentPair= new int[2];
-        float [][] qm = (float[][]) deserialize(qualityModel);
-        long [][] finalModel = new long[11050140][10];
-
-        LinkedList<Integer> auxPostingList = new LinkedList<>();
-        int [] lRanges = computelRanges(1.4);
-        long pair;
-        float [] quality = new float[22];
-
-        DataInputStream inStream = new DataInputStream( new BufferedInputStream(new FileInputStream(I2)));
-        final Long2IntOpenHashMap dumped = (Long2IntOpenHashMap) getOIStream(globalFold+"/dumped/finalDump", true).readObject();
-
-        Long2LongRBTreeMap model =
-        Long2FloatOpenHashMap pMap= fetchBigramProbabilities();
-
-        while(true){
-            posting = getEntry(inStream);
-            if(posting[0] ==-1) break;
-
-            if(posting[0] != currentPair[0] | posting[1] != currentPair[1]){
-                pair = getPair(currentPair[0], currentPair[1]);
-
-                quality = scalarPerArray(pMap.get(pair), qm[getLenBucket(auxPostingList.size() / 2 + dumped.get(pair), lRanges)]);
-                finalModel[pointer][0] = pair;
-
-                //for (int i = 1; i < quality.length ; i++) finalModel[pointer][i] = quality[i-1];
-
-
-                }
-
-                auxPostingList.clear();
-                currentPair[0]= posting[0];
-                currentPair[1]= posting[1];
-            }
-        System.out.println(model.size());
-        serialize(model, globalFold+"finalmodel");
-        return model;
-    }*/
-
-    static void greedySelection(Long2ObjectOpenHashMap finalModel){
-        Long2ObjectOpenHashMap<float[]> model = (Long2ObjectOpenHashMap<float[]>) deserialize("f");
-
-    }
-
-    static void externalSort(){
-
-    }
 
 
 
