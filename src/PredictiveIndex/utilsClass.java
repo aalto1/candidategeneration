@@ -10,6 +10,8 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -33,7 +35,7 @@ import static java.lang.System.out;
 /**
  * Created by aalto on 9/11/16.
  */
-class utilsClass {
+class utilsClass extends WWW {
 
     static int[] readClueWebDocument(String [] line, DataInputStream stream, int [] document) throws IOException {
         byte [] rawDoc = new byte[Integer.parseInt(line[3])];
@@ -94,7 +96,7 @@ class utilsClass {
         double b = 0.75;
         double IDF = java.lang.Math.log((N - n + 0.5 )/( n + 0.5));
         double BM25 = (IDF * f * k + 1) / (f + k * (1 - b + (b* docLen / avg)));
-        //System.out.println(BM25);
+        if(BM25<0) System.out.println(N + " " + n);
         return (int) (BM25*Math.pow(10, 7));
     }
 
@@ -125,55 +127,9 @@ class utilsClass {
         }
     }
 
-    static long getPair(int a , int b){
-        return (long)a << 32 | b & 0xFFFFFFFFL;
-    }
 
-    static int[] getTerms(long c){
-        int aBack = (int)(c >> 32);
-        int bBack = (int)c;
-        return new int[]{aBack,bBack};
-    }
 
-    static ObjectInputStream getOIStream(String filename, boolean buffered) throws IOException {
-        if(buffered) return new ObjectInputStream(new FileInputStream(filename+".bin"));
-        else return new ObjectInputStream( new BufferedInputStream(new FileInputStream(filename+".bin")));
 
-    }
-
-    static ObjectOutputStream getOOStream(String filename, boolean buffered) throws IOException {
-        if(buffered) return new ObjectOutputStream(new FileOutputStream(filename+".bin"));
-        else return new ObjectOutputStream( new BufferedOutputStream(new FileOutputStream(filename+".bin")));
-    }
-
-    static void serialize(Object e, String filename) {
-        try {
-            ObjectOutputStream OOStream = getOOStream(filename, true);
-            OOStream.writeObject(e);
-            OOStream.close();
-        } catch (IOException i) {
-            i.printStackTrace();
-        }
-    }
-
-    static Object deserialize(String file) {
-        out.print("Fetching: " + file + "...");
-        Object e = null;
-        try {
-            ObjectInputStream OIStream = getOIStream(file, true);
-            e = OIStream.readObject();
-            OIStream.close();
-            out.println("\tfetched!");
-            return e;
-        } catch (IOException i) {
-            i.printStackTrace();
-            return null;
-        } catch (ClassNotFoundException c) {
-            out.println("Object not found");
-            c.printStackTrace();
-            return null;
-        }
-    }
     /*528184109
     * #documnets: 50220423
     * rate: 10000000*/
@@ -267,7 +223,7 @@ class utilsClass {
                 + (runtime.totalMemory() - runtime.freeMemory()) / mb + " mb");
     }
 
-    static void splitCollection(String info) throws IOException {
+    static void splitCollection() throws IOException {
         long stemmedQuarter = 13760033936L;
         long nonStemmedQuarter = 14257479996L;
         System.out.println("Splitting ClueWeb09...");
@@ -276,14 +232,13 @@ class utilsClass {
         long bytes = 0;
         int flag = 0;
 
-        String docInfo = "/home/aalto/IdeaProjects/PredictiveIndex/data/source/docInfo";
         String compressedIndex = "/home/aalto/IdeaProjects/PredictiveIndex/data/source/noStemmerIndex";
         String folder = "/home/aalto/IdeaProjects/PredictiveIndex/data/";
 
-        DataInputStream DIS = new DataInputStream(new BufferedInputStream( new FileInputStream(compressedIndex)));
-        BufferedReader br = new BufferedReader(new FileReader(docInfo));
+        //DataInputStream DIS = new DataInputStream(new BufferedInputStream( new FileInputStream(compressedIndex)));
+        BufferedReader br = new BufferedReader(new FileReader(finalDocInfo));
 
-        DataOutputStream DOS = new DataOutputStream(new BufferedOutputStream( new FileOutputStream(folder + split + "/clueweb.bin")));;
+        //DataOutputStream DOS = new DataOutputStream(new BufferedOutputStream( new FileOutputStream(folder + split + "/clueweb.bin")));;
         BufferedWriter bw = new BufferedWriter(new FileWriter(folder + split + "/"+ "docInfo.csv"));
 
         String line = br.readLine();
@@ -292,33 +247,27 @@ class utilsClass {
             record = line.split(" ");
             if (flag==1) {
                 out.println(doc);
-                DOS.close();
+                //DOS.close();
                 bw.close();
-                System.exit(1);
                 split++;
                 flag=0;
                 bw = new BufferedWriter(new FileWriter(folder + split + "/"+ "docInfo.csv"));
-                DOS = new DataOutputStream(new BufferedOutputStream( new FileOutputStream(folder + split + "/clueweb.bin")));
+                //DOS = new DataOutputStream(new BufferedOutputStream( new FileOutputStream(folder + split + "/clueweb.bin")));
             }
             for (int i = 0; i < Integer.parseInt(record[3]); i++) {
-                DOS.writeByte(DIS.readByte());
+                //DOS.writeByte(DIS.readByte());
                 bytes++;
                 if(bytes % nonStemmedQuarter==0 & doc!=0) flag = 1;
             }
-            bw.write(line);
-            bw.newLine();
+            bw.write(line + "\n");
             line = br.readLine();
             doc++;
         }
-        DOS.close();
-        DIS.close();
+        //DOS.close();
+        //DIS.close();
         System.out.println("ClueWeb09 Splitted! " + doc);
     }
 
-   static void greedySelection(){
-        Int2IntOpenHashMap model = new Int2IntOpenHashMap();
-
-   }
 
    static void mergeDumps() throws IOException, ClassNotFoundException { /***NO-Need***/
        Long2IntOpenHashMap mergedMap = new Long2IntOpenHashMap();
@@ -340,5 +289,7 @@ class utilsClass {
        }
        return result;
    }
+
+
 
 }

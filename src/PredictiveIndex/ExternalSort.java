@@ -33,7 +33,8 @@ public class ExternalSort {
         }
     };
 
-    static long maxData = Long.MAX_VALUE;
+    static long pairMax = Long.MAX_VALUE;
+    static long BM25max = Long.MAX_VALUE;
 
 
 
@@ -61,7 +62,7 @@ public class ExternalSort {
     public static void massiveBinaryMerge(File folder, String output) throws IOException {
         LinkedList<long[][]> LL = new LinkedList<>();
         File [] files = folder.listFiles();
-        DataOutputStream DOStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(output, false)));
+        DataOutputStream DOStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(output+".bin", false)));
         long [][] bucketsAux;
         LinkedList<DataInputStream> DIStreams = new LinkedList<>();
         for(int k =0; k< files.length; k++){
@@ -89,15 +90,17 @@ public class ExternalSort {
                         if(buffLong == null){
                             buffLong = new long[]{DIStreams.get(i).readLong(),DIStreams.get(i).readLong()};
                         } else buffer.remove(i);
-                        if(buffLong[0]<=maxData){
+                        if(buffLong[0]<pairMax){
                             bucketsAux[z] = buffLong;
-                        } else{
-                            buffer.put(i,buffLong);
-                            if(z!=0)
-                                bucketsAux = Arrays.copyOfRange(bucketsAux,0,z-1);
-                            else
-                                bucketsAux = null;
-                            break;
+                        }else if (buffLong[0] == pairMax & buffLong[0] <= BM25max){
+                            bucketsAux[z] = buffLong;
+                        }else {
+                                buffer.put(i,buffLong);
+                                if(z!=0)
+                                    bucketsAux = Arrays.copyOfRange(bucketsAux,0,z-1);
+                                else
+                                    bucketsAux = null;
+                                break;
                         }
                     }catch (EOFException e){
                         if(z!=0) bucketsAux = Arrays.copyOfRange(bucketsAux,0,z-1);
@@ -111,14 +114,18 @@ public class ExternalSort {
                 if(bucketsAux!=null){
                     LL.addLast(bucketsAux);
                     if(i == 0){
-                        if(bucketsAux[bucketsAux.length-1] != null) maxData = bucketsAux[bucketsAux.length-1][0];
+                        if(bucketsAux[bucketsAux.length-1] != null){
+                            pairMax = bucketsAux[bucketsAux.length-1][0];
+                            BM25max = bucketsAux[bucketsAux.length-1][1];
+                        }
                         section= section*4;
-                        System.out.println(Arrays.toString(getTerms(maxData)));
+                        System.out.println(Arrays.toString(getTerms(pairMax)));
                     }
                 }
 
                 //System.out.println(Arrays.toString(getTerms(maxData)));
-            }maxData = Long.MAX_VALUE;
+            }pairMax = Long.MAX_VALUE;
+            BM25max = Long.MAX_VALUE;
             System.out.print("\t done: " + (System.currentTimeMillis() - partialNow)/1000 + "s");
 
             System.out.print("Merging data... ");
