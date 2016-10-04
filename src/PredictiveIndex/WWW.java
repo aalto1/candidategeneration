@@ -38,6 +38,7 @@ public abstract class WWW {
     static final String [] docInfo  = new String[]{folder[0]+"docInfo.csv",folder[1]+"docInfo.csv",folder[2]+"docInfo.csv",folder[3]+"docInfo.csv"};
 
     //source
+    static final String nonStemClue = source + "noStemmerIndex";
     static final String lanModel    = source + "lanModel";
     static final String complexRank = source + "complexRankerResultsTraining";
     static final String trainQ      = source + "trainQ";
@@ -45,6 +46,8 @@ public abstract class WWW {
     static final String oldDocInfo  = source + "oldDocInfo";
     static final String didNameMap  = source + "didNameMap";
     static final String finalDocInfo= source + "docInfo";
+    static final String trentaDoc   = source + "10documents";
+    static final String array30     = source + "array30";
 
     //metadata
     static final String freqMap     = metadata + "freqMap";

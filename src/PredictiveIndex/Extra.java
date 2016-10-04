@@ -96,16 +96,19 @@ public class Extra extends WWW {
             doc2IDmap.put(field[1], Integer.valueOf(field[0]).intValue());
         }
         br.close();
-        br = getBuffReader(oldDocInfo);
-        BufferedWriter bw = getBuffWriter(finalDocInfo);
-        System.out.println("Fetching oldDocInfo and merging the two in finalDocInfo...");
-        for (line = br.readLine(); line != null ; line = br.readLine()) {
-            field = line.split(" ");
-            bw.write(field[0] + " " + doc2IDmap.get(field[0]) + " " + field[2] + " " + field[3] + " " + field[4] + "\n");
+        for (int i = 0; i < 4 ; i++) {
+            br = getBuffReader(docInfo[i]);
+            BufferedWriter bw = getBuffWriter(docInfo[i]+"new");
+            System.out.println("Fetching oldDocInfo and merging the two in finalDocInfo...");
+            for (line = br.readLine(); line != null ; line = br.readLine()) {
+                field = line.split(" ");
+                bw.write(field[0] + " " + doc2IDmap.get(field[0]) + " " + field[2] + " " + field[3] + " " + field[4] + "\n");
+            }
+            bw.close();
+            br.close();
+            System.out.println("Merging Completed");
         }
-        bw.close();
-        br.close();
-        System.out.println("Merging Completed");
+
 
     }
 }

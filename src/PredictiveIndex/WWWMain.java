@@ -3,7 +3,9 @@ package PredictiveIndex;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -15,6 +17,7 @@ import static PredictiveIndex.Extra.uniquePairs;
 import static PredictiveIndex.FastQueryTrace.getFQT;
 import static PredictiveIndex.QualityModel.getQualityModel;
 import static PredictiveIndex.QualityModel.printQualityModel;
+import static PredictiveIndex.utilsClass.checkProgress;
 import static PredictiveIndex.utilsClass.splitCollection;
 
 /**
@@ -22,13 +25,17 @@ import static PredictiveIndex.utilsClass.splitCollection;
  */
 public class WWWMain extends WWW {
 
+        //14k
 
+    //30k
     /*/home/aalto/IdeaProjects/PredictiveIndex/aux/sort/bin/binsort --size 16 --length 12 --block-size=900000000  ./InvertedIndex.dat ./sortedInvertedIndex.dat*/
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
-        checkExtraData();
+        //checkExtraData();
+        //getDocIDMap();
         //splitCollection();
         //tryTry();
-        //System.exit(1);
+        printQualityModel();
+        System.exit(1);
 
         InvertedIndex i2;
         int distance = 5;
@@ -39,7 +46,7 @@ public class WWWMain extends WWW {
             serialize(i2.globalFreqMap, freqMap);
             serialize(i2.globalStats,   gStats);
         }
-        if(!checkExistence(rawI2+20)){
+        if(!checkExistence(dumpMap)){
             i2 = new InvertedIndex((int[]) deserialize(freqMap), (long[]) deserialize(gStats), distance, numThreads);
             startBatteria(i2, 1, numThreads);
             serialize(i2.dMap, dumpMap);
@@ -73,13 +80,41 @@ public class WWWMain extends WWW {
 
     }
 
-    private static void tryTry(){
-        Long2ObjectOpenHashMap<Int2IntMap> h = (Long2ObjectOpenHashMap<Int2IntMap>) deserialize(fastQT);
-        for (long key: h.keySet()) {
-            for(int m : h.get(key).keySet()){
-                System.out.println(Arrays.toString(getTerms(key)) + " " + m +" "+ h.get(key).get(m));
+    private static void tryTry() throws IOException {
+
+        if(true) {
+            int[][] decodingCheck = new int[30][];
+            BufferedReader br = getBuffReader(trentaDoc);
+            String line;
+            int[] termID;
+            String[] auxBuff;
+            line = br.readLine();
+            line = br.readLine();
+            for (int k = 0; (line = br.readLine()) != null; k++) {
+                auxBuff = line.split(" ");
+                termID = new int[auxBuff.length];
+                for (int i = 0; i < auxBuff.length; i++) {
+                    termID[i] = Integer.valueOf(auxBuff[i]);
+                }
+                decodingCheck[k] = termID;
+                line = br.readLine();
+            }
+            for (int [] a : decodingCheck) System.out.println(Arrays.toString(a));
+            serialize(decodingCheck,array30);
+
+
+        }
+
+        if(false){
+            Long2ObjectOpenHashMap<Int2IntMap> h = (Long2ObjectOpenHashMap<Int2IntMap>) deserialize(fastQT);
+            for (long key: h.keySet()) {
+                for(int m : h.get(key).keySet()){
+                    System.out.println(Arrays.toString(getTerms(key)) + " " + m +" "+ h.get(key).get(m));
+                }
             }
         }
+        System.exit(1);
+
     }
 
 

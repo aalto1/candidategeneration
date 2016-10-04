@@ -28,40 +28,46 @@ import static PredictiveIndex.utilsClass.*;
  */
 
 public class InvertedIndex extends WWW {
-    static final int testLimit = (int) (51*Math.pow(10,6));
+    static final int testLimit = 50222043;
     static final int bufferSize = (int) (3*Math.pow(10,7));
     final private int distance;
     final static int threadNum = 4;
 
     static LongOpenHashSet fSet ;
     Long2IntOpenHashMap dMap = new Long2IntOpenHashMap();
-    public long [] globalStats;                                     //1-numberofdocs,2-wordcounter,3-unique words
-    public long doc = 0;
+    public long [] globalStats;                                     //1-numberofdocs,2-wordcounter
+    public long doc = 1;
     int []  globalFreqMap;
     static AtomicInteger dump = new AtomicInteger(0);
 
 
-    DataOutputStream    [] DOS      =   new DataOutputStream[threadNum];
     DataInputStream     [] ClueDIS  =   new DataInputStream[threadNum];
-    DataInputStream     [] StatsDIS =   new DataInputStream[threadNum];
     BufferedReader      [] BR       =   new BufferedReader[threadNum];
+
+    DataInputStream     [] localStatsDIS =   new DataInputStream[threadNum];        //in the first fase output, in the second input
+
+    DataOutputStream    [] DOS      =   new DataOutputStream[threadNum];
+
+
+
     int             [][][] buffer   =   new int[threadNum][][];
-    int [] keepPointers             =   new int[]{0,0,0,0};
-    int [] pointers                 =   new int[]{0,0,0,0};
+
+    int             [] keepPointers =   new int[]{0,0,0,0};
+    int             [] pointers     =   new int[]{0,0,0,0};
 
 
 
-    /***CONSTRUCTORS***/
+    /*********************************************************** CONSTRUCTORS ***********************************************************/
 
     public InvertedIndex(int distance, int numThreads) throws IOException, ClassNotFoundException {
-        this.globalStats = new long[3];
+        this.globalStats = new long[2];
         globalFreqMap = new int[91553702];
         this.distance = distance;
 
         for (int i = 0; i < numThreads ; i++) {
-            DOS[i]      = getDOStream(docStat[i]);
             ClueDIS[i]  = getDIStream(CW[i]);
             BR[i]       = getBuffReader(docInfo[i]);
+            DOS[i]      = getDOStream(docStat[i]);
         }
     }
 
@@ -72,16 +78,20 @@ public class InvertedIndex extends WWW {
         this.fSet = (LongOpenHashSet) deserialize(filterSet);
 
         for (int i = 0; i < numThreads ; i++) {
-            DOS[i]  = getDOStream(rawI2+dump.getAndAdd(1));;
             ClueDIS[i]  = getDIStream(CW[i]);
-            StatsDIS[i] = getDIStream(docStat[i]);
+            System.out.println(CW[i]);
             BR[i]       = getBuffReader(docInfo[i]);
+
+            localStatsDIS[i] = getDIStream(docStat[i]);
+
+            DOS[i]  = getDOStream(rawI2+dump.getAndAdd(1));;
+
             buffer[i]   = new int[bufferSize][4];
         }
     }
 
 
-    /*** GET METADATA ***/
+    /***********************************************************  GET METADATA ***********************************************************/
 
     /* The file is stored in binary form with the firs bit as a continuation bit.
     * 0 - document title | 1 - docID | 2 - offset (varbyte) | 3 - size (varbyte) | 4 - docLength (#words)
@@ -95,8 +105,8 @@ public class InvertedIndex extends WWW {
         Int2IntMap position = new Int2IntOpenHashMap();
         int [] document = new int[127525*2];
 
-        for(line = BR[tn].readLine() ; line!=null & checkProgress(doc, totNumDocs, 500000, start, testLimit) & field.length == 5; line = BR[tn].readLine()){
-            field = line.split(" ");
+        for(line = BR[tn].readLine() ; line!=null & checkProgress(doc, totNumDocs, 500000, start, testLimit); line = BR[tn].readLine()){
+            if((field = line.split(" ")).length != 5) break;
             storeMetadata(readClueWebDocument(field, ClueDIS[tn], document), Integer.parseInt(field[1]), Integer.parseInt(field[4]), position, tn);
             position.clear();
             doc++;
@@ -108,13 +118,17 @@ public class InvertedIndex extends WWW {
     private void storeMetadata(int [] words, int docID, int docLen, Int2IntMap position, int tn) throws IOException {
         /*this function process the single wrac files */
         int multipleOccurece = 0;
+        int maxFreq = Integer.MIN_VALUE;
         for (int k = 0; k<docLen; k++) {
             if (position.putIfAbsent(words[k], 1) == null){
-                globalFreqMap[words[k]]++;
-                this.globalStats[2]++;
+                globalFreqMap[words[k]]++;                                  //how many documents contain words[k]
+                //this.globalStats[2]++;                                    //seems useless
+
             }else{
                 if(position.merge(words[k], 1, Integer::sum)==2) multipleOccurece++;            }
+                if(position.get(words[k])>maxFreq) maxFreq = position.get(words[k]);
         }
+        position.put(-99, maxFreq);
         storeHashMap(position, DOS[tn], multipleOccurece);
         this.globalStats[0]++;
         this.globalStats[1]+= words.length;
@@ -123,7 +137,16 @@ public class InvertedIndex extends WWW {
 
 
 
-    /*** BUILD INVERTED INDEX ***/
+    /*********************************************************** BUILD INVERTED INDEX ***********************************************************/
+
+    private void checkDecoding(int [] d, int[][] c){
+        for (int i = 0; i < d.length ; i++) {
+            if(d[i]!=c[(int)doc-1][i]){
+                System.out.print(d[i] +","+ c[(int)doc][i] + " " );
+            }else
+                System.out.println("OKOK");
+        }System.out.println();
+    }
 
     protected void buildDBigramInvertedIndex(int tn) throws IOException, ClassNotFoundException, InterruptedException {
         System.out.println("Building D-Bigram Inverted Index...");
@@ -137,13 +160,14 @@ public class InvertedIndex extends WWW {
         Int2IntMap bufferMap = new Int2IntOpenHashMap();
         bufferMap.defaultReturnValue(1);
         LongSet noDuplicateSet = new LongOpenHashSet();
-
+        //int [][] check = (int[][]) deserialize(array30);
 
         for(line = BR[tn].readLine(); line!=null & checkProgress(doc, totNumDocs, 500000, start, testLimit); line = BR[tn].readLine()){
             field = line.split(" ");
             if(field.length != 5) break;
             readClueWebDocument(field, ClueDIS[tn], document);
-            fetchHashMap(bufferMap, StatsDIS[tn]);
+
+            fetchHashMap(bufferMap, localStatsDIS[tn]);
             bufferedIndex(document, field, bufferMap , noDuplicateSet, buffPair, tn);
 
             bufferMap.clear();
@@ -154,7 +178,7 @@ public class InvertedIndex extends WWW {
 
         DOS[tn].close();
         ClueDIS[tn].close();
-        StatsDIS[tn].close();
+        localStatsDIS[tn].close();
         BR[tn].close();
 
         System.out.println("D-Bigram Inverted Index Built!");
@@ -168,6 +192,7 @@ public class InvertedIndex extends WWW {
         int score1;
         int score2;
         int movingDistance = distance;
+        int localMaxFreq = localFreqMap.get(-99);
 
         for (int wIx = 0; wIx < docLen; wIx++) {
             if(docLen - wIx < distance) movingDistance = (docLen - wIx);
@@ -178,8 +203,8 @@ public class InvertedIndex extends WWW {
                 Arrays.sort(pair);
 
                 if((noDuplicateSet.add(getPair(pair[0], pair[1])) & fSet.contains(getPair(pair[0],pair[1])))) {
-                    score1 = getBM25(globalStats, docLen, localFreqMap.get(pair[0]), globalFreqMap[pair[0]]);
-                    score2 = getBM25(globalStats, docLen, localFreqMap.get(pair[1]), globalFreqMap[pair[1]]);
+                    score1 = getBM25(globalStats, docLen, localFreqMap.get(pair[0]), localMaxFreq ,globalFreqMap[pair[0]]);
+                    score2 = getBM25(globalStats, docLen, localFreqMap.get(pair[1]), localMaxFreq ,globalFreqMap[pair[1]]);
 
                     if(pointers[tn] == buffer[tn].length){
                         sampledSelection(tn);

@@ -10,6 +10,7 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
 import java.io.*;
+import java.lang.reflect.Array;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -39,9 +40,14 @@ class utilsClass extends WWW {
 
     static int[] readClueWebDocument(String [] line, DataInputStream stream, int [] document) throws IOException {
         byte [] rawDoc = new byte[Integer.parseInt(line[3])];
+        int [] aux;
         for (int i = 0; i < rawDoc.length; i++) {
             rawDoc[i] = stream.readByte();
         }
+        //aux = Arrays.copyOf(decodeRawDoc(rawDoc, Integer.parseInt(line[4]), document),Integer.parseInt(line[4]));
+        //System.out.println(aux[0]);
+        //if(Arrays.asList(aux).contains(0)) System.out.println(Arrays.asList(aux));
+        //return aux;
         return decodeRawDoc(rawDoc, Integer.parseInt(line[4]), document);
     }
 
@@ -59,10 +65,12 @@ class utilsClass extends WWW {
             } else {
                 int num = n * 128 + b;
                 document[k] = num;
+                //if(document[k]<1)System.out.println(","+document[k]+","+ k);
                 k++;
                 n = 0;
             }
         }
+        //System.out.println(k+ " " + docLen);
         return document;
     }
 
@@ -88,15 +96,16 @@ class utilsClass extends WWW {
 
 
 
-    protected static int getBM25(long [] globalStats, int docLen, int f, int n) {
+    protected static int getBM25(long [] globalStats, int docLen, int termFreq , int localMaxFreq, int n) {
         /*global statistics for BM25*/
         long N = globalStats[0];
         double avg = globalStats[1] / N;
         double k = 1.6;
         double b = 0.75;
+        double normalizedFreq = 0.5 + (0.5*termFreq/localMaxFreq);
         double IDF = java.lang.Math.log((N - n + 0.5 )/( n + 0.5));
-        double BM25 = (IDF * f * k + 1) / (f + k * (1 - b + (b* docLen / avg)));
-        if(BM25<0) System.out.println(N + " " + n);
+        double BM25 = (IDF * normalizedFreq * (k + 1)) / (normalizedFreq + k * (1 - b + (b* docLen / avg)));
+        //if(BM25<0) System.out.println(N + " " + n);
         return (int) (BM25*Math.pow(10, 7));
     }
 
@@ -224,7 +233,7 @@ class utilsClass extends WWW {
     }
 
     static void splitCollection() throws IOException {
-        long stemmedQuarter = 13760033936L;
+        //long stemmedQuarter = 13760033936L;
         long nonStemmedQuarter = 14257479996L;
         System.out.println("Splitting ClueWeb09...");
         int doc = 0;
@@ -232,39 +241,40 @@ class utilsClass extends WWW {
         long bytes = 0;
         int flag = 0;
 
-        String compressedIndex = "/home/aalto/IdeaProjects/PredictiveIndex/data/source/noStemmerIndex";
-        String folder = "/home/aalto/IdeaProjects/PredictiveIndex/data/";
 
-        //DataInputStream DIS = new DataInputStream(new BufferedInputStream( new FileInputStream(compressedIndex)));
+        DataInputStream DIS = new DataInputStream(new BufferedInputStream( new FileInputStream(nonStemClue)));
         BufferedReader br = new BufferedReader(new FileReader(finalDocInfo));
 
-        //DataOutputStream DOS = new DataOutputStream(new BufferedOutputStream( new FileOutputStream(folder + split + "/clueweb.bin")));;
-        BufferedWriter bw = new BufferedWriter(new FileWriter(folder + split + "/"+ "docInfo.csv"));
+        DataOutputStream DOS = getDOStream(folder[split] + "clueweb");
+        BufferedWriter bw = getBuffWriter(folder[split] + "docInfo.csv");
 
         String line = br.readLine();
         String [] record;
         while(line != null){
             record = line.split(" ");
             if (flag==1) {
+
                 out.println(doc);
-                //DOS.close();
+                DOS.close();
                 bw.close();
+                //System.exit(1);
                 split++;
                 flag=0;
-                bw = new BufferedWriter(new FileWriter(folder + split + "/"+ "docInfo.csv"));
-                //DOS = new DataOutputStream(new BufferedOutputStream( new FileOutputStream(folder + split + "/clueweb.bin")));
+                bw = getBuffWriter(folder[split] + "docInfo.csv");
+                DOS = getDOStream(folder[split] + "clueweb");
             }
             for (int i = 0; i < Integer.parseInt(record[3]); i++) {
-                //DOS.writeByte(DIS.readByte());
+                DOS.writeByte(DIS.readByte());
                 bytes++;
-                if(bytes % nonStemmedQuarter==0 & doc!=0) flag = 1;
+                if(bytes % nonStemmedQuarter==0 & doc!=0 & split!=3) flag = 1;
             }
             bw.write(line + "\n");
             line = br.readLine();
             doc++;
         }
-        //DOS.close();
-        //DIS.close();
+        bw.close();                 //if you don't close the buffer you will lost stuff.
+        DOS.close();
+        DIS.close();
         System.out.println("ClueWeb09 Splitted! " + doc);
     }
 
