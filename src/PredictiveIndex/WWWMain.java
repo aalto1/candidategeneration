@@ -1,6 +1,7 @@
 package PredictiveIndex;
 
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 
 import java.io.BufferedReader;
@@ -11,14 +12,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 
 
-import static PredictiveIndex.Extra.getDocIDMap;
-import static PredictiveIndex.Extra.getFilterSet;
-import static PredictiveIndex.Extra.uniquePairs;
+import static PredictiveIndex.Extra.*;
 import static PredictiveIndex.FastQueryTrace.getFQT;
 import static PredictiveIndex.QualityModel.getQualityModel;
 import static PredictiveIndex.QualityModel.printQualityModel;
-import static PredictiveIndex.utilsClass.checkProgress;
-import static PredictiveIndex.utilsClass.splitCollection;
+import static PredictiveIndex.utilsClass.*;
 
 /**
  * Created by aalto on 10/1/16.
@@ -30,26 +28,27 @@ public class WWWMain extends WWW {
     //30k
     /*/home/aalto/IdeaProjects/PredictiveIndex/aux/sort/bin/binsort --size 16 --length 12 --block-size=900000000  ./InvertedIndex.dat ./sortedInvertedIndex.dat*/
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
-        //checkExtraData();
+        checkExtraData();
         //getDocIDMap();
         //splitCollection();
         //tryTry();
-        printQualityModel();
-        System.exit(1);
+        //printQualityModel();
+        //System.exit(1);
 
         InvertedIndex i2;
         int distance = 5;
         int numThreads = 4;
-        if (!checkExistence(freqMap)) {
+        if (!checkExistence(localFreqMap)) {
             i2 = new InvertedIndex(distance, numThreads);
             startBatteria(i2, 0, numThreads);
-            serialize(i2.globalFreqMap, freqMap);
+            getLocFreqMap(i2.locFreqArr, i2.uniTerms);
             serialize(i2.globalStats,   gStats);
         }
         if(!checkExistence(dumpMap)){
-            i2 = new InvertedIndex((int[]) deserialize(freqMap), (long[]) deserialize(gStats), distance, numThreads);
+            i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), (long[]) deserialize(gStats), distance, numThreads);
             startBatteria(i2, 1, numThreads);
             serialize(i2.dMap, dumpMap);
+            serialize(Arrays.stream(i2.dmpPost).sum(), dumpedPostings);
         }
         if(!checkExistence(sortedI2)) ExternalSort.massiveBinaryMerge(new File(rawI2), sortedI2);
         if(!checkExistence(partialModel)) getQualityModel(1);
@@ -73,10 +72,11 @@ public class WWWMain extends WWW {
 
 
     private static void checkExtraData() throws IOException {
-        if(!checkExistence(filterSet))  getFilterSet();
+        if(!checkExistence(bigFilterSet))  getBigFilterSet();
+        if(!checkExistence(smallFilterSet)) getSmallFilterSet();
         //if(!checkExistence(fastQT))     getFQT(10)  ;
         if(!checkExistence(accessMap))  uniquePairs();
-        //if(!checkExistence())  ;
+        if(!checkExistence(uniqueTerms)) getUniqueTermsSet();
 
     }
 

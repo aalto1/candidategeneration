@@ -12,6 +12,8 @@ import java.util.*;
 
 import static java.lang.System.out;
 
+
+
 /**
  * Created by aalto on 10/1/16.
  */
@@ -50,9 +52,12 @@ public abstract class WWW {
     static final String array30     = source + "array30";
 
     //metadata
-    static final String freqMap     = metadata + "freqMap";
+    static final String localFreqMap= metadata + "localFreqMap";
     static final String gStats      = metadata + "globalStats";
-    static final String filterSet   = metadata + "filterSet";
+    static final String smallFilterSet  =   metadata + "smallFilterSet";
+    static final String bigFilterSet= metadata + "bigFilterSet";
+    static final String uniqueTerms = metadata + "uniqueTerms";
+    static final String dumpedPostings =    metadata + "dumpedPostings";
     static final String fastQT      = metadata + "fastQT";
     static final String toPick      = metadata + "toPick";
 

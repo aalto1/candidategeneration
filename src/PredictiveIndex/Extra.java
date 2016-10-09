@@ -1,5 +1,6 @@
 package PredictiveIndex;
 
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.objects.Object2ByteOpenHashMap;
@@ -62,8 +63,8 @@ public class Extra extends WWW {
         return topkInt;
     }
 
-    static void  getFilterSet() throws IOException {
-        getTermMap();
+    static void  getBigFilterSet() throws IOException {
+        if (termMap == null) getTermMap();
         LongOpenHashSet fSet = new LongOpenHashSet();
         BufferedReader br = getBuffReader(lanModel);
         String line;
@@ -82,7 +83,55 @@ public class Extra extends WWW {
         }
         System.out.println("Absent Terms: " + removed + " removed.");
         System.out.println("Filter Set Size: " + fSet.size());
-        serialize(fSet, filterSet);
+        serialize(fSet, bigFilterSet);
+    }
+
+
+    public static void getSmallFilterSet() throws IOException {
+        if (termMap == null) getTermMap();
+        LongOpenHashSet smallFS = new LongOpenHashSet();
+        BufferedReader br = new BufferedReader(new FileReader(trainQ));
+        String line;
+        String [] field;
+        Integer term;
+        LinkedList<Integer> terms = new LinkedList<>();
+
+        for (line = br.readLine(); line != null; line = br.readLine()) {
+            field = line.split(":")[1].split(" ");
+
+            for (int i = 0; i < field.length; i++) {
+                term = termMap.get(field[i]);
+                if (term != null) {
+                    terms.addLast(term);
+                }
+            }
+
+            for (long j : getCombinations(terms, 2)) smallFS.add(j);
+            terms.clear();
+        }
+        serialize(smallFS, smallFilterSet);
+
+    }
+
+    public static void getUniqueTermsSet() throws IOException {
+        if (termMap == null) getTermMap();
+        IntOpenHashSet uniTerms = new IntOpenHashSet();
+        BufferedReader br = new BufferedReader(new FileReader(trainQ));
+        String line;
+        String [] field;
+        Integer term;
+        for (line = br.readLine(); line != null; line = br.readLine()) {
+            field = line.split(":")[1].split(" ");
+
+            for (int i = 0; i < field.length; i++) {
+                term = termMap.get(field[i]);
+                if (term != null) {
+                    uniTerms.add(term);
+                }
+            }
+        }
+        serialize(uniTerms, uniqueTerms);
+
     }
 
     static void getDocIDMap() throws IOException {

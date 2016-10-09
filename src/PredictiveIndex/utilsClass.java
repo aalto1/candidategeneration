@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.floats.Float2BooleanArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -22,8 +23,13 @@ import java.util.zip.GZIPInputStream;
 import me.lemire.integercompression.differential.*;
 
 import org.bouncycastle.asn1.dvcs.Data;
+import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
 import org.mapdb.*;
 import java.lang.System;
+import it.unimi.dsi.fastutil.longs.*;
+
+import java.util.*;
+import it.unimi.dsi.fastutil.ints.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipFile.*;
@@ -279,18 +285,27 @@ class utilsClass extends WWW {
     }
 
 
-   static void mergeDumps() throws IOException, ClassNotFoundException { /***NO-Need***/
+   static void mergePairDumps(Long2IntOpenHashMap [] maps) throws IOException, ClassNotFoundException { /***NO-Need***/
        Long2IntOpenHashMap mergedMap = new Long2IntOpenHashMap();
-       Long2IntOpenHashMap aux;
        int k = 0;
-       for(File f: new File(globalFold+"/dumped/").listFiles()) {
-           aux = (Long2IntOpenHashMap) new ObjectInputStream( new BufferedInputStream(new FileInputStream(f.getAbsoluteFile()))).readObject();
-           for (long key: aux.keySet()) {
-               if(mergedMap.putIfAbsent(key, aux.get(key)) != null) mergedMap.merge(key, aux.get(key), Integer::sum);
+       for(Long2IntOpenHashMap map: maps) {
+           for (long key: map.keySet()) {
+               if(mergedMap.putIfAbsent(key, map.get(key)) != null) mergedMap.merge(key, map.get(key), Integer::sum);
            }
        }
-       serialize(mergedMap, globalFold+"/dumped/finalDump");
+       serialize(mergedMap, dumpMap);
    }
+
+    static void getLocFreqMap(int [] locFreqArr, IntOpenHashSet uniTerms) throws IOException, ClassNotFoundException { /***NO-Need***/
+        Int2IntOpenHashMap mergedMap = new Int2IntOpenHashMap();
+        int k = 0;
+        for (int i = 0; i < locFreqArr.length ; i++) {
+            if(uniTerms.contains(i)) mergedMap.put(i, locFreqArr[i]);
+            k++;
+        }
+        System.out.println(k);
+        serialize(mergedMap, localFreqMap);
+    }
 
    static float[] scalarPerArray(float scalar, float[] array){
        float [] result = new float[array.length];

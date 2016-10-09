@@ -3,9 +3,8 @@ package PredictiveIndex;
 
 
 import com.mchange.v2.async.ThreadPoolAsynchronousRunner;
-import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import it.unimi.dsi.fastutil.longs.LongSet;
+import it.unimi.dsi.fastutil.longs.*;
+
 import java.util.*;
 import it.unimi.dsi.fastutil.ints.*;
 import org.apache.hadoop.io.nativeio.NativeIO;
@@ -14,12 +13,10 @@ import org.mapdb.DBMaker;
 import org.mapdb.Serializer;
 
 import java.io.*;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static PredictiveIndex.PredictiveIndex.dataFold;
-import static PredictiveIndex.PredictiveIndex.globalFold;
+
 import static PredictiveIndex.utilsClass.*;
 
 /**
@@ -33,12 +30,17 @@ public class InvertedIndex extends WWW {
     final private int distance;
     final static int threadNum = 4;
 
-    static LongOpenHashSet fSet ;
-    Long2IntOpenHashMap dMap = new Long2IntOpenHashMap();
-    public long [] globalStats;                                     //1-numberofdocs,2-wordcounter
+    LongOpenHashSet bigFS ;
+    LongOpenHashSet smallFS;
+    IntOpenHashSet uniTerms;
+    Long2LongOpenHashMap dMap       = new Long2LongOpenHashMap();          // new Long2LongOpenHashMap[threadNum];
+    Int2IntOpenHashMap [] auxFMap   = new Int2IntOpenHashMap[threadNum];
+    long [] globalStats;                                     //1-numberofdocs,2-wordcounter
     public long doc = 1;
-    int []  globalFreqMap;
+    int []  locFreqArr;
+    Int2IntMap locFreqMap;
     static AtomicInteger dump = new AtomicInteger(0);
+    long [] dmpPost = new long[4];
 
 
     DataInputStream     [] ClueDIS  =   new DataInputStream[threadNum];
@@ -61,21 +63,25 @@ public class InvertedIndex extends WWW {
 
     public InvertedIndex(int distance, int numThreads) throws IOException, ClassNotFoundException {
         this.globalStats = new long[2];
-        globalFreqMap = new int[91553702];
+        locFreqArr = new int[91553702];
         this.distance = distance;
+
+        this.uniTerms = (IntOpenHashSet) deserialize(uniqueTerms);
 
         for (int i = 0; i < numThreads ; i++) {
             ClueDIS[i]  = getDIStream(CW[i]);
             BR[i]       = getBuffReader(docInfo[i]);
             DOS[i]      = getDOStream(docStat[i]);
+            auxFMap[i]  = new Int2IntOpenHashMap();
         }
     }
 
-    public InvertedIndex(int[] globalFreqMap, long[] globalStats, int distance, int numThreads) throws IOException, ClassNotFoundException {
-        this.globalFreqMap = globalFreqMap;
+    public InvertedIndex(Int2IntOpenHashMap locFreqMap, long[] globalStats, int distance, int numThreads) throws IOException, ClassNotFoundException {
+        this.locFreqMap = locFreqMap;
         this.globalStats = globalStats;
         this.distance = distance;
-        this.fSet = (LongOpenHashSet) deserialize(filterSet);
+        this.bigFS = (LongOpenHashSet) deserialize(bigFilterSet);
+        this.smallFS = (LongOpenHashSet) deserialize((smallFilterSet));
 
         for (int i = 0; i < numThreads ; i++) {
             ClueDIS[i]  = getDIStream(CW[i]);
@@ -87,6 +93,7 @@ public class InvertedIndex extends WWW {
             DOS[i]  = getDOStream(rawI2+dump.getAndAdd(1));;
 
             buffer[i]   = new int[bufferSize][4];
+            //dMap[i]     = new Long2LongOpenHashMap();
         }
     }
 
@@ -94,7 +101,7 @@ public class InvertedIndex extends WWW {
     /***********************************************************  GET METADATA ***********************************************************/
 
     /* The file is stored in binary form with the firs bit as a continuation bit.
-    * 0 - document title | 1 - docID | 2 - offset (varbyte) | 3 - size (varbyte) | 4 - docLength (#words)
+    * 0 - document title | 1 - docID | 2 - ofbigFS (varbyte) | 3 - size (varbyte) | 4 - docLength (#words)
     */
 
     protected void getClueWebMetadata(int tn) throws IOException, ClassNotFoundException, InterruptedException {
@@ -120,19 +127,18 @@ public class InvertedIndex extends WWW {
         int multipleOccurece = 0;
         int maxFreq = Integer.MIN_VALUE;
         for (int k = 0; k<docLen; k++) {
-            if (position.putIfAbsent(words[k], 1) == null){
-                globalFreqMap[words[k]]++;                                  //how many documents contain words[k]
-                //this.globalStats[2]++;                                    //seems useless
+            if (position.putIfAbsent(words[k], 1) == null) {
+                locFreqArr[words[k]]++;                                  //how many documents contain words[k]
+            }else if (position.merge(words[k], 1, Integer::sum) == 2) multipleOccurece++;
 
-            }else{
-                if(position.merge(words[k], 1, Integer::sum)==2) multipleOccurece++;            }
-                if(position.get(words[k])>maxFreq) maxFreq = position.get(words[k]);
+            if (position.get(words[k]) > maxFreq) maxFreq = position.get(words[k]);
         }
         position.put(-99, maxFreq);
         storeHashMap(position, DOS[tn], multipleOccurece);
         this.globalStats[0]++;
         this.globalStats[1]+= words.length;
     }
+
 
 
 
@@ -174,7 +180,7 @@ public class InvertedIndex extends WWW {
             noDuplicateSet.clear();
             doc++;
         }
-        sampledSelection(tn);
+        sampledSelection(tn, buffPair);
 
         DOS[tn].close();
         ClueDIS[tn].close();
@@ -184,7 +190,7 @@ public class InvertedIndex extends WWW {
         System.out.println("D-Bigram Inverted Index Built!");
     }
 
-    public void bufferedIndex(int[] words, String [] field, Int2IntMap localFreqMap, LongSet noDuplicateSet, int [] pair, int tn) throws IOException, ClassNotFoundException, InterruptedException {
+    public void bufferedIndex(int[] words, String [] field, Int2IntMap localFreqMap, LongSet noDuplicateSet, int [] twoTerms, int tn) throws IOException, ClassNotFoundException, InterruptedException {
         /* For each document we take the pairs between documents within a distance. We add each entry to a buffer and
         * compute the BM25 for that specific term-pair*/
 
@@ -193,39 +199,56 @@ public class InvertedIndex extends WWW {
         int score2;
         int movingDistance = distance;
         int localMaxFreq = localFreqMap.get(-99);
+        long pair;
 
         for (int wIx = 0; wIx < docLen; wIx++) {
             if(docLen - wIx < distance) movingDistance = (docLen - wIx);
             for (int dIx = wIx+1; dIx < wIx + movingDistance; dIx++) {
 
-                pair[0] = words[wIx] ;
-                pair[1] = words[dIx] ;
-                Arrays.sort(pair);
+                twoTerms[0] = words[wIx] ;
+                twoTerms[1] = words[dIx] ;
+                Arrays.sort(twoTerms);
+                pair = getPair(twoTerms[0], twoTerms[1]);
+                if(noDuplicateSet.add(pair) & bigFS.contains(pair)){
+                    if(smallFS.contains(pair)){
+                        if(pointers[tn] == buffer[tn].length){
+                            sampledSelection(tn, twoTerms);
+                            pointers[tn] = keepPointers[tn];
+                        }
+                        incrementPostingList(tn, twoTerms, pair);
 
-                if((noDuplicateSet.add(getPair(pair[0], pair[1])) & fSet.contains(getPair(pair[0],pair[1])))) {
-                    score1 = getBM25(globalStats, docLen, localFreqMap.get(pair[0]), localMaxFreq ,globalFreqMap[pair[0]]);
-                    score2 = getBM25(globalStats, docLen, localFreqMap.get(pair[1]), localMaxFreq ,globalFreqMap[pair[1]]);
+                        score1 = getBM25(globalStats, docLen, localFreqMap.get(twoTerms[0]), localMaxFreq , locFreqMap.get(twoTerms[0]));
+                        score2 = getBM25(globalStats, docLen, localFreqMap.get(twoTerms[1]), localMaxFreq , locFreqMap.get(twoTerms[1]));
 
-                    if(pointers[tn] == buffer[tn].length){
-                        sampledSelection(tn);
-                        pointers[tn] = keepPointers[tn];
-                    }
-
-                    buffer[tn][pointers[tn]][0] = pair[0];
-                    buffer[tn][pointers[tn]][1] = pair[1];
-                    buffer[tn][pointers[tn]][2] = score1 + score2;
-                    buffer[tn][pointers[tn]][3] = Integer.parseInt(field[1]);
-                    pointers[tn]++;
+                        buffer[tn][pointers[tn]][0] = twoTerms[0];
+                        buffer[tn][pointers[tn]][1] = twoTerms[1];
+                        buffer[tn][pointers[tn]][2] = score1 + score2;
+                        buffer[tn][pointers[tn]][3] = Integer.parseInt(field[1]);
+                        pointers[tn]++;
+                    }else
+                        dmpPost[tn]++;
                 }
             }
         }
     }
 
-    private synchronized void incrementMap(long pair){
-        dMap.addTo(pair, 1);
+    private synchronized void incrementPostingList(int tn, int [] t, long pair){
+        t = getTerms(dMap.get(pair));
+        dMap.put(pair,getPair(t[0]++, t[1]));
     }
 
-    private void sampledSelection(int tn) throws IOException {
+    private synchronized void incrementDumpCounter(int tn, int [] t, long pair){
+        t = getTerms(dMap.get(pair));
+        dMap.put(pair,getPair(t[0], t[1]++));
+    }
+
+
+
+    /*private synchronized void incrementMap(long pair){
+        dMap.addTo(pair, 1);
+    }*/
+
+    private void sampledSelection(int tn, int [] twoTerms) throws IOException{
         //System.out.println("TIME TO CLEAN. Processed docs: " + doc);
         now = System.currentTimeMillis();
         int threshold = getThreshold(tn);
@@ -234,9 +257,11 @@ public class InvertedIndex extends WWW {
             if (buffer[tn][k][2] > threshold) {
                 buffer[tn][keepPointers[tn]++] = buffer[tn][k];
             }else
-                incrementMap(getPair(buffer[tn][k][0], buffer[tn][k][1]));
-        }
+                incrementDumpCounter(tn, twoTerms, getPair(buffer[tn][k][0], buffer[tn][k][1]));
+                //dMap[tn].addTo(getPair(buffer[tn][k][0], buffer[tn][k][1]),1);
+                //incrementMap(getPair(buffer[tn][k][0], buffer[tn][k][1]));
 
+        }
 
         if(keepPointers[tn] > (buffer[tn].length/100)*90){
             sortBuffer(tn);

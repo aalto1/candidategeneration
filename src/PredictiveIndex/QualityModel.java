@@ -2,10 +2,7 @@ package PredictiveIndex;
 
 import com.google.common.primitives.Ints;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
-import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
-import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import it.unimi.dsi.fastutil.longs.LongSet;
+import it.unimi.dsi.fastutil.longs.*;
 
 import java.io.*;
 import java.util.Arrays;
@@ -21,8 +18,8 @@ import static PredictiveIndex.utilsClass.getPair;
  * Created by aalto on 10/1/16.
  */
 public class QualityModel extends Selection {
-    static Long2IntOpenHashMap accMap = (Long2IntOpenHashMap) deserialize(accessMap);
-    static Long2IntOpenHashMap dumped = (Long2IntOpenHashMap) deserialize(dumpMap);
+    static Long2IntOpenHashMap accMap;
+    static Long2LongOpenHashMap dumped;
     static long hit = 0;
 
 
@@ -33,6 +30,8 @@ public class QualityModel extends Selection {
     * 2) Number of documents */
 
     public static long[][][] getQualityModel(int function) throws IOException, ClassNotFoundException {
+        accMap = (Long2IntOpenHashMap) deserialize(accessMap);
+        dumped = (Long2LongOpenHashMap) deserialize(dumpMap);
         Long2ObjectOpenHashMap<Int2IntMap> fastQueryTrace = getFQT(10);
 
         System.out.println("Fast Query Trace fetched!\nProcessing Inverted Index...");
@@ -81,7 +80,7 @@ public class QualityModel extends Selection {
 
         //access increment
         int increment = accMap.get(t1) + accMap.get(t2) + accMap.get(pair);
-        int lbucket = getLenBucket((postingList.length) + dumped.get(pair), lRanges);
+        int lbucket = getLenBucket((postingList.length) +  getTerms(dumped.get(pair))[1], lRanges);
         int range = getRankBucket(0, (postingList.length), rRanges);
 
         for (int k = 0; k < range; k++) {
