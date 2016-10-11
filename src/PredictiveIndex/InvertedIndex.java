@@ -21,12 +21,18 @@ import static PredictiveIndex.utilsClass.*;
 
 /**
  * Created by aalto on 6/24/16.
+ * distance 2   40k hits / 143347 hits
+ * distance 5   65k hits /
+ * distance 10  68k hits 3.3GB
  *
  */
 
+
+
+
 public class InvertedIndex extends WWW {
     static final int testLimit = 50222043;
-    static final int bufferSize = (int) (3*Math.pow(10,7));
+    static final int bufferSize = (int) (2.8*Math.pow(10,7));
     final private int distance;
     final static int threadNum = 4;
 
@@ -49,6 +55,7 @@ public class InvertedIndex extends WWW {
     DataInputStream     [] localStatsDIS =   new DataInputStream[threadNum];        //in the first fase output, in the second input
 
     DataOutputStream    [] DOS      =   new DataOutputStream[threadNum];
+    int                 [][] sample   =   new int[4][((int) (50222043*0.2))];
 
 
 
@@ -180,7 +187,7 @@ public class InvertedIndex extends WWW {
             noDuplicateSet.clear();
             doc++;
         }
-        sampledSelection(tn, buffPair);
+        sampledSelection(tn, buffPair, true);
 
         DOS[tn].close();
         ClueDIS[tn].close();
@@ -212,7 +219,7 @@ public class InvertedIndex extends WWW {
                 if(noDuplicateSet.add(pair) & bigFS.contains(pair)){
                     if(smallFS.contains(pair)){
                         if(pointers[tn] == buffer[tn].length){
-                            sampledSelection(tn, twoTerms);
+                            sampledSelection(tn, twoTerms, false);
                             pointers[tn] = keepPointers[tn];
                         }
                         incrementPostingList(tn, twoTerms, pair);
@@ -248,7 +255,7 @@ public class InvertedIndex extends WWW {
         dMap.addTo(pair, 1);
     }*/
 
-    private void sampledSelection(int tn, int [] twoTerms) throws IOException{
+    private void sampledSelection(int tn, int [] twoTerms, boolean end) throws IOException{
         //System.out.println("TIME TO CLEAN. Processed docs: " + doc);
         now = System.currentTimeMillis();
         int threshold = getThreshold(tn);
@@ -263,7 +270,7 @@ public class InvertedIndex extends WWW {
 
         }
 
-        if(keepPointers[tn] > (buffer[tn].length/100)*90){
+        if(keepPointers[tn] > (buffer[tn].length/100)*90 | end){
             sortBuffer(tn);
 
             System.out.print("Flushing Buffer...\t");
@@ -273,7 +280,7 @@ public class InvertedIndex extends WWW {
 
             //System.out.println("Processed docs: " + doc + "Sampled Natural Selection:" + (System.currentTimeMillis() - now) + "ms.\tThreshold: " + threshold +"\t MaxBM25: " + maxBM25);
             DOS[tn].close();
-            DOS[tn] = getDOStream(rawI2+dump.getAndAdd(1));
+            if(!end) DOS[tn] = getDOStream(rawI2+dump.getAndAdd(1));
             keepPointers[tn] = 0;
         }
 
@@ -298,16 +305,16 @@ public class InvertedIndex extends WWW {
 
     private int getThreshold(int tn){
         int rnd;
-        int[] sample = new int[(int) ((bufferSize-keepPointers[tn])*0.002)];
+        //int[] sample = new int[(int) ((buffer[tn].length)*0.002)];
 
-        for(int k = 0; k<sample.length; k++) {
-            rnd = ThreadLocalRandom.current().nextInt(keepPointers[tn], bufferSize-1);
-            sample[k] = buffer[tn][rnd][2];
+        for(int k = 0; k<sample[tn].length; k++) {
+            rnd = ThreadLocalRandom.current().nextInt(0, buffer[tn].length-1);
+            sample[tn][k] = buffer[tn][rnd][2];
         }
 
-        java.util.Arrays.sort(sample);
+        java.util.Arrays.sort(sample[tn]);
 
-        return sample[(int)(sample.length*0.8)];
+        return sample[tn][(int)(sample.length*0.8)];
     }
 }
 
