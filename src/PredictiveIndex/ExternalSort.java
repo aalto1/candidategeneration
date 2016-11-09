@@ -9,6 +9,8 @@ import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.ListIterator;
 
+import static PredictiveIndex.WWW.dBigramIndex;
+import static PredictiveIndex.WWW.getBuffWriter;
 import static PredictiveIndex.utilsClass.getTerms;
 
 /**
@@ -23,6 +25,10 @@ public class ExternalSort {
     static long [][] bucket;
     private static long now = System.currentTimeMillis();
     static long partialNow;
+
+    static BufferedWriter bw;
+    static int linesCount = 0;
+
     static Comparator<long[]> comp = new Comparator<long[]>() {
         @Override
         public int compare(long[] int1, long[] int2) {
@@ -60,6 +66,8 @@ public class ExternalSort {
 
 
     public static void massiveBinaryMerge(File folder, String output) throws IOException {
+        bw = getBuffWriter(dBigramIndex+"index.csv");
+
         LinkedList<long[][]> LL = new LinkedList<>();
         File [] files = folder.listFiles();
         DataOutputStream DOStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(output+".bin", false)));
@@ -77,21 +85,23 @@ public class ExternalSort {
             int section =  100000000/(files.length+2);
             System.out.print("Loading data...");
             partialNow = System.currentTimeMillis();
-            for (int i = 0; i < DIStreams.size(); i++ ) {
+            for (int i = 0; i < DIStreams.size(); i++) {
                 if(LL.size()%50 !=0 & LL.size()!=0){
                     System.out.print(" " + LL.size());
                 }else{
                     System.out.println(" "+LL.size());
                 }
                 bucketsAux = new long[section][2];
-                for (int z = 0; z < section; z++) {
+                for (int z = 0; z < section; z++){
                     try{
                         buffLong = buffer.get(i);
                         if(buffLong == null){
                             buffLong = new long[]{DIStreams.get(i).readLong(),DIStreams.get(i).readLong()};
+                            //linesCount++; //sometimes reading from the stream fails
                         } else buffer.remove(i);
                         if(buffLong[0]<pairMax){
                             bucketsAux[z] = buffLong;
+                            linesCount++;
                         }else if (buffLong[0] == pairMax & buffLong[0] <= BM25max){
                             bucketsAux[z] = buffLong;
                         }else {
@@ -151,6 +161,8 @@ public class ExternalSort {
             //if(dumps==3) break;
             //else  dumps++;
             }
+        System.out.println(linesCount);
+        bw.close();
         DOStream.close();
     }
 
@@ -161,11 +173,22 @@ public class ExternalSort {
         while (i < a.length && j < b.length) {
             if (comp.compare(a[i], b[j])<0){
                 if(i==0 && j ==0) System.out.print("\t\tFirst Element: " + Arrays.toString(getTerms(a[i][0])));
+                bw.write(Arrays.toString(getTerms(a[i][0])));
+                bw.write(Arrays.toString(getTerms(a[i][1])));
+                bw.newLine();
+                //linesCount++;
+
                 DOOStream.writeLong(a[i][0]);
                 DOOStream.writeLong(a[i++][1]);
+
             }
             else{
                 if(i==0 && j ==0) System.out.print("\t\tFirst Element: " + Arrays.toString(getTerms(b[j][0])));
+                bw.write(Arrays.toString(getTerms(b[j][0])));
+                bw.write(Arrays.toString(getTerms(b[j][1])));
+                bw.newLine();
+                //linesCount++;
+
                 DOOStream.writeLong(b[j][0]);
                 DOOStream.writeLong(b[j++][1]);
             }
@@ -173,12 +196,26 @@ public class ExternalSort {
         while (i < a.length){
             if(i==a.length-1) System.out.print("\tLast Element:" +  Arrays.toString(getTerms(a[i][0])));
             //System.out.println(i +" i - length" + a.length);
+
+            bw.write(Arrays.toString(getTerms(a[i][0])));
+            bw.write(Arrays.toString(getTerms(a[i][1])));
+            bw.newLine();
+            //linesCount++;
+
+
             DOOStream.writeLong(a[i][0]);
             DOOStream.writeLong(a[i++][1]);
         }
         while (j < b.length) {
             //System.out.println(j +" j - lenght" + b.length);
             if(j==b.length-1) System.out.print("\tLast Element:" +  Arrays.toString(getTerms(b[j][0])));
+
+            bw.write(Arrays.toString(getTerms(b[j][0])));
+            bw.write(Arrays.toString(getTerms(b[j][1])));
+            bw.newLine();
+            //linesCount++;
+
+
             DOOStream.writeLong(b[j][0]);
             DOOStream.writeLong(b[j++][1]);
         }

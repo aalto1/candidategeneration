@@ -47,7 +47,7 @@ public class GreedySelection extends Selection {
         Long2IntOpenHashMap PLLen = fetchPPLength(getDIStream(pListLength));
         BufferedReader br = getBuffReader(lanModel);
         DataOutputStream DOStream = getDOStream(pairProbLen);
-        getTermMap();
+        getTerm2IdMap();
 
         String line;
         long pair =0;
@@ -55,18 +55,19 @@ public class GreedySelection extends Selection {
         for (line = br.readLine(); line != null; line = br.readLine()){
             field = line.split(" ");
             try{
-                pair = getPair(termMap.get(field[0]),termMap.get(field[1]));
+                pair = getPair(term2IdMap.get(field[0]),term2IdMap.get(field[1]));
                 DOStream.writeLong(pair);
                 DOStream.writeDouble(Double.valueOf(field[3]));
                 DOStream.writeInt(PLLen.get(pair));
             }catch (NullPointerException e){
-                System.out.println(termMap.get(field[0])+","+termMap.get(field[1]));
+                System.out.println(term2IdMap.get(field[0])+","+term2IdMap.get(field[1]));
             }
 
         }
         br.close();
         DOStream.close();
     }
+
 
     static void greedySelection() throws IOException {
         Long2IntOpenHashMap pairMap = new Long2IntOpenHashMap();

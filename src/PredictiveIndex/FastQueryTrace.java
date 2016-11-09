@@ -7,6 +7,7 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.LinkedList;
 
 
@@ -33,13 +34,15 @@ public class FastQueryTrace extends WWW {
     }
 
     private static Long2ObjectOpenHashMap<Int2IntMap> buildFastQT(int k) throws IOException {
-        int[][] topKMatrix = getTopKMatrix(new int[173800][], getBuffReader(complexRank), k);
+        int[][] topKMatrix = getTopKMatrixNew(new int[173800][], getBuffReader(complexRankN), k);
+        getTerm2IdMap();
         BufferedReader br= getBuffReader(trainQ);
         FQT = new Long2ObjectOpenHashMap<>();
         String line;
         String [] field;
         long[] queryBigrams;
         int[] topK;
+        int counter = 0;
 
         while ((line = br.readLine()) != null) {
             field = line.split(":");
@@ -49,10 +52,14 @@ public class FastQueryTrace extends WWW {
                     addTopK(bigram, topKMatrix[Integer.valueOf(field[0])]);
                 }
             }catch (NullPointerException e){
-                System.out.println(Integer.valueOf(field[0]));
+                System.out.println("Test Set Query: " + Integer.valueOf(field[0]));
+                System.out.println(counter++);
+
             }
         }
         serialize(FQT, fastQT+k);
+        System.out.println(FQT.size());
+        System.exit(1);
         return FQT;
     }
 
@@ -79,7 +86,7 @@ public class FastQueryTrace extends WWW {
 
         private static int[][] getTopKMatrix(int[][] topMatrix, BufferedReader br, int k) throws IOException {
             System.out.println("Building TopK matrix...");
-            getTermMap();
+            getTerm2IdMap();
             LinkedList<Integer> auxTopK = new LinkedList<>();
             String line;
             String [] field;
@@ -90,6 +97,7 @@ public class FastQueryTrace extends WWW {
             while ((line = br.readLine()) != null) {
                 field = line.split(" ");
                 tmp = Integer.valueOf(field[0]);
+                if(tmp==32363) System.out.println("trovato");
                 if (perm != tmp) {
                     topMatrix[perm] = Ints.toArray(auxTopK);
                     auxTopK.clear();
@@ -105,6 +113,24 @@ public class FastQueryTrace extends WWW {
             System.out.println("TopK matrix built.");
             return topMatrix;
         }
+
+    private static int[][] getTopKMatrixNew(int[][] topMatrix, BufferedReader br, int k) throws IOException {
+        System.out.println("Building TopK matrix...");
+        String line;
+        String [] field;
+        int perm = 0;
+        int tmp;
+        int topk = 0;
+        int [] array;
+
+        while ((line = br.readLine()) != null) {
+            array = Arrays.stream(line.split(",")).mapToInt(Integer::parseInt).toArray();
+            topMatrix[array[0]] = Arrays.copyOfRange(array, 1, array.length);
+        }
+
+        System.out.println("TopK matrix built.");
+        return topMatrix;
+    }
 
 
 

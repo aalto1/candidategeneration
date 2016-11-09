@@ -20,6 +20,7 @@ import static PredictiveIndex.utilsClass.getPair;
 public class QualityModel extends Selection {
     static Long2IntOpenHashMap accMap;
     static Long2LongOpenHashMap dumped;
+    static LongOpenHashSet hitPairs = new LongOpenHashSet();
     static long hit = 0;
 
 
@@ -33,6 +34,8 @@ public class QualityModel extends Selection {
         accMap = (Long2IntOpenHashMap) deserialize(accessMap);
         dumped = (Long2LongOpenHashMap) deserialize(dumpMap);
         Long2ObjectOpenHashMap<Int2IntMap> fastQueryTrace = getFQT(10);
+        System.out.println(fastQueryTrace.size());
+
 
         System.out.println("Fast Query Trace fetched!\nProcessing Inverted Index...");
         DataInputStream DIStream = getDIStream(sortedI2);
@@ -54,6 +57,7 @@ public class QualityModel extends Selection {
 
                     case 1:
                         if (fastQueryTrace.containsKey(pair))
+                            //hitPairs.add(pair);
                             processPostingList(pair, currentPair[0], currentPair[1], Ints.toArray(auxPostingList), fastQueryTrace.get(pair));
                         break;
 
@@ -71,6 +75,7 @@ public class QualityModel extends Selection {
             auxPostingList.addLast(posting[3]); //docid
 
         }
+        System.out.println(hitPairs.size());
 
         serialize(QM, partialModel);
         return QM;
@@ -92,9 +97,11 @@ public class QualityModel extends Selection {
         for (int i = 0; i < postingList.length - 1; i++) {
             increment = aggregatedTopK.get(postingList[i]);
             if (increment > 0) {
+                hitPairs.add(pair);
                 rankBucket = getRankBucket(rankBucket, i, rRanges);
                 QM[lbucket][rankBucket][0] += increment;
-                System.out.println("Number of HITS: " + (hit+=increment));
+                hit+=increment;
+                System.out.println("Number of HITS: " + (hit));
             }
 
         }

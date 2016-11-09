@@ -20,6 +20,8 @@ import static PredictiveIndex.utilsClass.*;
 
 /**
  * Created by aalto on 10/1/16.
+ *
+ * Minimum Distance is 1: this value takes into account just the prox term.
  */
 public class WWWMain extends WWW {
 
@@ -28,12 +30,16 @@ public class WWWMain extends WWW {
     //30k
     /*/home/aalto/IdeaProjects/PredictiveIndex/aux/sort/bin/binsort --size 16 --length 12 --block-size=900000000  ./InvertedIndex.dat ./sortedInvertedIndex.dat*/
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
-        checkExtraData();
+        //checkExtraData();
         //getDocIDMap();
         //splitCollection();
         //tryTry();
         //printQualityModel();
-        //System.exit(1);
+        //ExternalSort.massiveBinaryMerge(new File(dBigramIndex+rawI2),dBigramIndex+sortedI2);
+        //sortComplexRanking();
+        getFQT(10);
+        System.exit(1);
+        //getId2TermMap();
 
         InvertedIndex i2;
         int distance = 5;
@@ -45,10 +51,18 @@ public class WWWMain extends WWW {
             serialize(i2.globalStats,   gStats);
         }
         if(!checkExistence(dumpMap)){
-            i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), (long[]) deserialize(gStats), distance, numThreads);
-            startBatteria(i2, 1, numThreads);
-            serialize(i2.dMap, dumpMap);
-            serialize(Arrays.stream(i2.dmpPost).sum(), dumpedPostings);
+            //Single
+            //i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), (long[]) deserialize(gStats), 1, false, singleIndex, numThreads);
+            //buildStructure(i2, numThreads);
+            //Bigram
+            //i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), (long[]) deserialize(gStats), Integer.MAX_VALUE, true, bigramIndex, numThreads);
+            //buildStructure(i2, numThreads);
+            //D-Bigram
+            i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), (long[]) deserialize(gStats), distance, true, dBigramIndex, numThreads);
+            buildStructure(i2, numThreads);
+            //HIT
+            //i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), (long[]) deserialize(gStats), 1, false, HITIndex, numThreads);
+            //buildStructure(i2, true, dBigramIndex, numThreads, distance);
         }
         if(!checkExistence(sortedI2)) ExternalSort.massiveBinaryMerge(new File(rawI2), sortedI2);
         if(!checkExistence(partialModel)) getQualityModel(1);
@@ -56,6 +70,15 @@ public class WWWMain extends WWW {
 
 
     }
+
+    private static void buildStructure(InvertedIndex i2, int numThreads) throws IOException, ClassNotFoundException, InterruptedException {
+        System.out.println("");
+        startBatteria(i2, 1, numThreads);
+        serialize(i2.dMap, dumpMap);
+        serialize(Arrays.stream(i2.dmpPost).sum(), dumpedPostings);
+    }
+
+
 
     private static void startBatteria(InvertedIndex i2, int phase, int numThreads) throws InterruptedException {
         System.out.println("Starting Batteria. Phase: " + phase);
@@ -74,7 +97,7 @@ public class WWWMain extends WWW {
     private static void checkExtraData() throws IOException {
         if(!checkExistence(bigFilterSet))  getBigFilterSet();
         if(!checkExistence(smallFilterSet)) getSmallFilterSet();
-        //if(!checkExistence(fastQT))     getFQT(10)  ;
+        if(!checkExistence(fastQT))     getFQT(10)  ;
         if(!checkExistence(accessMap))  uniquePairs();
         if(!checkExistence(uniqueTerms)) getUniqueTermsSet();
 

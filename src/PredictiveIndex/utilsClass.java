@@ -76,7 +76,7 @@ class utilsClass extends WWW {
                 n = 0;
             }
         }
-        //System.out.println(k+ " " + docLen);
+        //if(docLen==k) System.out.println("expected: " + docLen + " Found: " + k + " Array Length: " + document.length);
         return document;
     }
 
@@ -112,8 +112,10 @@ class utilsClass extends WWW {
         double IDF = java.lang.Math.log((N - n + 0.5 )/( n + 0.5));
         double BM25 = (IDF * normalizedFreq * (k + 1)) / (normalizedFreq + k * (1 - b + (b* docLen / avg)));
         //if(BM25<0) System.out.println(N + " " + n);
+        //System.out.println(BM25*Math.pow(10, 7));
         return (int) (BM25*Math.pow(10, 7));
     }
+
 
 
     static int [] hashMapToArray(Int2IntMap map, int [] array){
@@ -313,6 +315,46 @@ class utilsClass extends WWW {
            result[i] = array[i]*scalar;
        }
        return result;
+   }
+
+   static void sortComplexRanking() throws IOException {
+       BufferedReader br = getBuffReader(complexRank);
+       BufferedWriter bw = getBuffWriter(complexRank+"New.csv");
+       double [][] ranks = new double[60794823][3];
+       int k = 0;
+       String line = br.readLine();
+       String [] record;
+       while(line != null){
+           try {
+
+               record = line.split(" ");
+               ranks[k][0] = Double.parseDouble(record[0]);
+               ranks[k][1] = Double.parseDouble(record[1]);
+               ranks[k][2] = Double.parseDouble(record[3]);
+               k++;
+               line = br.readLine();
+           }catch (EOFException e){
+               System.out.println(k);
+           }
+       }
+       br.close();
+
+       Arrays.parallelSort(ranks, rankerComparator);
+       double tmp = -1;
+       int counter = 0;
+       for (double [] aux : ranks) {
+           if(tmp!=aux[0]){
+               counter = 0;
+               tmp = aux[0];
+           }
+           if(counter < 10){
+               if(counter == 0) bw.write(((int) aux[0])+",");
+               bw.write((((int) aux[1])+","));
+               counter++;
+               if(counter == 10) bw.newLine();
+           }
+       }
+       bw.close();
    }
 
 

@@ -21,8 +21,8 @@ import static PredictiveIndex.utilsClass.*;
 
 /**
  * Created by aalto on 6/24/16.
- * distance 2   40k hits / 143347 hits
- * distance 5   65k hits /
+ * distance 2   143347 hits {6.7GB}     / t-0.5 - 95221 - 2.9GB / t-0.2 - 134626 -4.9GB
+ * distance 5   188800 hits {11.6 GB} /
  * distance 10  68k hits 3.3GB
  *
  */
@@ -33,7 +33,9 @@ import static PredictiveIndex.utilsClass.*;
 public class InvertedIndex extends WWW {
     static final int testLimit = 50222043;
     static final int bufferSize = (int) (2.8*Math.pow(10,7));
-    final private int distance;
+    private int distance;
+    private boolean isBigram;
+    private String prefix;
     final static int threadNum = 4;
 
     LongOpenHashSet bigFS ;
@@ -46,6 +48,7 @@ public class InvertedIndex extends WWW {
     int []  locFreqArr;
     Int2IntMap locFreqMap;
     static AtomicInteger dump = new AtomicInteger(0);
+    static int gThreshold = 0;
     long [] dmpPost = new long[4];
 
 
@@ -55,7 +58,7 @@ public class InvertedIndex extends WWW {
     DataInputStream     [] localStatsDIS =   new DataInputStream[threadNum];        //in the first fase output, in the second input
 
     DataOutputStream    [] DOS      =   new DataOutputStream[threadNum];
-    int                 [][] sample   =   new int[4][((int) (50222043*0.2))];
+    int                 [][] sample   =   new int[4][((int) (bufferSize*0.002))];
 
 
 
@@ -63,6 +66,7 @@ public class InvertedIndex extends WWW {
 
     int             [] keepPointers =   new int[]{0,0,0,0};
     int             [] pointers     =   new int[]{0,0,0,0};
+
 
 
 
@@ -83,23 +87,25 @@ public class InvertedIndex extends WWW {
         }
     }
 
-    public InvertedIndex(Int2IntOpenHashMap locFreqMap, long[] globalStats, int distance, int numThreads) throws IOException, ClassNotFoundException {
+    public InvertedIndex(Int2IntOpenHashMap locFreqMap, long[] globalStats, int distance, boolean isBgram, String prefix, int numThreads) throws IOException, ClassNotFoundException {
         this.locFreqMap = locFreqMap;
         this.globalStats = globalStats;
         this.distance = distance;
+        this.isBigram = isBgram;
+        this.prefix = prefix ;
         this.bigFS = (LongOpenHashSet) deserialize(bigFilterSet);
         this.smallFS = (LongOpenHashSet) deserialize((smallFilterSet));
 
-        for (int i = 0; i < numThreads ; i++) {
-            ClueDIS[i]  = getDIStream(CW[i]);
-            System.out.println(CW[i]);
-            BR[i]       = getBuffReader(docInfo[i]);
+        for (int tn = 0; tn < numThreads ; tn++) {
+            ClueDIS[tn]  = getDIStream(CW[tn]);
+            System.out.println(CW[tn]);
+            BR[tn]       = getBuffReader(docInfo[tn]);
 
-            localStatsDIS[i] = getDIStream(docStat[i]);
+            localStatsDIS[tn] = getDIStream(docStat[tn]);
 
-            DOS[i]  = getDOStream(rawI2+dump.getAndAdd(1));;
+            DOS[tn]  = getDOStream(prefix+rawI2+dump.getAndAdd(1));
 
-            buffer[i]   = new int[bufferSize][4];
+            buffer[tn]   = new int[bufferSize][4];
             //dMap[i]     = new Long2LongOpenHashMap();
         }
     }
@@ -161,8 +167,25 @@ public class InvertedIndex extends WWW {
         }System.out.println();
     }
 
+    private boolean consistencyCheck(int [] document, int docLen, BufferedWriter bw, String docID, int tn) throws IOException {
+        bw.write("\n#doc: " + docID + "\n ---------------------------------------------------- \n");
+        for (int k = 0; k< docLen; k++){
+          bw.write(id2TermMap.get(document[k])+ " ");
+        }
+        //bw.write(Arrays.toString(Arrays.copyOfRange(document,0, docLen)));
+        bw.newLine();
+        if(doc>100){
+            /*
+            bw.close();
+            Thread.currentThread().interrupt();
+            */
+            return true;
+        }
+        return false;
+    }
+
     protected void buildDBigramInvertedIndex(int tn) throws IOException, ClassNotFoundException, InterruptedException {
-        System.out.println("Building D-Bigram Inverted Index...");
+        System.out.println("Building D-Bigram Inverted Index. Posting list number:" + smallFS.size() );
         start = System.currentTimeMillis();
 
         String [] field;
@@ -174,11 +197,15 @@ public class InvertedIndex extends WWW {
         bufferMap.defaultReturnValue(1);
         LongSet noDuplicateSet = new LongOpenHashSet();
         //int [][] check = (int[][]) deserialize(array30);
+        //BufferedWriter bw = getBuffWriter(results+tn+"converted");
 
         for(line = BR[tn].readLine(); line!=null & checkProgress(doc, totNumDocs, 500000, start, testLimit); line = BR[tn].readLine()){
             field = line.split(" ");
             if(field.length != 5) break;
             readClueWebDocument(field, ClueDIS[tn], document);
+
+            //if(consistencyCheck(document, Integer.parseInt(field[4]), bw, field[0], tn)) break;
+            if(doc>10000) break;
 
             fetchHashMap(bufferMap, localStatsDIS[tn]);
             bufferedIndex(document, field, bufferMap , noDuplicateSet, buffPair, tn);
@@ -188,6 +215,12 @@ public class InvertedIndex extends WWW {
             doc++;
         }
         sampledSelection(tn, buffPair, true);
+
+        /*for (int [] aux: buffer[tn]
+             ) {
+            bw.write(Arrays.toString(aux) + "\n");
+        }
+        bw.close();*/
 
         DOS[tn].close();
         ClueDIS[tn].close();
@@ -209,14 +242,16 @@ public class InvertedIndex extends WWW {
         long pair;
 
         for (int wIx = 0; wIx < docLen; wIx++) {
-            if(docLen - wIx < distance) movingDistance = (docLen - wIx);
-            for (int dIx = wIx+1; dIx < wIx + movingDistance; dIx++) {
+            //System.out.println(movingDistance);
+            if(wIx + movingDistance > docLen) movingDistance = (docLen - wIx);
+            for (int dIx = wIx+1; dIx <= wIx + movingDistance; dIx++) {
 
                 twoTerms[0] = words[wIx] ;
                 twoTerms[1] = words[dIx] ;
+                //System.out.println(Arrays.toString(twoTerms));
                 Arrays.sort(twoTerms);
                 pair = getPair(twoTerms[0], twoTerms[1]);
-                if(noDuplicateSet.add(pair) & bigFS.contains(pair)){
+                if(noDuplicateSet.add(pair) & smallFS.contains(pair)/*bigFS.contains(pair)*/){
                     if(smallFS.contains(pair)){
                         if(pointers[tn] == buffer[tn].length){
                             sampledSelection(tn, twoTerms, false);
@@ -258,10 +293,16 @@ public class InvertedIndex extends WWW {
     private void sampledSelection(int tn, int [] twoTerms, boolean end) throws IOException{
         //System.out.println("TIME TO CLEAN. Processed docs: " + doc);
         now = System.currentTimeMillis();
-        int threshold = getThreshold(tn);
+
+        if(gThreshold==0)
+            gThreshold = getThreshold(tn);
+        else
+            gThreshold = (getThreshold(tn)+gThreshold)/2;
+
+        System.out.println("This is the threshold: " + gThreshold);
 
         for (int k = keepPointers[tn]; k < buffer[tn].length; k++) {
-            if (buffer[tn][k][2] > threshold) {
+            if (buffer[tn][k][2] > gThreshold) {
                 buffer[tn][keepPointers[tn]++] = buffer[tn][k];
             }else
                 incrementDumpCounter(tn, twoTerms, getPair(buffer[tn][k][0], buffer[tn][k][1]));
@@ -270,19 +311,9 @@ public class InvertedIndex extends WWW {
 
         }
 
-        if(keepPointers[tn] > (buffer[tn].length/100)*90 | end){
-            sortBuffer(tn);
+        if(keepPointers[tn] > (buffer[tn].length/100)*90 | end) flushBuffer(tn, end);
 
-            System.out.print("Flushing Buffer...\t");
-            for (int k = 0; k < keepPointers[tn]; k++) {
-                for (int elem : buffer[tn][k]) DOS[tn].writeInt(elem);
-            }System.out.print("Done.");
 
-            //System.out.println("Processed docs: " + doc + "Sampled Natural Selection:" + (System.currentTimeMillis() - now) + "ms.\tThreshold: " + threshold +"\t MaxBM25: " + maxBM25);
-            DOS[tn].close();
-            if(!end) DOS[tn] = getDOStream(rawI2+dump.getAndAdd(1));
-            keepPointers[tn] = 0;
-        }
 
 
         maxBM25 = 0;
@@ -290,17 +321,28 @@ public class InvertedIndex extends WWW {
         //System.out.println("Processing Time:" + (doc / (System.currentTimeMillis() - start)) * 1000 + " doc/s");
     }
 
-    private void sortBuffer(int tn){
-        java.util.Arrays.sort(buffer[tn],0,keepPointers[tn], new Comparator<int[]>() {
-            @Override
-            public int compare(int[] int1, int[] int2) {
-                if (int1[0] == int2[0]) {
-                    if(int1[1] == int2[1]){
-                        return Integer.compare(int1[2], int2[2]) * -1;
-                    }else return Integer.compare(int1[1], int2[1]);
-                } else return Integer.compare(int1[0], int2[0]);
+    private void flushBuffer(int tn, boolean end) throws IOException {
+        System.out.print("Flushing Buffer...\t");
+        if (isBigram) {
+            java.util.Arrays.sort(buffer[tn], 0, keepPointers[tn], bigramBufferComparator); //testComparator); //
+            for (int k = 0; k < keepPointers[tn]; k++) {
+                for (int elem : buffer[tn][k])
+                    DOS[tn].writeInt(elem);
             }
-        });
+        }else {
+            java.util.Arrays.sort(buffer[tn], 0, keepPointers[tn], unigramBufferComparator);
+            for (int k = 0; k < keepPointers[tn]; k++) {
+                DOS[tn].writeInt(buffer[tn][k][0]);
+                DOS[tn].writeInt(buffer[tn][k][2]);
+                DOS[tn].writeInt(buffer[tn][k][3]);
+            }
+        }
+        System.out.print("Done.");
+        //System.out.println("Processed docs: " + doc + "Sampled Natural Selection:" + (System.currentTimeMillis() - now) + "ms.\tThreshold: " + threshold +"\t MaxBM25: " + maxBM25);
+        DOS[tn].close();
+        if(!end) DOS[tn]  = getDOStream(prefix+rawI2+dump.getAndAdd(1));
+        keepPointers[tn] = 0;
+
     }
 
     private int getThreshold(int tn){
@@ -308,13 +350,13 @@ public class InvertedIndex extends WWW {
         //int[] sample = new int[(int) ((buffer[tn].length)*0.002)];
 
         for(int k = 0; k<sample[tn].length; k++) {
-            rnd = ThreadLocalRandom.current().nextInt(0, buffer[tn].length-1);
+            rnd = ThreadLocalRandom.current().nextInt(keepPointers[tn], buffer[tn].length-1);
             sample[tn][k] = buffer[tn][rnd][2];
         }
 
         java.util.Arrays.sort(sample[tn]);
 
-        return sample[tn][(int)(sample.length*0.8)];
+        return sample[tn][(int)(sample[tn].length*0.8)];
     }
 }
 

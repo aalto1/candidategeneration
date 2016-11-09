@@ -19,8 +19,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import it.unimi.di.big.mg4j.search.score.BM25FScorer;
 
-import static PredictiveIndex.InvertedIndex.dPath;
-import static PredictiveIndex.InvertedIndex.path;
 import static PredictiveIndex.VariableByteCode.encodeInterpolate;
 import static PredictiveIndex.utilsClass.arrayToHashMap;
 import static PredictiveIndex.utilsClass.getOIStream;

@@ -1,6 +1,7 @@
 package PredictiveIndex;
 
 import com.google.common.primitives.Ints;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import org.lemurproject.kstem.KrovetzStemmer;
@@ -32,7 +33,7 @@ public abstract class WWW {
     static final String results     = root + "results/";
     static final String models      = root + "models/";
     static final String source      = root + "source/";
-    static final String maps         = root + "maps/";
+    static final String maps        = root + "maps/";
 
     //threads
     static final String [] CW       = new String[]{folder[0]+"clueweb",folder[1]+"clueweb",folder[2]+"clueweb",folder[3]+"clueweb"};
@@ -43,7 +44,9 @@ public abstract class WWW {
     static final String nonStemClue = source + "noStemmerIndex";
     static final String lanModel    = source + "lanModel";
     static final String complexRank = source + "complexRankerResultsTraining";
+    static final String complexRankN= source + "complexRankerResultsTrainingNew";
     static final String trainQ      = source + "trainQ";
+    static final String allQ        = source + "million09_all";
     static final String tMap        = source + "termIDs";
     static final String oldDocInfo  = source + "oldDocInfo";
     static final String didNameMap  = source + "didNameMap";
@@ -66,8 +69,13 @@ public abstract class WWW {
     static final String accessMap   = maps + "accessMap";
 
     //results
-    static final String sortedI2    = results + "sortedI2" ;
-    static final String rawI2       = results + "rawI2/";
+    static final String singleIndex = results + "singleIndex/";
+    static final String bigramIndex = results + "bigramIndex/";
+    static final String dBigramIndex= results + "dBigramIndex/";
+    static final String HITIndex    = results + "HITIndex/";
+
+    static final String rawI2       = "rawI2/";
+    static final String sortedI2    = "sortedI2" ;
     static final String pListLength = results + "PListLength";
     static final String pairProbLen = results + "PairProbLen";
     static final String selected    = results + "selected";
@@ -78,24 +86,82 @@ public abstract class WWW {
     static final String sortedRange = models + "sortedRanges";
 
 
-    static Object2IntMap<String> termMap;
+    static Object2IntMap<String> term2IdMap;
+    static Int2ObjectOpenHashMap<String>  id2TermMap;
     static double start;
     static double now;
     static double maxBM25 = 0;
     static double minBM25 =2147388309;
     static int totNumDocs = 50220423;
 
+    //comparators
+    static Comparator<int[]> bigramBufferComparator = new Comparator<int[]>() {
+        @Override
+        public int compare(int[] int1, int[] int2) {
+            if (int1[0] == int2[0]) {
+                if(int1[1] == int2[1]){
+                    return Integer.compare(int2[2], int1[2]);
+                }else return Integer.compare(int1[1], int2[1]);
+            } else return Integer.compare(int1[0], int2[0]);
+        }
+    };
 
-    static void getTermMap() throws IOException {
+    static Comparator<int[]> unigramBufferComparator = new Comparator<int[]>() {
+        @Override
+        public int compare(int[] int1, int[] int2) {
+            if (int1[0] == int2[0]) {
+                    return Integer.compare(int2[2], int1[2]);
+            } else return Integer.compare(int1[0], int2[0]);
+        }
+    };
+
+    static Comparator<int[]> testComparator = new Comparator<int[]>() {
+        @Override
+        public int compare(int[] int1, int[] int2) {
+            if (int1[3] == int2[3]) {
+                if(int1[0] == int2[0]){
+                    return Integer.compare(int2[1], int1[1]);
+                }else return Integer.compare(int1[0], int2[0]);
+            } else return Integer.compare(int1[3], int2[3]);
+        }
+    };
+
+    static Comparator<double[]> rankerComparator = new Comparator<double[]>() {
+        @Override
+        public int compare(double[] int1, double[] int2) {
+            if (int1[0] == int2[0]) {
+                return Double.compare(int2[2],int1[2]);
+            } else return Double.compare(int1[0], int2[0]);
+        }
+    };
+
+
+
+
+    static void getTerm2IdMap() throws IOException {
         System.out.println("Fetching Term-TermID map...");
         BufferedReader br = getBuffReader(tMap);
-        termMap = new Object2IntOpenHashMap<>();
+        term2IdMap = new Object2IntOpenHashMap<>();
         String line;
         String [] record;
         int k = 1;
         while ((line = br.readLine()) != null) {
             record = line.split(" ");
-            termMap.put(record[1], k++);
+            term2IdMap.put(record[1], k++);
+        }
+        System.out.println("Map fetched!");
+    }
+
+    static void getId2TermMap() throws IOException {
+        System.out.println("Fetching TermID-Term map...");
+        BufferedReader br = getBuffReader(tMap);
+        id2TermMap = new Int2ObjectOpenHashMap<>();
+        String line;
+        String [] record;
+        int k = 1;
+        while ((line = br.readLine()) != null) {
+            record = line.split(" ");
+            id2TermMap.put(k++, record[1]);
         }
         System.out.println("Map fetched!");
     }
@@ -135,7 +201,7 @@ public abstract class WWW {
         return combo;
     }
 
-    static long[] getBigrams(String[] queryTerms) {
+    static long[] getBigrams(String [] queryTerms) {
         //this method return all the combination of the docID in the document
 
         LinkedList<Integer> queryInt = new LinkedList<>();
@@ -146,9 +212,9 @@ public abstract class WWW {
         // We convert our String [] to int [] using the term-termID map
         for (int i = 0; i < queryTerms.length; i++) {
             try{
-                queryInt.add(termMap.get(queryTerms[i]));
+                queryInt.add(term2IdMap.get(queryTerms[i]));
             }catch (NullPointerException e){
-                System.out.println(queryTerms[i]);
+                System.out.println("Missing: "+queryTerms[i]);
             }
         }
         //We take every combination of our query terms. We save them in a long array using bit-shifting
@@ -172,18 +238,23 @@ public abstract class WWW {
     }
 
     static BufferedWriter getBuffWriter(String path) throws IOException {
-        return  new BufferedWriter(new FileWriter(path));
+        return
+                new BufferedWriter(new FileWriter(path));
     }
 
     static ObjectInputStream getOIStream(String filename, boolean buffered) throws IOException {
-        if(buffered) return new ObjectInputStream(new FileInputStream(filename+".bin"));
-        else return new ObjectInputStream( new BufferedInputStream(new FileInputStream(filename+".bin")));
+        if(buffered)
+            return new ObjectInputStream(new FileInputStream(filename+".bin"));
+        else
+            return new ObjectInputStream( new BufferedInputStream(new FileInputStream(filename+".bin")));
 
     }
 
     static ObjectOutputStream getOOStream(String filename, boolean buffered) throws IOException {
-        if(buffered) return new ObjectOutputStream(new FileOutputStream(filename+".bin"));
-        else return new ObjectOutputStream( new BufferedOutputStream(new FileOutputStream(filename+".bin", false)));
+        if(buffered)
+            return new ObjectOutputStream(new FileOutputStream(filename+".bin"));
+        else
+            return new ObjectOutputStream( new BufferedOutputStream(new FileOutputStream(filename+".bin", false)));
     }
 
     static void serialize(Object e, String filename) {
