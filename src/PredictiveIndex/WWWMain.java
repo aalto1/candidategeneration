@@ -47,22 +47,23 @@ public class WWWMain extends WWW {
         if (!checkExistence(localFreqMap)) {
             i2 = new InvertedIndex(distance, numThreads);
             startBatteria(i2, 0, numThreads);
-            getLocFreqMap(i2.locFreqArr, i2.uniTerms);
+            //getLocFreqMap(i2.locFreqArr, i2.uniTerms); //no need
+            //serialize(i2.locFreqArr, localFreqMap);
             serialize(i2.globalStats,   gStats);
         }
         if(!checkExistence(dumpMap)){
             //Single
-            //i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), (long[]) deserialize(gStats), 1, false, singleIndex, numThreads);
+            //i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), (long[]) deserialize(gStats), 1, false, false, singleIndex, numThreads);
             //buildStructure(i2, numThreads);
             //Bigram
-            //i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), (long[]) deserialize(gStats), Integer.MAX_VALUE, true, bigramIndex, numThreads);
+            //i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), (long[]) deserialize(gStats), Integer.MAX_VALUE, true, false, bigramIndex, numThreads);
             //buildStructure(i2, numThreads);
             //D-Bigram
-            i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), (long[]) deserialize(gStats), distance, true, dBigramIndex, numThreads);
+            i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), (long[]) deserialize(gStats), distance, true, false, dBigramIndex, numThreads);
             buildStructure(i2, numThreads);
             //HIT
-            //i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), (long[]) deserialize(gStats), 1, false, HITIndex, numThreads);
-            //buildStructure(i2, true, dBigramIndex, numThreads, distance);
+            i2 = new InvertedIndex(getHITArray(), (long[]) deserialize(gStats), 1, false, true, HITIndex, numThreads);
+            //buildStructure(i2, numThreads);
         }
         if(!checkExistence(sortedI2)) ExternalSort.massiveBinaryMerge(new File(rawI2), sortedI2);
         if(!checkExistence(partialModel)) getQualityModel(1);

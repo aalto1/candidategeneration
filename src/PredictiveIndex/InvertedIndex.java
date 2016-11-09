@@ -35,6 +35,7 @@ public class InvertedIndex extends WWW {
     static final int bufferSize = (int) (2.8*Math.pow(10,7));
     private int distance;
     private boolean isBigram;
+    private boolean isHit;
     private String prefix;
     final static int threadNum = 4;
 
@@ -45,8 +46,8 @@ public class InvertedIndex extends WWW {
     Int2IntOpenHashMap [] auxFMap   = new Int2IntOpenHashMap[threadNum];
     long [] globalStats;                                     //1-numberofdocs,2-wordcounter
     public long doc = 1;
-    int []  locFreqArr;
-    Int2IntMap locFreqMap;
+    int []  termFreqArray;
+    Int2IntMap termFreqMap;
     static AtomicInteger dump = new AtomicInteger(0);
     static int gThreshold = 0;
     long [] dmpPost = new long[4];
@@ -74,7 +75,7 @@ public class InvertedIndex extends WWW {
 
     public InvertedIndex(int distance, int numThreads) throws IOException, ClassNotFoundException {
         this.globalStats = new long[2];
-        locFreqArr = new int[91553702];
+        termFreqArray = new int[91553702];
         this.distance = distance;
 
         this.uniTerms = (IntOpenHashSet) deserialize(uniqueTerms);
@@ -87,8 +88,8 @@ public class InvertedIndex extends WWW {
         }
     }
 
-    public InvertedIndex(Int2IntOpenHashMap locFreqMap, long[] globalStats, int distance, boolean isBgram, String prefix, int numThreads) throws IOException, ClassNotFoundException {
-        this.locFreqMap = locFreqMap;
+    public InvertedIndex(Int2IntOpenHashMap termFreqMap, long[] globalStats, int distance, boolean isBgram, boolean isHit, String prefix, int numThreads) throws IOException, ClassNotFoundException {
+        this.termFreqMap = termFreqMap;
         this.globalStats = globalStats;
         this.distance = distance;
         this.isBigram = isBgram;
@@ -141,7 +142,7 @@ public class InvertedIndex extends WWW {
         int maxFreq = Integer.MIN_VALUE;
         for (int k = 0; k<docLen; k++) {
             if (position.putIfAbsent(words[k], 1) == null) {
-                locFreqArr[words[k]]++;                                  //how many documents contain words[k]
+                termFreqArray[words[k]]++;                                  //how many documents contain words[k]
             }else if (position.merge(words[k], 1, Integer::sum) == 2) multipleOccurece++;
 
             if (position.get(words[k]) > maxFreq) maxFreq = position.get(words[k]);
@@ -230,7 +231,7 @@ public class InvertedIndex extends WWW {
         System.out.println("D-Bigram Inverted Index Built!");
     }
 
-    public void bufferedIndex(int[] words, String [] field, Int2IntMap localFreqMap, LongSet noDuplicateSet, int [] twoTerms, int tn) throws IOException, ClassNotFoundException, InterruptedException {
+    public void bufferedIndex(int[] words, String [] field, Int2IntMap localFrequencyMap, LongSet noDuplicateSet, int [] twoTerms, int tn) throws IOException, ClassNotFoundException, InterruptedException {
         /* For each document we take the pairs between documents within a distance. We add each entry to a buffer and
         * compute the BM25 for that specific term-pair*/
 
@@ -238,7 +239,7 @@ public class InvertedIndex extends WWW {
         int score1;
         int score2;
         int movingDistance = distance;
-        int localMaxFreq = localFreqMap.get(-99);
+        int localMaxFreq = localFrequencyMap.get(-99);
         long pair;
 
         for (int wIx = 0; wIx < docLen; wIx++) {
@@ -259,12 +260,19 @@ public class InvertedIndex extends WWW {
                         }
                         incrementPostingList(tn, twoTerms, pair);
 
-                        score1 = getBM25(globalStats, docLen, localFreqMap.get(twoTerms[0]), localMaxFreq , locFreqMap.get(twoTerms[0]));
-                        score2 = getBM25(globalStats, docLen, localFreqMap.get(twoTerms[1]), localMaxFreq , locFreqMap.get(twoTerms[1]));
+                        if(isHit)
+                            score1 = termFreqArray[twoTerms[0]];
+                        else
+                            score1 = getBM25(globalStats, docLen, localFrequencyMap.get(twoTerms[0]), localMaxFreq , termFreqMap.get(twoTerms[0]));
+
+                        score2 = getBM25(globalStats, docLen, localFrequencyMap.get(twoTerms[1]), localMaxFreq , termFreqMap.get(twoTerms[1]));
 
                         buffer[tn][pointers[tn]][0] = twoTerms[0];
                         buffer[tn][pointers[tn]][1] = twoTerms[1];
-                        buffer[tn][pointers[tn]][2] = score1 + score2;
+                        if(isBigram)
+                            buffer[tn][pointers[tn]][2] = score1 + score2;
+                        else
+                            buffer[tn][pointers[tn]][2] = score1;
                         buffer[tn][pointers[tn]][3] = Integer.parseInt(field[1]);
                         pointers[tn]++;
                     }else
