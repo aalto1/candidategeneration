@@ -153,8 +153,9 @@ class utilsClass extends WWW {
     static boolean checkProgress(long now, int tot, int rate, double start, int testLimit){
         if(now % rate == 0){
             long percentage = (long) (now*100.0)/testLimit;
+            double value = (((System.currentTimeMillis() - start)/percentage)*(100-percentage)/60000);
             out.println("Work in progress: " + percentage+ "%\tProcessing Time: " + (now / (System.currentTimeMillis() - start)) * 1000 + "doc/s. \tProcessed: " +now);
-            out.print("Expected Remaining Time: "+ (((System.currentTimeMillis() - start)/percentage)*(100-percentage)/60000) + " minutes");
+            out.print("Expected Remaining Time: "+ ((int) value) + " minutes " + (int) ((value - ((int) value))*60) + " seconds");
             memoryStatistics();
         }
         if(now>testLimit) return false;
@@ -203,9 +204,34 @@ class utilsClass extends WWW {
         }
         out.print("\tdone.");
 
+    }
 
+    public static double[] getHitScore() throws IOException {
+        int numbeOfDocs = 50025479;
+        BufferedReader br = getBuffReader(hitScores);
+        String line = br.readLine();
+        double [] hitScores = new double[numbeOfDocs];
+        double [] aux;
+        while(line!=null){
+            aux = Arrays.stream(line.split(",")).mapToDouble(Double::parseDouble).toArray();
+            hitScores[(int) aux[0]] = aux[1];
+            br.readLine();
+        }
+        return hitScores;
+    }
 
-
+    public static void getHitScore2() throws IOException {
+        System.out.println("Getting HITS score");
+        int numbeOfDocs = 50222043; //50025479; attention!
+        BufferedReader br = getBuffReader(hitScoresCSV);
+        String line = br.readLine();
+        int [] HITS = new int[numbeOfDocs];
+        for(int i = 0; line!= null; i++){
+            HITS[Integer.parseInt(line.split(",")[0])] = i;
+            line = br.readLine();
+            if(i%1000000==0) System.out.print(i+",");
+        }
+        serialize(HITS, hitScores);
     }
 
     public static void tryMap(){

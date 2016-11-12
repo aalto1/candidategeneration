@@ -37,8 +37,8 @@ public class WWWMain extends WWW {
         //printQualityModel();
         //ExternalSort.massiveBinaryMerge(new File(dBigramIndex+rawI2),dBigramIndex+sortedI2);
         //sortComplexRanking();
-        getFQT(10);
-        System.exit(1);
+        //getFQT(10);
+        //System.exit(1);
         //getId2TermMap();
 
         InvertedIndex i2;
@@ -47,25 +47,19 @@ public class WWWMain extends WWW {
         if (!checkExistence(localFreqMap)) {
             i2 = new InvertedIndex(distance, numThreads);
             startBatteria(i2, 0, numThreads);
-            //getLocFreqMap(i2.locFreqArr, i2.uniTerms); //no need
-            //serialize(i2.locFreqArr, localFreqMap);
+            getLocFreqMap(i2.termFreqArray, i2.uniTerms); //no need
+            //serialize(i2.termFreqArray, termFrequencyArray);
             serialize(i2.globalStats,   gStats);
         }
-        if(!checkExistence(dumpMap)){
-            //Single
-            //i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), (long[]) deserialize(gStats), 1, false, false, singleIndex, numThreads);
-            //buildStructure(i2, numThreads);
-            //Bigram
-            //i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), (long[]) deserialize(gStats), Integer.MAX_VALUE, true, false, bigramIndex, numThreads);
-            //buildStructure(i2, numThreads);
-            //D-Bigram
-            i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), (long[]) deserialize(gStats), distance, true, false, dBigramIndex, numThreads);
+        if(false/*!checkExistence(dumpMap)*/){
+            //Single + HIT
+            i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), (int[]) deserialize(hitScores), (long[]) deserialize(gStats), 1, false, singleIndex, numThreads);
             buildStructure(i2, numThreads);
-            //HIT
-            i2 = new InvertedIndex(getHITArray(), (long[]) deserialize(gStats), 1, false, true, HITIndex, numThreads);
-            //buildStructure(i2, numThreads);
+            //D-Bigram
+            i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), null, (long[]) deserialize(gStats), distance, true, dBigramIndex, numThreads);
+            buildStructure(i2, numThreads);
         }
-        if(!checkExistence(sortedI2)) ExternalSort.massiveBinaryMerge(new File(rawI2), sortedI2);
+        buildFinalStructures();
         if(!checkExistence(partialModel)) getQualityModel(1);
         printQualityModel();
 
@@ -94,8 +88,18 @@ public class WWWMain extends WWW {
         }
     }
 
+    private static void buildFinalStructures() throws IOException {
+        if(!checkExistence(finalSingle))
+            ExternalSort.massiveBinaryMerge(new File(singleIndex+rawI2), finalSingle, false);
+        if(!checkExistence(finalHIT))
+            ExternalSort.massiveBinaryMerge(new File(HITIndex+rawI2), finalHIT, false);
+        if(!checkExistence(finalDBigram))
+            ExternalSort.massiveBinaryMerge(new File(dBigramIndex+rawI2), finalDBigram, true);
+    }
+
 
     private static void checkExtraData() throws IOException {
+        if(!checkExistence(hitScores))  getHitScore2();
         if(!checkExistence(bigFilterSet))  getBigFilterSet();
         if(!checkExistence(smallFilterSet)) getSmallFilterSet();
         if(!checkExistence(fastQT))     getFQT(10)  ;

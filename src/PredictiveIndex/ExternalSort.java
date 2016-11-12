@@ -28,6 +28,7 @@ public class ExternalSort {
 
     static BufferedWriter bw;
     static int linesCount = 0;
+    static boolean fourFields;
 
     static Comparator<long[]> comp = new Comparator<long[]>() {
         @Override
@@ -65,8 +66,9 @@ public class ExternalSort {
 
 
 
-    public static void massiveBinaryMerge(File folder, String output) throws IOException {
+    public static void massiveBinaryMerge(File folder, String output, boolean fourFields) throws IOException {
         bw = getBuffWriter(dBigramIndex+"index.csv");
+        fourFields = fourFields;
 
         LinkedList<long[][]> LL = new LinkedList<>();
         File [] files = folder.listFiles();
@@ -96,7 +98,10 @@ public class ExternalSort {
                     try{
                         buffLong = buffer.get(i);
                         if(buffLong == null){
-                            buffLong = new long[]{DIStreams.get(i).readLong(),DIStreams.get(i).readLong()};
+                            if(fourFields)
+                                buffLong = new long[]{DIStreams.get(i).readLong(),DIStreams.get(i).readLong()};
+                            else
+                                buffLong = new long[]{DIStreams.get(i).readLong(),DIStreams.get(i).readInt()};
                             //linesCount++; //sometimes reading from the stream fails
                         } else buffer.remove(i);
                         if(buffLong[0]<pairMax){
@@ -166,58 +171,51 @@ public class ExternalSort {
         DOStream.close();
     }
 
-    public static void writeMergeSortedMatrix(long[][] a, long[][] b, DataOutputStream DOOStream) throws IOException {
+    private static void binaryEntryWrite(DataOutputStream DOStream, long [] a) throws IOException {
+        if(fourFields){
+            DOStream.writeLong(a[0]);
+            DOStream.writeLong(a[1]);
+        }else{
+            DOStream.writeLong(a[0]);
+            DOStream.writeInt((int) a[1]);
+        }
+    }
+
+    private static void UTF8EntryWrite(DataOutputStream DOStream, long [] a) throws IOException {
+        if(fourFields){
+            bw.write(Arrays.toString(getTerms(a[0])));
+            bw.write(Arrays.toString(getTerms(a[1])));
+            bw.newLine();
+        }else {
+            bw.write(Arrays.toString(getTerms(a[0])));
+            bw.write((int) a[1]);
+            bw.newLine();
+        }
+    }
+
+    public static void writeMergeSortedMatrix(long[][] a, long[][] b, DataOutputStream DOStream) throws IOException {
         //for (long[] z : a)  System.out.println(z[0]);
         //System.out.println(a.length+"-"+b.length);
         int i = 0, j = 0;
         while (i < a.length && j < b.length) {
             if (comp.compare(a[i], b[j])<0){
                 if(i==0 && j ==0) System.out.print("\t\tFirst Element: " + Arrays.toString(getTerms(a[i][0])));
-                bw.write(Arrays.toString(getTerms(a[i][0])));
-                bw.write(Arrays.toString(getTerms(a[i][1])));
-                bw.newLine();
-                //linesCount++;
-
-                DOOStream.writeLong(a[i][0]);
-                DOOStream.writeLong(a[i++][1]);
-
+                binaryEntryWrite(DOStream, a[i++]);
             }
             else{
                 if(i==0 && j ==0) System.out.print("\t\tFirst Element: " + Arrays.toString(getTerms(b[j][0])));
-                bw.write(Arrays.toString(getTerms(b[j][0])));
-                bw.write(Arrays.toString(getTerms(b[j][1])));
-                bw.newLine();
-                //linesCount++;
-
-                DOOStream.writeLong(b[j][0]);
-                DOOStream.writeLong(b[j++][1]);
+                binaryEntryWrite(DOStream, b[j++]);
             }
         }
         while (i < a.length){
             if(i==a.length-1) System.out.print("\tLast Element:" +  Arrays.toString(getTerms(a[i][0])));
             //System.out.println(i +" i - length" + a.length);
-
-            bw.write(Arrays.toString(getTerms(a[i][0])));
-            bw.write(Arrays.toString(getTerms(a[i][1])));
-            bw.newLine();
-            //linesCount++;
-
-
-            DOOStream.writeLong(a[i][0]);
-            DOOStream.writeLong(a[i++][1]);
+            binaryEntryWrite(DOStream, a[i++]);
         }
         while (j < b.length) {
             //System.out.println(j +" j - lenght" + b.length);
             if(j==b.length-1) System.out.print("\tLast Element:" +  Arrays.toString(getTerms(b[j][0])));
-
-            bw.write(Arrays.toString(getTerms(b[j][0])));
-            bw.write(Arrays.toString(getTerms(b[j][1])));
-            bw.newLine();
-            //linesCount++;
-
-
-            DOOStream.writeLong(b[j][0]);
-            DOOStream.writeLong(b[j++][1]);
+            binaryEntryWrite(DOStream, b[j++]);
         }
     }
 

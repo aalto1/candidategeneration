@@ -53,16 +53,19 @@ public abstract class WWW {
     static final String finalDocInfo= source + "docInfo";
     static final String trentaDoc   = source + "10documents";
     static final String array30     = source + "array30";
+    static final String hitScores   = source + "hitScores";
+    static final String hitScoresCSV= source + "hitScores.csv";
 
     //metadata
-    static final String localFreqMap= metadata + "localFreqMap";
-    static final String gStats      = metadata + "globalStats";
-    static final String smallFilterSet  =   metadata + "smallFilterSet";
-    static final String bigFilterSet= metadata + "bigFilterSet";
-    static final String uniqueTerms = metadata + "uniqueTerms";
-    static final String dumpedPostings =    metadata + "dumpedPostings";
-    static final String fastQT      = metadata + "fastQT";
-    static final String toPick      = metadata + "toPick";
+    static final String localFreqMap        = metadata + "localFreqMap";
+    static final String termFrequencyArray  = metadata + "termFrequencyArray";
+    static final String gStats              = metadata + "globalStats";
+    static final String smallFilterSet      = metadata + "smallFilterSet";
+    static final String bigFilterSet        = metadata + "bigFilterSet";
+    static final String uniqueTerms         = metadata + "uniqueTerms";
+    static final String dumpedPostings      = metadata + "dumpedPostings";
+    static final String fastQT              = metadata + "fastQT";
+    static final String toPick              = metadata + "toPick";
 
     //maps
     static final String dumpMap     = maps + "dumpMap";
@@ -73,6 +76,12 @@ public abstract class WWW {
     static final String bigramIndex = results + "bigramIndex/";
     static final String dBigramIndex= results + "dBigramIndex/";
     static final String HITIndex    = results + "HITIndex/";
+
+    //result final index
+    static final String finalIndex  = results + "finalIndex/";
+    static final String finalSingle = finalIndex + "single";
+    static final String finalHIT    = finalIndex + "hit";
+    static final String finalDBigram= finalIndex + "dbigram";
 
     static final String rawI2       = "rawI2/";
     static final String sortedI2    = "sortedI2" ;
@@ -111,6 +120,24 @@ public abstract class WWW {
         public int compare(int[] int1, int[] int2) {
             if (int1[0] == int2[0]) {
                     return Integer.compare(int2[2], int1[2]);
+            } else return Integer.compare(int1[0], int2[0]);
+        }
+    };
+
+    static Comparator<int[]> singleComparator = new Comparator<int[]>() {
+        @Override
+        public int compare(int[] int1, int[] int2) {
+            if (int1[0] == int2[0]) {
+                return Integer.compare(int2[1], int1[1]);
+            } else return Integer.compare(int1[0], int2[0]);
+        }
+    };
+
+    static Comparator<int[]> hitComparator = new Comparator<int[]>() {
+        @Override
+        public int compare(int[] int1, int[] int2) {
+            if (int1[0] == int2[0]) {
+                return Integer.compare(int2[2], int1[2]);
             } else return Integer.compare(int1[0], int2[0]);
         }
     };
