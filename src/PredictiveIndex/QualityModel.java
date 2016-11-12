@@ -30,7 +30,7 @@ public class QualityModel extends Selection {
     * 1) Number of Varbytes to read
     * 2) Number of documents */
 
-    public static long[][][] getQualityModel(int function) throws IOException, ClassNotFoundException {
+    public static long[][][] getBigramQualityModel(int function, String index) throws IOException, ClassNotFoundException {
         accMap = (Long2IntOpenHashMap) deserialize(accessMap);
         dumped = (Long2LongOpenHashMap) deserialize(dumpMap);
         Long2ObjectOpenHashMap<Int2IntMap> fastQueryTrace = getFQT(10);
@@ -38,7 +38,7 @@ public class QualityModel extends Selection {
 
 
         System.out.println("Fast Query Trace fetched!\nProcessing Inverted Index...");
-        DataInputStream DIStream = getDIStream(sortedI2);
+        DataInputStream DIStream = getDIStream(index);
         LinkedList<Integer> auxPostingList = new LinkedList<>();
         int[] posting = new int[4];
         int[] currentPair = new int[]{-1, -1};
@@ -58,7 +58,7 @@ public class QualityModel extends Selection {
                     case 1:
                         if (fastQueryTrace.containsKey(pair))
                             //hitPairs.add(pair);
-                            processPostingList(pair, currentPair[0], currentPair[1], Ints.toArray(auxPostingList), fastQueryTrace.get(pair));
+                            processBigramPostingList(pair, currentPair[0], currentPair[1], Ints.toArray(auxPostingList), fastQueryTrace.get(pair));
                         break;
 
                     case 2:
@@ -81,7 +81,7 @@ public class QualityModel extends Selection {
         return QM;
     }
 
-    private static void processPostingList(long pair, int t1, int t2, int[] postingList, Int2IntMap aggregatedTopK) {
+    private static void processBigramPostingList(long pair, int t1, int t2, int[] postingList, Int2IntMap aggregatedTopK) {
 
         //access increment
         int increment = accMap.get(t1) + accMap.get(t2) + accMap.get(pair);
