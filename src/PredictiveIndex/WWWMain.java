@@ -14,7 +14,7 @@ import java.util.HashMap;
 
 import static PredictiveIndex.Extra.*;
 import static PredictiveIndex.FastQueryTrace.getFQT;
-import static PredictiveIndex.QualityModel.getQualityModel;
+import static PredictiveIndex.QualityModel.getBigramQualityModel;
 import static PredictiveIndex.QualityModel.printQualityModel;
 import static PredictiveIndex.utilsClass.*;
 
@@ -33,6 +33,7 @@ public class WWWMain extends WWW {
         //checkExtraData();
         //getDocIDMap();
         //splitCollection();
+        november13();
         //tryTry();
         //printQualityModel();
         //ExternalSort.massiveBinaryMerge(new File(dBigramIndex+rawI2),dBigramIndex+sortedI2);
@@ -60,7 +61,7 @@ public class WWWMain extends WWW {
             buildStructure(i2, numThreads);
         }
         buildFinalStructures();
-        if(!checkExistence(partialModel)) getQualityModel(1);
+        //if(!checkExistence(partialModel)) getBigramQualityModel();
         printQualityModel();
 
 
@@ -69,7 +70,6 @@ public class WWWMain extends WWW {
     private static void buildStructure(InvertedIndex i2, int numThreads) throws IOException, ClassNotFoundException, InterruptedException {
         System.out.println("");
         startBatteria(i2, 1, numThreads);
-        serialize(i2.dMap, dumpMap);
         serialize(Arrays.stream(i2.dmpPost).sum(), dumpedPostings);
     }
 

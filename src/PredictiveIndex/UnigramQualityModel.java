@@ -24,7 +24,7 @@ public class UnigramQualityModel extends Selection {
     static LongOpenHashSet hitPairs = new LongOpenHashSet();
     static long hit = 0;
 
-    public static long[][][] getUnigramQualityModel(int function, String index) throws IOException, ClassNotFoundException {
+    public static long[][][] getUnigramQualityModel(int function, String index, String dumpMap) throws IOException, ClassNotFoundException {
         accMap = (Int2IntOpenHashMap) deserialize(accessMap);
         dumped = (Int2IntOpenHashMap) deserialize(dumpMap);
         Long2ObjectOpenHashMap<Int2IntMap> fastUnigramQueryTrace = getFQT(10);
@@ -50,7 +50,7 @@ public class UnigramQualityModel extends Selection {
                     case 1:
                         if (fastUnigramQueryTrace.containsKey(posting[0]))
                             //hitPairs.add(pair);
-                            processUnigramPostingList(dumped.get(posting[0]), Ints.toArray(auxPostingList), fastUnigramQueryTrace.get(posting[0]));
+                            processUnigramPostingList(posting[0], Ints.toArray(auxPostingList), fastUnigramQueryTrace.get(posting[0]));
                         break;
 
                     case 2:
@@ -72,10 +72,11 @@ public class UnigramQualityModel extends Selection {
         return QM;
     }
 
-    private static void processUnigramPostingList(int increment, int[] postingList, Int2IntMap aggregatedTopK) {
+    private static void processUnigramPostingList(int term, int[] postingList, Int2IntMap aggregatedTopK) {
 
         //access increment
-        int lbucket = getLenBucket((postingList.length) + increment, lRanges);
+        int increment = accMap.get(term);
+        int lbucket = getLenBucket(getTerms(dumped.get(term))[0], lRanges);
         int range = getRankBucket(0, (postingList.length), rRanges);
 
         for (int k = 0; k < range; k++) {

@@ -9,6 +9,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import org.lemurproject.kstem.KrovetzStemmer;
 
 import java.io.*;
+import java.util.Collections;
 import java.util.LinkedList;
 
 /**
@@ -165,6 +166,12 @@ public class Extra extends WWW {
         }
 
 
+    }
+
+    public static void november13(){
+        IntOpenHashSet sTerms = (IntOpenHashSet) deserialize(uniqueTerms);
+        System.out.println(sTerms.size());
+        System.exit(1);
     }
 
 

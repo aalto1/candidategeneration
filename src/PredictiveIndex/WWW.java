@@ -68,7 +68,11 @@ public abstract class WWW {
     static final String toPick              = metadata + "toPick";
 
     //maps
-    static final String dumpMap     = maps + "dumpMap";
+    static final String unigramDumpMap      = maps + "unigramDumpMap";
+    static final String hitDumpMap          = maps + "hitDumpMap";
+    static final String dBigramDumpMap      = maps + "dbigramDumpMap";
+
+
     static final String accessMap   = maps + "accessMap";
 
     //results

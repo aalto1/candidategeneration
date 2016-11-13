@@ -321,7 +321,7 @@ class utilsClass extends WWW {
                if(mergedMap.putIfAbsent(key, map.get(key)) != null) mergedMap.merge(key, map.get(key), Integer::sum);
            }
        }
-       serialize(mergedMap, dumpMap);
+       serialize(mergedMap, dBigramDumpMap);
    }
 
     static void getLocFreqMap(int [] locFreqArr, IntOpenHashSet uniTerms) throws IOException, ClassNotFoundException { /***NO-Need***/

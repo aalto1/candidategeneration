@@ -32,7 +32,7 @@ public class QualityModel extends Selection {
 
     public static long[][][] getBigramQualityModel(int function, String index) throws IOException, ClassNotFoundException {
         accMap = (Long2IntOpenHashMap) deserialize(accessMap);
-        dumped = (Long2LongOpenHashMap) deserialize(dumpMap);
+        dumped = (Long2LongOpenHashMap) deserialize(dBigramDumpMap);
         Long2ObjectOpenHashMap<Int2IntMap> fastQueryTrace = getFQT(10);
         System.out.println(fastQueryTrace.size());
 

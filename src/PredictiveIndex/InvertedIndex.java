@@ -41,7 +41,10 @@ public class InvertedIndex extends WWW {
     LongOpenHashSet bigFS ;
     LongOpenHashSet smallFS;
     IntOpenHashSet uniTerms;
-    Long2LongOpenHashMap dMap       = new Long2LongOpenHashMap();          // new Long2LongOpenHashMap[threadNum];
+    Long2LongOpenHashMap dBiMap       = new Long2LongOpenHashMap();          // new Long2LongOpenHashMap[threadNum];
+    Int2LongOpenHashMap  uniMap = new Int2LongOpenHashMap();
+    Int2LongOpenHashMap  hitMap = new Int2LongOpenHashMap();
+
     Int2IntOpenHashMap [] auxFMap   = new Int2IntOpenHashMap[threadNum];
     long [] globalStats;                                     //1-numberofdocs,2-wordcounter
     public long doc = 1;
@@ -196,7 +199,7 @@ public class InvertedIndex extends WWW {
         String [] field;
         String line;
         int [] document = new int[127525];
-        int [] buffPair = new int[2];
+        int [] twoTerms = new int[2];
 
         Int2IntMap bufferMap = new Int2IntOpenHashMap();
         bufferMap.defaultReturnValue(1);
@@ -215,19 +218,19 @@ public class InvertedIndex extends WWW {
             fetchHashMap(bufferMap, localStatsDIS[tn]);
 
             if(isBigram)
-                bufferedIndex(document, field, bufferMap , noDuplicateSet, buffPair, tn);
+                bufferedIndex(      document, field, bufferMap , noDuplicateSet, twoTerms, tn);
             else
-                singleBufferedIndex(document, field, bufferMap , noDuplicateSet, tn);
+                singleBufferedIndex(document, field, bufferMap , noDuplicateSet, twoTerms, tn);
 
             bufferMap.clear();
             noDuplicateSet.clear();
             doc++;
         }
         if(isBigram)
-            sampledSelection(tn, buffPair, true);
+            sampledSelection(tn, twoTerms, true);
         else{
-            singleFlush(singleComparator, singleIndex, 1, tn);
-            singleFlush(hitComparator, HITIndex, 2, tn);
+            singleFlush(singleComparator, singleIndex, twoTerms, 1, true, tn);
+            singleFlush(hitComparator, HITIndex, twoTerms, 2, true, tn);
         }
 
 
@@ -290,7 +293,7 @@ public class InvertedIndex extends WWW {
         }
     }
 
-    private void singleFlush(Comparator c, String pre, int entry, int tn) throws IOException {
+    private void singleFlush(Comparator c, String pre, int [] twoTerms, int entry, boolean end, int tn) throws IOException {
         System.out.println("Flushing " + pre);
         int threshold = getThreshold(entry, tn);
         DOS[tn]  = getDOStream(pre+rawI2+dump.getAndAdd(1));
@@ -306,12 +309,20 @@ public class InvertedIndex extends WWW {
                     DOS[tn].writeInt(buffer[tn][i][2]);
 
                 DOS[tn].writeInt(buffer[tn][i][3]);
+            }else{
+                uniIncrementDumpCounter(pre, tn, twoTerms, buffer[tn][i][0]);
             }
+        }
+        if(end) {
+            if (pre == singleIndex)
+                serialize(uniMap, unigramDumpMap);
+            else
+                serialize(hitMap, hitDumpMap);
         }
         DOS[tn].close();
     }
 
-    public void singleBufferedIndex(int[] words, String [] field, Int2IntMap localFrequencyMap, LongSet noDuplicateSet, int tn) throws IOException, ClassNotFoundException, InterruptedException {
+    public void singleBufferedIndex(int[] words, String [] field, Int2IntMap localFrequencyMap, LongSet noDuplicateSet, int [] twoTerms, int tn) throws IOException, ClassNotFoundException, InterruptedException {
         //System.out.println(pointers[tn]);
         for (int wIx = 0; wIx < Integer.parseInt(field[4]); wIx++) {
             if(noDuplicateSet.add(words[wIx]) & uniTerms.contains(words[wIx])) {
@@ -319,26 +330,47 @@ public class InvertedIndex extends WWW {
                 buffer[tn][pointers[tn]][1] = getBM25(globalStats, Integer.parseInt(field[4]), localFrequencyMap.get(words[wIx]), localFrequencyMap.get(-99), termFreqMap.get(words[wIx]));
                 buffer[tn][pointers[tn]][2] = HITS[Integer.parseInt(field[1])];
                 buffer[tn][pointers[tn]][3] = Integer.parseInt(field[1]);
+                uniIncrementPostingList(tn, twoTerms, words[wIx]);
+                uniIncrementPostingList(tn, twoTerms, words[wIx]);
                 pointers[tn]++;
 
                 if (pointers[tn] == buffer[tn].length) {
-                    singleFlush(singleComparator, singleIndex, 1, tn);
-                    singleFlush(hitComparator, HITIndex, 2, tn);
+                    singleFlush(singleComparator, singleIndex, twoTerms, 1, false, tn);
+                    singleFlush(hitComparator, HITIndex, twoTerms, 2, false, tn);
                     pointers[tn]=0;
                 }
             }
         }
     }
 
+    private synchronized void uniIncrementDumpCounter(String pre, int tn, int [] t, int term){
+        if (pre == singleIndex) {
+            t = getTerms(uniMap.get(term));
+            uniMap.put(term, getPair(t[0], t[1]++));
+        }else {
+            t = getTerms(hitMap.get(term));
+            hitMap.put(term, getPair(t[0], t[1]));
+        }
+    }
 
+    private synchronized void uniIncrementPostingList(int tn, int [] t, int term){
+        t = getTerms(uniMap.get(term));
+        uniMap.put(term,getPair(t[0]++, t[1]));
+        t = getTerms(hitMap.get(term));
+        hitMap.put(term,getPair(t[0]++, t[1]));
+    }
+
+
+
+    //hack of the structure. This justifies the previous code. I can use the same function to do this.
     private synchronized void incrementPostingList(int tn, int [] t, long pair){
-        t = getTerms(dMap.get(pair));
-        dMap.put(pair,getPair(t[0]++, t[1]));
+        t = getTerms(dBiMap.get(pair));
+        dBiMap.put(pair,getPair(t[0]++, t[1]));
     }
 
     private synchronized void incrementDumpCounter(int tn, int [] t, long pair){
-        t = getTerms(dMap.get(pair));
-        dMap.put(pair,getPair(t[0], t[1]++));
+        t = getTerms(dBiMap.get(pair));
+        dBiMap.put(pair,getPair(t[0], t[1]++));
     }
 
 
@@ -394,7 +426,10 @@ public class InvertedIndex extends WWW {
         System.out.print("Done.");
         //System.out.println("Processed docs: " + doc + "Sampled Natural Selection:" + (System.currentTimeMillis() - now) + "ms.\tThreshold: " + threshold +"\t MaxBM25: " + maxBM25);
         DOS[tn].close();
-        if(!end) DOS[tn]  = getDOStream(prefix+rawI2+dump.getAndAdd(1));
+        if(end)
+            serialize(dBiMap, dBigramDumpMap);
+        else
+            DOS[tn]  = getDOStream(prefix+rawI2+dump.getAndAdd(1));
         keepPointers[tn] = 0;
 
     }
