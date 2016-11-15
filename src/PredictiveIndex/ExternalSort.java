@@ -28,7 +28,7 @@ public class ExternalSort {
 
     static BufferedWriter bw;
     static int linesCount = 0;
-    static boolean fourFields;
+    static boolean fourFields = false;
 
     static Comparator<long[]> comp = new Comparator<long[]>() {
         @Override
@@ -66,9 +66,9 @@ public class ExternalSort {
 
 
 
-    public static void massiveBinaryMerge(File folder, String output, boolean fourFields) throws IOException {
+    public static void massiveBinaryMerge(File folder, String output, boolean fFields) throws IOException {
         bw = getBuffWriter(dBigramIndex+"index.csv");
-        fourFields = fourFields;
+        fourFields = fFields;
 
         LinkedList<long[][]> LL = new LinkedList<>();
         File [] files = folder.listFiles();

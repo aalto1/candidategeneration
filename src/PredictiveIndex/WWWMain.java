@@ -2,6 +2,7 @@ package PredictiveIndex;
 
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 
 import java.io.BufferedReader;
@@ -9,6 +10,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 
 
@@ -31,9 +33,10 @@ public class WWWMain extends WWW {
     /*/home/aalto/IdeaProjects/PredictiveIndex/aux/sort/bin/binsort --size 16 --length 12 --block-size=900000000  ./InvertedIndex.dat ./sortedInvertedIndex.dat*/
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
         //checkExtraData();
+        printModels();
         //getDocIDMap();
         //splitCollection();
-        november13();
+        //november13();
         //tryTry();
         //printQualityModel();
         //ExternalSort.massiveBinaryMerge(new File(dBigramIndex+rawI2),dBigramIndex+sortedI2);
@@ -61,8 +64,8 @@ public class WWWMain extends WWW {
             buildStructure(i2, numThreads);
         }
         buildFinalStructures();
-        //if(!checkExistence(partialModel)) getBigramQualityModel();
-        printQualityModel();
+        buildQualityModels();
+        //printQualityModel();
 
 
     }
@@ -86,6 +89,24 @@ public class WWWMain extends WWW {
         for (int i = 0; i < threads.length; i++) {
             threads[i].join();
         }
+    }
+
+    private static void buildQualityModels() throws IOException, ClassNotFoundException {
+        if(!checkExistence(dBiModel)) {
+            getBigramQualityModel(1, finalDBigram, dBigramDumpMap, dBiModel);
+        }
+        if(!checkExistence(hitModel)){
+            UnigramQualityModel.getUnigramQualityModel(1, finalHIT, hitDumpMap, hitModel);
+        }
+        if(!checkExistence(unigramModel)) {
+            UnigramQualityModel.getUnigramQualityModel(1, finalSingle, unigramDumpMap, unigramModel);
+        }
+    }
+
+    private static void printModels() throws IOException, ClassNotFoundException {
+        printQualityModel(dBiModel);
+        printQualityModel(hitModel);
+        printQualityModel(unigramModel);
     }
 
     private static void buildFinalStructures() throws IOException {
@@ -141,6 +162,14 @@ public class WWWMain extends WWW {
                 }
             }
         }
+        System.exit(1);
+
+    }
+
+    public static void x(){
+        IntOpenHashSet a = (IntOpenHashSet) deserialize(uniqueTerms);
+        System.out.println(a.size());
+        System.out.println(Collections.max(a));
         System.exit(1);
 
     }

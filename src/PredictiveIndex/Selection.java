@@ -5,6 +5,8 @@ import com.google.common.primitives.Ints;
 import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.LinkedList;
 
 import static PredictiveIndex.InvertedIndex.now;
@@ -84,6 +86,9 @@ public class Selection extends WWW {
 
     }
 
+
+    /*this method works even for three term inverted index since is based only on the
+    lenght of the given array*/
     static int[] getEntry(DataInputStream dataStream, int [] posting) throws IOException {
         try {
             for (int k = 0; k < posting.length; k++) posting[k] = dataStream.readInt();
@@ -95,5 +100,66 @@ public class Selection extends WWW {
             return null;
         }
     }
+
+    static void printQualityModel(String model) throws IOException, ClassNotFoundException {
+        long[][][] qm = (long[][][]) deserialize(model);
+        int [] rRange = computerRanges(1.4, 1, 400000000);
+        float HP;
+        float [][][] bufferQM = new float[qm.length][qm[0].length][2];
+        float [][] finalQM = new float[qm.length][qm[0].length];
+        long [][] bucketOrder = new long[bufferQM.length][bufferQM[0].length-1];
+        System.out.println(bufferQM[0].length);
+
+
+        int lowerBound =0;
+        int upperBound =0;
+        for (int i = 0; i < bufferQM.length; i++) {
+            for (int j = 0; j < bufferQM[0].length-1; j++) {
+                HP = (float) ((qm[i][j][0]*1.0)/(qm[i][j][1]));
+                //System.out.print(HP+"\t\t");
+                if(Float.isNaN(HP) | Float.isInfinite(HP))
+                    bufferQM[i][j][0] =0;
+                else
+                    bufferQM[i][j][0] =  HP;
+                bufferQM[i][j][1] = j;
+                //System.out.print(bufferQM[i][j][0] +"\t");
+            }
+
+
+            Arrays.sort(bufferQM[i], new Comparator<float[]>() {
+                @Override
+                public int compare(float[] o1, float[] o2) {
+                    return Float.compare(o2[0],o1[0]);
+                }
+            });
+
+            /***/
+
+            //System.out.println(Arrays.deepToString(bufferQM[i]));
+            int end = 0;
+            //System.out.println(rRange[0] +"," + rRange[1]);
+            for (int j = 0; j < bufferQM[i].length-1; j++) {
+
+                lowerBound = (int) bufferQM[i][j][1];
+                upperBound = (int) bufferQM[i][j][1]+1;
+                if(upperBound==22) end = 1;
+                if(upperBound < 22) {
+                    finalQM[i][j] = bufferQM[i][j][0];
+                    bucketOrder[i][j - end] = getPair(rRange[lowerBound], rRange[upperBound]);
+                    //System.out.println(rRange[lowerBound] +" , "+ rRange[upperBound]);
+                }
+            }
+            //Those two print functions is useful to understand which buckets have more value
+            //System.out.println(Arrays.toString(bucketOrder[i]));
+            for (long a: bucketOrder[i]) System.out.print(Arrays.toString(getTerms(a)) +" ");
+            System.out.println();
+            //System.exit(1);
+
+        }
+
+        serialize(bucketOrder,  model+"_sortedRange");
+        serialize(finalQM,      model+"_qualityModel");
+    }
+
 
 }

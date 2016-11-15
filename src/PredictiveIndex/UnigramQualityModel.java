@@ -11,6 +11,7 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.LinkedList;
 
 import static PredictiveIndex.FastQueryTrace.getFQT;
@@ -19,22 +20,22 @@ import static PredictiveIndex.FastQueryTrace.getFQT;
  * Created by aalto on 11/12/16.
  */
 public class UnigramQualityModel extends Selection {
-    static Int2IntOpenHashMap accMap;
-    static Int2IntOpenHashMap dumped;
+    static Long2IntOpenHashMap accMap;
+    static Int2LongOpenHashMap dumped;
     static LongOpenHashSet hitPairs = new LongOpenHashSet();
     static long hit = 0;
 
-    public static long[][][] getUnigramQualityModel(int function, String index, String dumpMap) throws IOException, ClassNotFoundException {
-        accMap = (Int2IntOpenHashMap) deserialize(accessMap);
-        dumped = (Int2IntOpenHashMap) deserialize(dumpMap);
+    public static long[][][] getUnigramQualityModel(int function, String index, String dumpMap,  String model) throws IOException, ClassNotFoundException {
+        accMap = (Long2IntOpenHashMap) deserialize(accessMap);
+        dumped = (Int2LongOpenHashMap) deserialize(dumpMap);
         Long2ObjectOpenHashMap<Int2IntMap> fastUnigramQueryTrace = getFQT(10);
         System.out.println(fastUnigramQueryTrace.size());
 
 
-        System.out.println("Fast Query Trace fetched!\nProcessing Inverted Index...");
+        System.out.println("Fast Query Trace fetched!\n Processing Inverted Index...");
         DataInputStream DIStream = getDIStream(index);
         LinkedList<Integer> auxPostingList = new LinkedList<>();
-        int[] posting = new int[3];
+        int[] posting = new int[3];                         //
         int currentTerm = -1;
 
         //DataOutputStream DOStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(metadata+"PLLength.bin")));
@@ -45,30 +46,25 @@ public class UnigramQualityModel extends Selection {
             if (posting[0] != currentTerm) {
                 //processing Posting List
 
-                switch (function){
+                if (fastUnigramQueryTrace.containsKey(posting[0])) {
+                    //hitPairs.add(pair);
+                    System.out.println(Arrays.toString(posting));
 
-                    case 1:
-                        if (fastUnigramQueryTrace.containsKey(posting[0]))
-                            //hitPairs.add(pair);
-                            processUnigramPostingList(posting[0], Ints.toArray(auxPostingList), fastUnigramQueryTrace.get(posting[0]));
-                        break;
-
-                    case 2:
-                        //DOStream.writeLong(pair);
-                        //DOStream.writeInt(auxPostingList.size() + dumped.get(pair));
-                        break;
+                    processUnigramPostingList(posting[0], Ints.toArray(auxPostingList), fastUnigramQueryTrace.get(posting[0]));
                 }
+
 
                 //DOStream.close();
                 currentTerm = posting[0];
                 auxPostingList.clear();
             }
-            auxPostingList.addLast(posting[3]); //docid
+            auxPostingList.addLast(posting[2]); //docid
 
         }
         System.out.println(hitPairs.size());
 
-        serialize(QM, partialModel);
+        serialize(QM, model);
+        printQualityModel(model);
         return QM;
     }
 

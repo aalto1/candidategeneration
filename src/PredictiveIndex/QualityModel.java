@@ -30,14 +30,15 @@ public class QualityModel extends Selection {
     * 1) Number of Varbytes to read
     * 2) Number of documents */
 
-    public static long[][][] getBigramQualityModel(int function, String index) throws IOException, ClassNotFoundException {
+    public static long[][][] getBigramQualityModel(int function, String index, String dumpMap, String model) throws IOException, ClassNotFoundException {
         accMap = (Long2IntOpenHashMap) deserialize(accessMap);
-        dumped = (Long2LongOpenHashMap) deserialize(dBigramDumpMap);
+        dumped = (Long2LongOpenHashMap) deserialize(dumpMap);
         Long2ObjectOpenHashMap<Int2IntMap> fastQueryTrace = getFQT(10);
         System.out.println(fastQueryTrace.size());
 
 
         System.out.println("Fast Query Trace fetched!\nProcessing Inverted Index...");
+        System.out.println(index);
         DataInputStream DIStream = getDIStream(index);
         LinkedList<Integer> auxPostingList = new LinkedList<>();
         int[] posting = new int[4];
@@ -48,25 +49,18 @@ public class QualityModel extends Selection {
         while (true) {
             posting = getEntry(DIStream, posting);
             if (posting == null) break;
-
+            //System.out.println(Arrays.toString(posting));
             if (posting[0] != currentPair[0] | posting[1] != currentPair[1]) {
-                //processing Posting List
+                //System.out.println(posting[0] +" "+ currentPair[0] +" - "+posting[1] +" "+ currentPair[1]);
 
                 pair = getPair(currentPair[0], currentPair[1]);
-                switch (function){
 
-                    case 1:
-                        if (fastQueryTrace.containsKey(pair))
-                            //hitPairs.add(pair);
-                            processBigramPostingList(pair, currentPair[0], currentPair[1], Ints.toArray(auxPostingList), fastQueryTrace.get(pair));
-                        break;
-
-                    case 2:
-                        //DOStream.writeLong(pair);
-                        //DOStream.writeInt(auxPostingList.size() + dumped.get(pair));
-                        break;
+                if (fastQueryTrace.containsKey(pair)){
+                    //hitPairs.add(pair);
+                    System.out.println(auxPostingList.size());
+                    //System.out.println(Arrays.toString(getTerms(pair)));
+                    processBigramPostingList(pair, currentPair[0], currentPair[1], Ints.toArray(auxPostingList), fastQueryTrace.get(pair));
                 }
-
                 //DOStream.close();
                 auxPostingList.clear();
                 currentPair[0] = posting[0];
@@ -77,7 +71,8 @@ public class QualityModel extends Selection {
         }
         System.out.println(hitPairs.size());
 
-        serialize(QM, partialModel);
+        serialize(QM, model);
+        printQualityModel(model);
         return QM;
     }
 
@@ -107,64 +102,5 @@ public class QualityModel extends Selection {
         }
     }
 
-    static void printQualityModel() throws IOException, ClassNotFoundException {
-        long[][][] qm = (long[][][]) deserialize(partialModel);
-        int [] rRange = computerRanges(1.4, 1, 400000000);
-        float HP;
-        float [][][] bufferQM = new float[qm.length][qm[0].length][2];
-        float [][] finalQM = new float[qm.length][qm[0].length];
-        long [][] bucketOrder = new long[bufferQM.length][bufferQM[0].length-1];
-        System.out.println(bufferQM[0].length);
-
-
-        int lowerBound =0;
-        int upperBound =0;
-        for (int i = 0; i < bufferQM.length; i++) {
-            for (int j = 0; j < bufferQM[0].length-1; j++) {
-                HP = (float) ((qm[i][j][0]*1.0)/(qm[i][j][1]));
-                //System.out.print(HP+"\t\t");
-                if(Float.isNaN(HP) | Float.isInfinite(HP))
-                    bufferQM[i][j][0] =0;
-                else
-                    bufferQM[i][j][0] =  HP;
-                bufferQM[i][j][1] = j;
-                //System.out.print(bufferQM[i][j][0] +"\t");
-            }
-
-
-            Arrays.sort(bufferQM[i], new Comparator<float[]>() {
-                @Override
-                public int compare(float[] o1, float[] o2) {
-                    return Float.compare(o2[0],o1[0]);
-                }
-            });
-
-            /***/
-
-            //System.out.println(Arrays.deepToString(bufferQM[i]));
-            int end = 0;
-            //System.out.println(rRange[0] +"," + rRange[1]);
-            for (int j = 0; j < bufferQM[i].length-1; j++) {
-
-                lowerBound = (int) bufferQM[i][j][1];
-                upperBound = (int) bufferQM[i][j][1]+1;
-                if(upperBound==22) end = 1;
-                if(upperBound < 22) {
-                    finalQM[i][j] = bufferQM[i][j][0];
-                    bucketOrder[i][j - end] = getPair(rRange[lowerBound], rRange[upperBound]);
-                    //System.out.println(rRange[lowerBound] +" , "+ rRange[upperBound]);
-                }
-            }
-            //Those two print functions is useful to understand which buckets have more value
-            //System.out.println(Arrays.toString(bucketOrder[i]));
-            for (long a: bucketOrder[i]) System.out.print(Arrays.toString(getTerms(a)) +" ");
-            System.out.println();
-            //System.exit(1);
-
-        }
-
-        serialize(bucketOrder,   sortedRange);
-        serialize(finalQM,       qualityModel);
-    }
 
 }

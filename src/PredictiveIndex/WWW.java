@@ -94,6 +94,12 @@ public abstract class WWW {
     static final String selected    = results + "selected";
 
     //models
+    static final String unigramModel =   models + "unigramModel";
+    static final String hitModel     =   models + "hitModel";
+    static final String dBiModel     =   models + "dBiModel";
+    static final String biModel      =   models + "biModel";
+
+
     static final String partialModel= models + "partialModel";
     static final String qualityModel= models + "qualityModel";
     static final String sortedRange = models + "sortedRanges";
@@ -219,7 +225,7 @@ public abstract class WWW {
         List<Set<Integer>> res = new ArrayList<>();
         superSet.removeIf(Objects::isNull);
         getSubsets(superSet, k, 0, new HashSet<>(), res);
-        long[] combo = new long[res.size()];
+        long[] combo = new long[res.size() + superSet.size()];
         int[] pair;
         int p = 0;
         //System.out.println(res);
@@ -227,6 +233,10 @@ public abstract class WWW {
             pair = Ints.toArray(set);
             java.util.Arrays.parallelSort(pair);
             combo[p] = getPair(pair[0], pair[1]);
+            p++;
+        }
+        for(int a : superSet){
+            combo[p]=a;
             p++;
         }
         return combo;
