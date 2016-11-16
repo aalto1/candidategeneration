@@ -86,6 +86,8 @@ public abstract class WWW {
     static final String finalSingle = finalIndex + "single";
     static final String finalHIT    = finalIndex + "hit";
     static final String finalDBigram= finalIndex + "dbigram";
+    static final String finalBigram= finalIndex + "bigram";
+
 
     static final String rawI2       = "rawI2/";
     static final String sortedI2    = "sortedI2" ;
@@ -267,7 +269,7 @@ public abstract class WWW {
     }
 
     static DataInputStream getDIStream(String path) throws FileNotFoundException {
-        return new DataInputStream(new BufferedInputStream(new FileInputStream(path+".bin")));
+       return new DataInputStream(new BufferedInputStream(new FileInputStream(path+".bin")));
     }
 
     static DataOutputStream getDOStream(String path) throws FileNotFoundException {

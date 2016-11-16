@@ -123,12 +123,14 @@ public class Extra extends WWW {
     public static void getUniqueTermsSet() throws IOException {
         if (term2IdMap == null) getTerm2IdMap();
         IntOpenHashSet uniTerms = new IntOpenHashSet();
-        BufferedReader br = new BufferedReader(new FileReader(trainQ));
+        BufferedReader br = new BufferedReader(new FileReader(allQ));
         String line;
         String [] field;
         Integer term;
         for (line = br.readLine(); line != null; line = br.readLine()) {
-            field = line.split(":")[1].split(" ");
+            //field = line.split(":")[1].split(" ");
+            field = line.split(" ");
+
 
             for (int i = 0; i < field.length; i++) {
                 term = term2IdMap.get(field[i]);

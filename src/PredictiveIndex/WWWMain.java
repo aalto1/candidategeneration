@@ -33,7 +33,10 @@ public class WWWMain extends WWW {
     /*/home/aalto/IdeaProjects/PredictiveIndex/aux/sort/bin/binsort --size 16 --length 12 --block-size=900000000  ./InvertedIndex.dat ./sortedInvertedIndex.dat*/
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
         //checkExtraData();
-        printModels();
+        //printModels();
+        BigramIndex.getBigramIndex(finalSingle);
+        //getUniqueTermsSet();
+        //BigramIndex.checkFilterSets();
         //getDocIDMap();
         //splitCollection();
         //november13();
