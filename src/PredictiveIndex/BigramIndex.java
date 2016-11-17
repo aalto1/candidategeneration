@@ -37,7 +37,11 @@ public class BigramIndex {
     static boolean check= false;
     static IntOpenHashSet unigram = (IntOpenHashSet) deserialize(uniqueTerms);
 
-
+    /*The code has a strange outcome since in the final single inverted index we have just
+    * 19752 posting list vs the 20856 terms.
+    * 1) in the whole corpora there is not such term
+    * 2) the threshold completly cuts out the lists
+    * 3) other bugs */
     public static void getBigramIndex(String index) throws IOException, ClassNotFoundException {
         Int2ObjectOpenHashMap<int[][]> top1000I2 = new Int2ObjectOpenHashMap<>();
 
@@ -48,44 +52,64 @@ public class BigramIndex {
         int currentTerm = -1;
         int [][] auxArray = null;
         //DataOutputStream DOStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(metadata+"PLLength.bin")));
+        if(!checkExistence(results+"top") & false) {
+            for (int term = 0, post = 0; true; ) {
+                posting = getEntry(DIStream, posting);
+                if (posting == null) break;
+                if (posting[0] != currentTerm & (check | (checkTheCheck(posting[0])))) {
+                    if (currentTerm != -1) {
+                        top1000I2.put(currentTerm, Arrays.copyOf(auxArray, post));
+                        //System.out.println(Arrays.deepToString(top1000I2.get(currentTerm)));
+                    }
 
-        for(int term = 0, post = 0; true; ) {
-            posting = getEntry(DIStream, posting);
-            if (posting == null) break;
-
-            if (posting[0] != currentTerm & (check | (checkTheCheck(posting[0])))){
-                if(currentTerm != -1) {
-                    top1000I2.put(currentTerm, Arrays.copyOf(auxArray, post));
+                    currentTerm = posting[0];
+                    top1000I2.put(currentTerm, new int[1000][2]);
+                    auxArray = top1000I2.get(currentTerm);
+                    System.out.println((term++) + "-" + post);
+                    post = 0;
                 }
-                currentTerm = posting[0];
-                top1000I2.put(currentTerm, new int[1000][2]);
-                auxArray = top1000I2.get(currentTerm );
-                System.out.println((term++)+"-" + post);
-                post=0;
-            }if(post<1000 & (check | (checkTheCheck(posting[0])))){
-                auxArray[post][0]   = posting[1];
-                auxArray[post++][1] = posting[2];
-                if(post==1000) check=false;
+                if (post < 1000 & (check | (checkTheCheck(posting[0])))) {
+                    auxArray[post][0] = posting[1];
+                    auxArray[post++][1] = posting[2];
+                    if (post == 1000) check = false;
+                }
+
+
             }
+            serialize(top1000I2, results+"top");
 
-
+        }else{
+            top1000I2 = (Int2ObjectOpenHashMap<int[][]>) deserialize(results+"top");
         }
+
+        //System.out.println(top1000I2.size());
+        //System.out.println(top1000I2.containsKey(185));
+        System.out.println(unigram.size());
+        System.out.println(top1000I2.size());
+
+        System.exit(1);
+
+
         int [] bA;
         int [][] aux = new int[2000][2];
         DataOutputStream DOS = getDOStream(bigramIndex);
         int intersectionLen;
+        int missing = 0;
         for (long bigram: (LongOpenHashSet) deserialize(smallFilterSet)){
             bA = getTerms(bigram);
             try {
                 System.arraycopy(top1000I2.get(bA[0]), 0, aux, 0, top1000I2.get(bA[0]).length);
                 System.arraycopy(top1000I2.get(bA[1]), 0, aux, top1000I2.get(bA[0]).length, top1000I2.get(bA[1]).length);
+                Arrays.parallelSort(aux, 0, top1000I2.get(bA[0]).length+top1000I2.get(bA[1]).length, c);
+                intersectionLen = min(top1000I2.get(bA[0]).length+top1000I2.get(bA[1]).length, 1000);
             }catch (NullPointerException e){
                 System.out.println(bA[0]+"-"+top1000I2.get(bA[0]));
                 System.out.println(bA[1]+"-"+top1000I2.get(bA[1]));
+                missing++;
+                intersectionLen=0;
 
             }
-            Arrays.parallelSort(aux, 0, top1000I2.get(bA[0]).length+top1000I2.get(bA[1]).length, c);
-            intersectionLen = min(top1000I2.get(bA[0]).length+top1000I2.get(bA[1]).length, 1000);
+
             for(int i = 0; i< intersectionLen ; i++){
                 DOS.writeLong(bigram);
                 DOS.writeInt(aux[i][0]);
@@ -93,6 +117,7 @@ public class BigramIndex {
             }
         }
         DOS.close();
+        System.out.println(missing);
     }
 
     private static boolean  checkTheCheck(int term){
