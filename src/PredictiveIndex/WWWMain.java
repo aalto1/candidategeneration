@@ -34,7 +34,7 @@ public class WWWMain extends WWW {
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
         //checkExtraData();
         //printModels();
-        BigramIndex.getBigramIndex(finalSingle);
+        //BigramIndex.getBigramIndex(finalSingle);
         //getUniqueTermsSet();
         //BigramIndex.checkFilterSets();
         //getDocIDMap();
@@ -66,6 +66,9 @@ public class WWWMain extends WWW {
             i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), null, (long[]) deserialize(gStats), distance, true, dBigramIndex, numThreads);
             buildStructure(i2, numThreads);
         }
+        //i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), (int[]) deserialize(hitScores), (long[]) deserialize(gStats), 1, false, singleIndex, numThreads);
+        //startBatteria(i2, 0, numThreads);
+        //serialize(i2.missingWords,results+"trueMissingSet");
         buildFinalStructures();
         buildQualityModels();
         //printQualityModel();

@@ -38,10 +38,14 @@ public class BigramIndex {
     static IntOpenHashSet unigram = (IntOpenHashSet) deserialize(uniqueTerms);
 
     /*The code has a strange outcome since in the final single inverted index we have just
-    * 19752 posting list vs the 20856 terms.
-    * 1) in the whole corpora there is not such term
-    * 2) the threshold completly cuts out the lists
-    * 3) other bugs */
+    * 19752 posting list vs the 20856 terms. 1104 terms missing saved in a set
+    *
+    * X -I have found all the words in the corpora - in the whole corpora there is not such term.
+    * 2) the threshold cuts out the lists
+    * 3) other bugs
+    *
+    * */
+
     public static void getBigramIndex(String index) throws IOException, ClassNotFoundException {
         Int2ObjectOpenHashMap<int[][]> top1000I2 = new Int2ObjectOpenHashMap<>();
 
@@ -52,13 +56,14 @@ public class BigramIndex {
         int currentTerm = -1;
         int [][] auxArray = null;
         //DataOutputStream DOStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(metadata+"PLLength.bin")));
-        if(!checkExistence(results+"top") & false) {
+        if(!checkExistence(results+"top")) {
             for (int term = 0, post = 0; true; ) {
                 posting = getEntry(DIStream, posting);
                 if (posting == null) break;
-                if (posting[0] != currentTerm & (check | (checkTheCheck(posting[0])))) {
+                if (posting[0] != currentTerm) {
                     if (currentTerm != -1) {
                         top1000I2.put(currentTerm, Arrays.copyOf(auxArray, post));
+                        //unigram.remove(currentTerm);
                         //System.out.println(Arrays.deepToString(top1000I2.get(currentTerm)));
                     }
 
@@ -68,7 +73,7 @@ public class BigramIndex {
                     System.out.println((term++) + "-" + post);
                     post = 0;
                 }
-                if (post < 1000 & (check | (checkTheCheck(posting[0])))) {
+                if (post < 1000) {
                     auxArray[post][0] = posting[1];
                     auxArray[post++][1] = posting[2];
                     if (post == 1000) check = false;
@@ -84,6 +89,8 @@ public class BigramIndex {
 
         //System.out.println(top1000I2.size());
         //System.out.println(top1000I2.containsKey(185));
+        //serialize(unigram.removeAll(top1000I2.keySet()), results+"missingSet");
+        serialize(unigram, results+"missingSet");
         System.out.println(unigram.size());
         System.out.println(top1000I2.size());
 

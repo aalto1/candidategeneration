@@ -44,6 +44,7 @@ public class InvertedIndex extends WWW {
     Long2LongOpenHashMap dBiMap       = new Long2LongOpenHashMap();          // new Long2LongOpenHashMap[threadNum];
     Int2LongOpenHashMap  uniMap = new Int2LongOpenHashMap();
     Int2LongOpenHashMap  hitMap = new Int2LongOpenHashMap();
+    IntOpenHashSet missingWords = (IntOpenHashSet) deserialize(results+"missingSet");
 
     Int2IntOpenHashMap [] auxFMap   = new Int2IntOpenHashMap[threadNum];
     long [] globalStats;                                     //1-numberofdocs,2-wordcounter
@@ -136,6 +137,7 @@ public class InvertedIndex extends WWW {
         for(line = BR[tn].readLine() ; line!=null & checkProgress(doc, totNumDocs, 500000, start, testLimit); line = BR[tn].readLine()){
             if((field = line.split(" ")).length != 5) break;
             storeMetadata(readClueWebDocument(field, ClueDIS[tn], document), Integer.parseInt(field[1]), Integer.parseInt(field[4]), position, tn);
+            //checkMissingWords(readClueWebDocument(field, ClueDIS[tn], document), Integer.parseInt(field[4]));
             position.clear();
             doc++;
         }
@@ -143,6 +145,14 @@ public class InvertedIndex extends WWW {
         System.out.println("ClueWeb09 global statistics collected! " + doc);
 
     }
+
+    private void checkMissingWords(int [] words, int docLen){
+        for (int k = 0; k<docLen; k++) {
+            if(missingWords.remove(words[k])) System.out.println(missingWords.size());
+        }
+    }
+
+
     private void storeMetadata(int [] words, int docID, int docLen, Int2IntMap position, int tn) throws IOException {
         /*this function process the single wrac files */
         int multipleOccurece = 0;
@@ -293,25 +303,40 @@ public class InvertedIndex extends WWW {
         }
     }
 
+    private void writeEntry(String pre, int i, int tn) throws IOException {
+        DOS[tn].writeInt(buffer[tn][i][0]);
+
+        if (pre == singleIndex)
+            DOS[tn].writeInt(buffer[tn][i][1]);
+        else
+            DOS[tn].writeInt(buffer[tn][i][2]);
+
+        DOS[tn].writeInt(buffer[tn][i][3]);
+
+    }
+
     private void singleFlush(Comparator c, String pre, int [] twoTerms, int entry, boolean end, int tn) throws IOException {
         System.out.println("Flushing " + pre);
         int threshold = getThreshold(entry, tn);
         DOS[tn]  = getDOStream(pre+rawI2+dump.getAndAdd(1));
         Arrays.sort(buffer[tn], 0 , pointers[tn], c);
         getThreshold(1,tn);
+        int currentTerm = -1;
+        int counter = 0;
         for (int i = 0; i < pointers[tn]; i++) {
-            if (buffer[tn][i][entry] > threshold) {
-                DOS[tn].writeInt(buffer[tn][i][0]);
-
-                if (pre == singleIndex)
-                    DOS[tn].writeInt(buffer[tn][i][1]);
-                else
-                    DOS[tn].writeInt(buffer[tn][i][2]);
-
-                DOS[tn].writeInt(buffer[tn][i][3]);
-            }else{
-                uniIncrementDumpCounter(pre, tn, twoTerms, buffer[tn][i][0]);
+            if(buffer[tn][i][0] != currentTerm){
+                currentTerm = buffer[tn][i][0];
+                counter = 0;
             }
+            if(counter<500) {
+                if (counter < 50){
+                    writeEntry(pre, i, tn);
+                    counter++;
+                } else if (buffer[tn][i][entry] > threshold){
+                    writeEntry(pre, i, tn);
+                    counter++;
+                } else uniIncrementDumpCounter(pre, tn, twoTerms, buffer[tn][i][0]);
+            }else uniIncrementDumpCounter(pre, tn, twoTerms, buffer[tn][i][0]);
         }
         if(end) {
             if (pre == singleIndex)
