@@ -48,7 +48,7 @@ public class UnigramQualityModel extends Selection {
 
                 if (fastUnigramQueryTrace.containsKey(posting[0])) {
                     //hitPairs.add(pair);
-                    System.out.println(Arrays.toString(posting));
+                    //System.out.println(Arrays.toString(posting));
                     processUnigramPostingList(posting[0], Ints.toArray(auxPostingList), fastUnigramQueryTrace.get(posting[0]));
 
 

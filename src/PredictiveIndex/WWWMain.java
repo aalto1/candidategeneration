@@ -58,7 +58,7 @@ public class WWWMain extends WWW {
             //serialize(i2.termFreqArray, termFrequencyArray);
             serialize(i2.globalStats,   gStats);
         }
-        if(false/*!checkExistence(dumpMap)*/){
+        if(true/*!checkExistence(dumpMap)*/){
             //Single + HIT
             i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), (int[]) deserialize(hitScores), (long[]) deserialize(gStats), 1, false, singleIndex, numThreads);
             buildStructure(i2, numThreads);

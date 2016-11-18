@@ -324,7 +324,8 @@ public class InvertedIndex extends WWW {
         int currentTerm = -1;
         int counter = 0;
         for (int i = 0; i < pointers[tn]; i++) {
-            if(buffer[tn][i][0] != currentTerm){
+            writeEntry(pre, i , tn);
+            /*if(buffer[tn][i][0] != currentTerm){
                 currentTerm = buffer[tn][i][0];
                 counter = 0;
             }
@@ -336,7 +337,7 @@ public class InvertedIndex extends WWW {
                     writeEntry(pre, i, tn);
                     counter++;
                 } else uniIncrementDumpCounter(pre, tn, twoTerms, buffer[tn][i][0]);
-            }else uniIncrementDumpCounter(pre, tn, twoTerms, buffer[tn][i][0]);
+            }else uniIncrementDumpCounter(pre, tn, twoTerms, buffer[tn][i][0]); */
         }
         if(end) {
             if (pre == singleIndex)
@@ -416,25 +417,37 @@ public class InvertedIndex extends WWW {
 
         System.out.println("This is the threshold: " + gThreshold);
 
-        for (int k = keepPointers[tn]; k < buffer[tn].length; k++) {
-            if (buffer[tn][k][2] > gThreshold) {
-                buffer[tn][keepPointers[tn]++] = buffer[tn][k];
-            }else
-                incrementDumpCounter(tn, twoTerms, getPair(buffer[tn][k][0], buffer[tn][k][1]));
-                //dMap[tn].addTo(getPair(buffer[tn][k][0], buffer[tn][k][1]),1);
-                //incrementMap(getPair(buffer[tn][k][0], buffer[tn][k][1]));
+        int counter = 0;
+        int current=-1;
 
+        for (int k = keepPointers[tn]; k < buffer[tn].length; k++) {
+
+            if(buffer[tn][k][0]!= current){
+                current = buffer[tn][k][0];
+                counter = 0;
+            }
+            if(counter<1000) {
+                if (counter < 100){
+                    buffer[tn][keepPointers[tn]++] = buffer[tn][k];
+                }else if (buffer[tn][k][2] > gThreshold){
+                    buffer[tn][keepPointers[tn]++] = buffer[tn][k];
+                }else incrementDumpCounter(tn, twoTerms, getPair(buffer[tn][k][0], buffer[tn][k][1]));
+            }else incrementDumpCounter(tn, twoTerms, getPair(buffer[tn][k][0], buffer[tn][k][1]));
         }
 
         if(keepPointers[tn] > (buffer[tn].length/100)*90 | end) flushBuffer(tn, end);
-
-
-
 
         maxBM25 = 0;
         //System.out.println("Dump size "+ dump +" " +dMap.size());
         //System.out.println("Processing Time:" + (doc / (System.currentTimeMillis() - start)) * 1000 + " doc/s");
     }
+
+    /*if (buffer[tn][k][2] > gThreshold) {
+                buffer[tn][keepPointers[tn]++] = buffer[tn][k];
+            }else
+                incrementDumpCounter(tn, twoTerms, getPair(buffer[tn][k][0], buffer[tn][k][1]));
+                //dMap[tn].addTo(getPair(buffer[tn][k][0], buffer[tn][k][1]),1);
+                //incrementMap(getPair(buffer[tn][k][0], buffer[tn][k][1]));*/
 
     private void flushBuffer(int tn, boolean end) throws IOException {
         System.out.print("Flushing Buffer...\t");

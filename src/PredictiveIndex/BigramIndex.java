@@ -87,19 +87,19 @@ public class BigramIndex {
             top1000I2 = (Int2ObjectOpenHashMap<int[][]>) deserialize(results+"top");
         }
 
-        //System.out.println(top1000I2.size());
+        System.out.println(top1000I2.size());
         //System.out.println(top1000I2.containsKey(185));
         //serialize(unigram.removeAll(top1000I2.keySet()), results+"missingSet");
         serialize(unigram, results+"missingSet");
         System.out.println(unigram.size());
         System.out.println(top1000I2.size());
 
-        System.exit(1);
+        //System.exit(1);
 
 
         int [] bA;
         int [][] aux = new int[2000][2];
-        DataOutputStream DOS = getDOStream(bigramIndex);
+        DataOutputStream DOS = getDOStream(finalBigram);
         int intersectionLen;
         int missing = 0;
         for (long bigram: (LongOpenHashSet) deserialize(smallFilterSet)){
@@ -152,6 +152,5 @@ public class BigramIndex {
         }
         System.out.println("\n"+counter);
         System.exit(1);
-
     }
 }
