@@ -160,7 +160,7 @@ public class Extra extends WWW {
             System.out.println("Fetching oldDocInfo and merging the two in finalDocInfo...");
             for (line = br.readLine(); line != null ; line = br.readLine()) {
                 field = line.split(" ");
-                bw.write(field[0] + " " + doc2IDmap.get(field[0]) + " " + field[2] + " " + field[3] + " " + field[4] + "\n");
+                bw.write(field[0] + " " + /*doc2IDmap.get(field[0]) +*/ " " + field[2] + " " + field[3] + " " + field[4] + "\n");
             }
             bw.close();
             br.close();
