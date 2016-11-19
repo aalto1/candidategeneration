@@ -254,6 +254,8 @@ class utilsClass extends WWW {
         db.close();
     }
 
+    /*fefe*/
+
     public static void memoryStatistics() {
 
         int mb = 1024*1024;
