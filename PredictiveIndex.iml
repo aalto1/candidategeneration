@@ -12,13 +12,10 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="it.unimi.dsi:fastutil:7.0.12" level="project" />
-    <orderEntry type="library" name="org.jsoup:jsoup:1.9.2" level="project" />
-    <orderEntry type="library" name="me.lemire.integercompression:JavaFastPFOR:0.1.7" level="project" />
-    <orderEntry type="library" name="org.apache.commons:commons-csv:1.4" level="project" />
     <orderEntry type="library" name="Maven: it.unimi.dsi:fastutil:7.0.12" level="project" />
     <orderEntry type="library" name="Maven: org.jsoup:jsoup:1.9.2" level="project" />
     <orderEntry type="library" name="Maven: me.lemire.integercompression:JavaFastPFOR:0.1.7" level="project" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-csv:1.4" level="project" />
+    <orderEntry type="library" name="Maven: com.google.guava:guava:20.0" level="project" />
   </component>
 </module>
