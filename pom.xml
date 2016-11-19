@@ -152,7 +152,7 @@
                         <goal>site</goal>
                     </goals>
                     <configuration>
-                        <outputDirectory>/home/aalto/IdeaProjects/PredictiveIndex/target/site</outputDirectory>
+                        <outputDirectory>${basedir}/target/site</outputDirectory>
                         <reportPlugins>
                             <reportPlugin>
                                 <groupId>org.apache.maven.plugins</groupId>
@@ -168,7 +168,7 @@
                         <goal>deploy</goal>
                     </goals>
                     <configuration>
-                        <outputDirectory>/home/aalto/IdeaProjects/PredictiveIndex/target/site</outputDirectory>
+                        <outputDirectory>${basedir}/target/site</outputDirectory>
                         <reportPlugins>
                             <reportPlugin>
                                 <groupId>org.apache.maven.plugins</groupId>
@@ -179,7 +179,7 @@
                 </execution>
             </executions>
             <configuration>
-                <outputDirectory>/home/aalto/IdeaProjects/PredictiveIndex/target/site</outputDirectory>
+                <outputDirectory>${basedir}/target/site</outputDirectory>
                 <reportPlugins>
                     <reportPlugin>
                         <groupId>org.apache.maven.plugins</groupId>
