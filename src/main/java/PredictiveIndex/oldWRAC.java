@@ -17,7 +17,6 @@ import java.util.function.Predicate;
 import java.util.zip.GZIPInputStream;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import it.unimi.di.big.mg4j.search.score.BM25FScorer;
 
 import static PredictiveIndex.VariableByteCode.encodeInterpolate;
 import static PredictiveIndex.utilsClass.arrayToHashMap;
@@ -25,7 +24,6 @@ import static PredictiveIndex.utilsClass.getOIStream;
 import static PredictiveIndex.utilsClass.getPair;
 import static java.util.Arrays.asList;
 import com.google.common.collect.Sets;
-import it.unimi.di.big.mg4j.search.score.BM25Scorer;
 import it.unimi.dsi.fastutil.Hash;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;

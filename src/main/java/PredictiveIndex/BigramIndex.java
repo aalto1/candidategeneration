@@ -1,13 +1,10 @@
 package PredictiveIndex;
 
 import com.google.common.primitives.Ints;
-import com.mchange.v1.util.ArrayUtils;
 import it.unimi.dsi.fastutil.ints.*;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import org.apache.commons.lang.ObjectUtils;
-import org.apache.poi.util.ArrayUtil;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;

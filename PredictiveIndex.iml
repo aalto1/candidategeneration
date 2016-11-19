@@ -12,14 +12,13 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" exported="" name="it.unimi.dsi:fastutil:7.0.12" level="project" />
-    <orderEntry type="library" exported="" name="org.jsoup:jsoup:1.9.2" level="project" />
-    <orderEntry type="library" exported="" name="me.lemire.integercompression:JavaFastPFOR:0.1.7" level="project" />
-    <orderEntry type="library" exported="" name="com.koloboke:koloboke-impl-jdk8:1.0.0" level="project" />
-    <orderEntry type="library" exported="" name="kstem-3.4" level="project" />
-    <orderEntry type="library" exported="" name="it.unimi.di:mg4j-big:5.4.3" level="project" />
-    <orderEntry type="library" exported="" name="com.google.code.externalsortinginjava:externalsortinginjava:0.2.2" level="project" />
-    <orderEntry type="library" exported="" name="org.apache.commons:commons-csv:1.4" level="project" />
-    <orderEntry type="library" exported="" name="org.mapdb:mapdb:3.0.2" level="project" />
+    <orderEntry type="library" name="it.unimi.dsi:fastutil:7.0.12" level="project" />
+    <orderEntry type="library" name="org.jsoup:jsoup:1.9.2" level="project" />
+    <orderEntry type="library" name="me.lemire.integercompression:JavaFastPFOR:0.1.7" level="project" />
+    <orderEntry type="library" name="org.apache.commons:commons-csv:1.4" level="project" />
+    <orderEntry type="library" name="Maven: it.unimi.dsi:fastutil:7.0.12" level="project" />
+    <orderEntry type="library" name="Maven: org.jsoup:jsoup:1.9.2" level="project" />
+    <orderEntry type="library" name="Maven: me.lemire.integercompression:JavaFastPFOR:0.1.7" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.commons:commons-csv:1.4" level="project" />
   </component>
 </module>

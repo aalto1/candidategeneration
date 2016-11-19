@@ -4,7 +4,7 @@ import com.google.common.primitives.Ints;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import org.lemurproject.kstem.KrovetzStemmer;
+//import org.lemurproject.kstem.KrovetzStemmer;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -252,7 +252,7 @@ public abstract class WWW {
         LinkedList<Integer> queryInt = new LinkedList<>();
         int termID;
         String stemmedTerm;
-        KrovetzStemmer stemmer = new KrovetzStemmer();
+        //KrovetzStemmer stemmer = new KrovetzStemmer();
 
         // We convert our String [] to int [] using the term-termID map
         for (int i = 0; i < queryTerms.length; i++) {

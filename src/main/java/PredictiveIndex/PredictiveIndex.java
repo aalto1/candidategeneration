@@ -13,7 +13,6 @@ import it.unimi.dsi.fastutil.ints.*;
 import it.unimi.dsi.fastutil.longs.*;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import org.lemurproject.kstem.KrovetzStemmer;
 
 import static PredictiveIndex.ExternalSort.massiveBinaryMerge;
 import static PredictiveIndex.ExternalSort.sortSmallInvertedIndex;

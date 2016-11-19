@@ -6,7 +6,7 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.objects.Object2ByteOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import org.lemurproject.kstem.KrovetzStemmer;
+//import org.lemurproject.kstem.KrovetzStemmer;
 
 import java.io.*;
 import java.util.Collections;
@@ -25,7 +25,7 @@ public class Extra extends WWW {
         String [] field;
         Integer term;
         LinkedList<Integer> terms = new LinkedList<>();
-        KrovetzStemmer stemmer = new KrovetzStemmer();
+        //KrovetzStemmer stemmer = new KrovetzStemmer();
 
         for (line = br.readLine(); line != null; line = br.readLine()) {
             field = line.split(":")[1].split(" ");

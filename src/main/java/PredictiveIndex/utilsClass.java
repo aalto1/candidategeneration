@@ -22,9 +22,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.zip.GZIPInputStream;
 import me.lemire.integercompression.differential.*;
 
-import org.bouncycastle.asn1.dvcs.Data;
-import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
-import org.mapdb.*;
 import java.lang.System;
 import it.unimi.dsi.fastutil.longs.*;
 
@@ -234,7 +231,7 @@ class utilsClass extends WWW {
         serialize(HITS, hitScores);
     }
 
-    public static void tryMap(){
+    /*public static void tryMap(){
         Int2IntMap auxMap = new Int2IntOpenHashMap();
         Pump a = Pump.INSTANCE;
         DB db = DBMaker.fileDB("termFreq.db").fileMmapEnable().cleanerHackEnable().fileMmapPreclearDisable().make();
@@ -252,7 +249,7 @@ class utilsClass extends WWW {
             auxMap.put(i,i);
         }
         db.close();
-    }
+    }*/
 
     /*fefe*/
 
