@@ -46,7 +46,7 @@
                     <goals>
                         <goal>clean</goal>
                     </goals>
-                </execution>y
+                </execution>
             </executions>
         </plugin>
         <plugin>
