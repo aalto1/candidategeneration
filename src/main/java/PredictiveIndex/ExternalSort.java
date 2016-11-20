@@ -165,7 +165,8 @@ public class ExternalSort {
             else if(LL.size() == 1){
                 for (long [] auxArr :LL.get(0)) for (long auxLong : auxArr) DOStream.writeLong(auxLong);
             }
-            LL.clear();
+            //LL.clear();
+            LL = new LinkedList<>();
             System.gc();
             System.out.println("\t done: " + (System.currentTimeMillis() - partialNow)/1000 + "s");
             //if(dumps==3) break;
