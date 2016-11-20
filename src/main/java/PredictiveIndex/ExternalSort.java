@@ -157,8 +157,11 @@ public class ExternalSort {
                 LL.removeFirst();
                 LL.removeFirst();
             }
-            if(LL.size()==2)
+            if(LL.size()==2) {
                 writeMergeSortedMatrix(LL.get(0), LL.get(1), DOStream);
+                LL.removeFirst();
+                LL.removeFirst();
+            }
             else if(LL.size() == 1){
                 for (long [] auxArr :LL.get(0)) for (long auxLong : auxArr) DOStream.writeLong(auxLong);
             }
