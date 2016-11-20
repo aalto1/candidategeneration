@@ -60,7 +60,7 @@ public class WWWMain extends WWW {
             //serialize(i2.termFreqArray, termFrequencyArray);
             serialize(i2.globalStats,   gStats);
         }
-        if(true/*!checkExistence(dumpMap)*/){
+        if(false/*!checkExistence(dumpMap)*/){
             //D-Bigram
             i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), null, (long[]) deserialize(gStats), distance, true, dBigramIndex, numThreads);
             buildStructure(i2, numThreads);
