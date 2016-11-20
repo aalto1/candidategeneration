@@ -117,7 +117,7 @@ public abstract class WWW {
     static double minBM25 =2147388309;
     static int totNumDocs = 50220423;
 
-    static final int server = 2;
+    static final int server = 3;
 
     //comparators
     static Comparator<int[]> bigramBufferComparator = new Comparator<int[]>() {
