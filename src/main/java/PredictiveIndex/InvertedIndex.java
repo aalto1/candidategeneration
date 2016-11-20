@@ -39,7 +39,7 @@ public class InvertedIndex extends WWW {
     Long2LongOpenHashMap dBiMap       = new Long2LongOpenHashMap();          // new Long2LongOpenHashMap[threadNum];
     Int2LongOpenHashMap  uniMap = new Int2LongOpenHashMap();
     Int2LongOpenHashMap  hitMap = new Int2LongOpenHashMap();
-    IntOpenHashSet missingWords = (IntOpenHashSet) deserialize(results+"missingSet");
+    IntOpenHashSet missingWords;// = (IntOpenHashSet) deserialize(results+"missingSet");
 
     Int2IntOpenHashMap [] auxFMap   = new Int2IntOpenHashMap[threadNum];
     long [] globalStats;                                     //1-numberofdocs,2-wordcounter
