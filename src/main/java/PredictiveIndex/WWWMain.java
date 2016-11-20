@@ -61,11 +61,11 @@ public class WWWMain extends WWW {
             serialize(i2.globalStats,   gStats);
         }
         if(true/*!checkExistence(dumpMap)*/){
-            //Single + HIT
-            i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), (int[]) deserialize(hitScores), (long[]) deserialize(gStats), 1, false, singleIndex, numThreads);
-            buildStructure(i2, numThreads);
             //D-Bigram
             i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), null, (long[]) deserialize(gStats), distance, true, dBigramIndex, numThreads);
+            buildStructure(i2, numThreads);
+            //Single + HIT
+            i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), (int[]) deserialize(hitScores), (long[]) deserialize(gStats), 1, false, singleIndex, numThreads);
             buildStructure(i2, numThreads);
         }
         //i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), (int[]) deserialize(hitScores), (long[]) deserialize(gStats), 1, false, singleIndex, numThreads);
