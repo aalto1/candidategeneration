@@ -11,6 +11,7 @@ import java.util.ListIterator;
 
 import static PredictiveIndex.WWW.dBigramIndex;
 import static PredictiveIndex.WWW.getBuffWriter;
+import static PredictiveIndex.WWW.server;
 import static PredictiveIndex.utilsClass.getTerms;
 
 /**
@@ -84,7 +85,7 @@ public class ExternalSort {
         long [] buffLong;
         int dumps =0;
         while(DIStreams.size()>1) {
-            int section =  100000000/(files.length+2);
+            int section =  (100000000*server)/(files.length+2);
             System.out.print("Loading data...");
             partialNow = System.currentTimeMillis();
             for (int i = 0; i < DIStreams.size(); i++) {

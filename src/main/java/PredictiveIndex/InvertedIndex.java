@@ -27,7 +27,7 @@ import static PredictiveIndex.utilsClass.*;
 
 public class InvertedIndex extends WWW {
     static final int testLimit = 50222043;
-    static final int bufferSize = (int) (2.8*Math.pow(10,7));
+    static final int bufferSize = (int) (2.8*Math.pow(10,7)*server);
     private int distance;
     private boolean isBigram;
     private String prefix;

@@ -39,7 +39,7 @@ public class WWWMain extends WWW {
         //getUniqueTermsSet();
         //BigramIndex.checkFilterSets();
         //getDocIDMap();
-        splitCollection();
+        //splitCollection();
         //november13();
         //tryTry();
         //printQualityModel();
@@ -47,7 +47,7 @@ public class WWWMain extends WWW {
         //sortComplexRanking();
         //getFQT(10);
         //System.out.println("klkn");
-        System.exit(1);
+        //System.exit(1);
         //getId2TermMap();
 
         InvertedIndex i2;
