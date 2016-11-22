@@ -47,9 +47,9 @@ public class WWWMain extends WWW {
         //ExternalSort.massiveBinaryMerge(new File(dBigramIndex+rawI2),dBigramIndex+sortedI2);
         //sortComplexRanking();
         //getFQT(10);
-        buildFastQT2(10);
+        //buildFastQT2(10);
         //System.out.println("klkn");
-        System.exit(1);
+        //System.exit(1);
         //getId2TermMap();
 
         InvertedIndex i2;
