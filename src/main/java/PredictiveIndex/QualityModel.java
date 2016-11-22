@@ -1,7 +1,9 @@
 package PredictiveIndex;
 
 import com.google.common.primitives.Ints;
+import it.unimi.dsi.fastutil.ints.Int2IntLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.*;
 
 import java.io.*;
@@ -33,7 +35,8 @@ public class QualityModel extends Selection {
     public static long[][][] getBigramQualityModel(int function, String index, String dumpMap, String model) throws IOException, ClassNotFoundException {
         accMap = (Long2IntOpenHashMap) deserialize(accessMap);
         dumped = (Long2LongOpenHashMap) deserialize(dumpMap);
-        Long2ObjectOpenHashMap<Int2IntMap> fastQueryTrace = getFQT(10);
+        //Long2ObjectOpenHashMap<Int2IntMap> fastQueryTrace = getFQT(10);
+        Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntLinkedOpenHashMap>> fastQueryTrace = (Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntLinkedOpenHashMap>>) deserialize(fastQT+"102");
         System.out.println(fastQueryTrace.size());
 
 
@@ -59,7 +62,8 @@ public class QualityModel extends Selection {
                     //hitPairs.add(pair);
                     System.out.println(auxPostingList.size());
                     //System.out.println(Arrays.toString(getTerms(pair)));
-                    processBigramPostingList(pair, currentPair[0], currentPair[1], Ints.toArray(auxPostingList), fastQueryTrace.get(pair));
+                    //processBigramPostingList(pair, currentPair[0], currentPair[1], Ints.toArray(auxPostingList), fastQueryTrace.get(pair));
+                    fastQueryTrace.put(pair, processPostingListNew(fastQueryTrace.get(pair), Ints.toArray(auxPostingList)));
                 }
                 //DOStream.close();
                 auxPostingList.clear();
@@ -74,6 +78,15 @@ public class QualityModel extends Selection {
         serialize(QM, model);
         printQualityModel(model);
         return QM;
+    }
+
+    private static Int2ObjectOpenHashMap<Int2IntLinkedOpenHashMap> processPostingListNew(Int2ObjectOpenHashMap<Int2IntLinkedOpenHashMap> qt, int [] postingList){
+        for(int i = 0; i < postingList.length; i++){
+            for(Int2IntLinkedOpenHashMap map : qt.values()){
+                if(map.containsKey(postingList[i])) map.put(postingList[i], i+1);
+            }
+        }
+        return qt;
     }
 
     private static void processBigramPostingList(long pair, int t1, int t2, int[] postingList, Int2IntMap aggregatedTopK) {

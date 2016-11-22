@@ -16,6 +16,7 @@ import java.util.HashMap;
 
 
 import static PredictiveIndex.Extra.*;
+import static PredictiveIndex.FastQueryTrace.buildFastQT2;
 import static PredictiveIndex.FastQueryTrace.getFQT;
 import static PredictiveIndex.QualityModel.getBigramQualityModel;
 import static PredictiveIndex.QualityModel.printQualityModel;
@@ -46,8 +47,9 @@ public class WWWMain extends WWW {
         //ExternalSort.massiveBinaryMerge(new File(dBigramIndex+rawI2),dBigramIndex+sortedI2);
         //sortComplexRanking();
         //getFQT(10);
+        buildFastQT2(10);
         //System.out.println("klkn");
-        //System.exit(1);
+        System.exit(1);
         //getId2TermMap();
 
         InvertedIndex i2;
@@ -122,8 +124,8 @@ public class WWWMain extends WWW {
             ExternalSort.massiveBinaryMerge(new File(singleIndex+rawI2), finalSingle, false);
         if(!checkExistence(finalHIT))
             ExternalSort.massiveBinaryMerge(new File(HITIndex+rawI2), finalHIT, false);
-        if(!checkExistence(finalDBigram))
-            ExternalSort.massiveBinaryMerge(new File(dBigramIndex+rawI2), finalDBigram, true);
+        //if(!checkExistence(finalDBigram))
+            //ExternalSort.massiveBinaryMerge(new File(dBigramIndex+rawI2), finalDBigram, true);
     }
 
 

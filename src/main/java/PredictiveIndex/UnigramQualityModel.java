@@ -1,18 +1,19 @@
 package PredictiveIndex;
 
 import com.google.common.primitives.Ints;
-import it.unimi.dsi.fastutil.ints.Int2IntMap;
-import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
-import it.unimi.dsi.fastutil.ints.Int2LongOpenHashMap;
+import it.unimi.dsi.fastutil.ints.*;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 
+import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.function.BiFunction;
 
 import static PredictiveIndex.FastQueryTrace.getFQT;
 
@@ -28,7 +29,9 @@ public class UnigramQualityModel extends Selection {
     public static long[][][] getUnigramQualityModel(int function, String index, String dumpMap,  String model) throws IOException, ClassNotFoundException {
         accMap = (Long2IntOpenHashMap) deserialize(accessMap);
         dumped = (Int2LongOpenHashMap) deserialize(dumpMap);
-        Long2ObjectOpenHashMap<Int2IntMap> fastUnigramQueryTrace = getFQT(10);
+        //Long2ObjectOpenHashMap<Int2IntMap> fastUnigramQueryTrace = getFQT(10);
+        Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntLinkedOpenHashMap>> fastUnigramQueryTrace = (Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntLinkedOpenHashMap>>) deserialize(fastQT+"102");
+
         System.out.println(fastUnigramQueryTrace.size());
 
 
@@ -49,12 +52,9 @@ public class UnigramQualityModel extends Selection {
                 if (fastUnigramQueryTrace.containsKey(posting[0])) {
                     //hitPairs.add(pair);
                     //System.out.println(Arrays.toString(posting));
-                    processUnigramPostingList(posting[0], Ints.toArray(auxPostingList), fastUnigramQueryTrace.get(posting[0]));
-
-
+                    //processUnigramPostingList(posting[0], Ints.toArray(auxPostingList), fastUnigramQueryTrace.get(posting[0]));
+                    fastUnigramQueryTrace.put(posting[0], processPostingListNew(fastUnigramQueryTrace.get(posting[0]), Ints.toArray(auxPostingList)));
                 }
-
-
                 //DOStream.close();
                 currentTerm = posting[0];
                 auxPostingList.clear();
@@ -65,8 +65,75 @@ public class UnigramQualityModel extends Selection {
         System.out.println(hitPairs.size());
 
         serialize(QM, model);
+        restructResults(fastUnigramQueryTrace);
         printQualityModel(model);
         return QM;
+    }
+
+    private static BiFunction<LinkedList<long[]>, long[], LinkedList<long[]>> mergeList = (x,y) -> {
+        x.addLast(y);
+        return x;
+    };
+
+    private static LinkedList<long[]> map2longarray(Int2IntMap map){
+        long [] array = new long[map.size()];
+        LinkedList<long[]> a = new LinkedList<>();
+        int k = 0;
+        for (int key : map.keySet()) {
+            array[k++] = getPair(key,map.get(key));
+        }
+        a.add(array);
+        return a;
+    }
+
+    private static void restructResults(Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntLinkedOpenHashMap>> fqt) throws IOException {
+        Int2ObjectOpenHashMap<LinkedList<long[]>> toPrint = new Int2ObjectOpenHashMap<>();
+        Int2ObjectOpenHashMap<Int2IntLinkedOpenHashMap> pairQID;
+
+        for(long pair: fqt.keySet()){
+            pairQID = fqt.get(pair);
+            for(int qID: pairQID.keySet()) {
+                toPrint.merge(qID, map2longarray(pairQID.get(qID)), UnigramQualityModel::mergeList);
+            }
+        }
+
+        BufferedWriter bw = getBuffWriter(results+"modelResult");
+        for(int k : toPrint.keySet()){
+            bw.write("############################################\n");
+            bw.write("Document: " + k);
+            bw.write("############################################\n");
+            for(long [] a : toPrint.get(k)){
+                for (long elem: a) {
+                    bw.write(Arrays.toString(getTerms(elem)));
+                }
+                bw.newLine();
+                bw.newLine();
+            }
+
+        }
+    bw.close();
+    }
+
+
+
+
+    private static LinkedList<long[]> mergeList(LinkedList<long[]> a, LinkedList<long[]> longs) {
+        longs.addLast(a.getFirst());
+        return longs;
+    }
+
+
+    private static Int2ObjectOpenHashMap<Int2IntLinkedOpenHashMap> processPostingListNew(Int2ObjectOpenHashMap<Int2IntLinkedOpenHashMap> qt, int [] postingList){
+        int counter = 0;
+        for(int i = 0; i < postingList.length & counter<10; i++){
+            for(Int2IntLinkedOpenHashMap map : qt.values()){
+                if(map.containsKey(postingList[i])){
+                    map.put(postingList[i], i+1);
+                    counter++;
+                }
+            }
+        }
+        return qt;
     }
 
     private static void processUnigramPostingList(int term, int[] postingList, Int2IntMap aggregatedTopK) {
@@ -82,7 +149,7 @@ public class UnigramQualityModel extends Selection {
 
         //hit increment
         int rankBucket = 0;
-        for (int i = 0; i < postingList.length - 1; i++) {
+        for (int i = 0; i < postingList.length - 1; i++){
             increment = aggregatedTopK.get(postingList[i]);
             if (increment > 0) {
                 rankBucket = getRankBucket(rankBucket, i, rRanges);
