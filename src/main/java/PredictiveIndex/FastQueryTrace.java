@@ -63,6 +63,36 @@ public class FastQueryTrace extends WWW {
         return FQT;
     }
 
+    private static Long2ObjectOpenHashMap<Int2IntMap> buildFastQT2(int k) throws IOException {
+        int[][] topKMatrix = getTopKMatrixNew(new int[173800][], getBuffReader(complexRankN), k);
+        getTerm2IdMap();
+        BufferedReader br= getBuffReader(trainQ);
+        FQT = new Long2ObjectOpenHashMap<>();
+        String line;
+        String [] field;
+        long[] queryBigrams;
+        int[] topK;
+        int counter = 0;
+
+        while ((line = br.readLine()) != null) {
+            field = line.split(":");
+            queryBigrams = getBigrams(field[1].split(" "));
+            try {
+                for (long bigram : queryBigrams) {
+                    addTopK(bigram, topKMatrix[Integer.valueOf(field[0])]);
+                }
+            }catch (NullPointerException e){
+                System.out.println("Test Set Query: " + Integer.valueOf(field[0]));
+                System.out.println(counter++);
+
+            }
+        }
+        serialize(FQT, fastQT+k);
+        System.out.println(FQT.size());
+        System.exit(1);
+        return FQT;
+    }
+
     private static void addTopK(long bigram, int[] topK) {
         Int2IntMap auxMap = FQT.get(bigram);
         if (auxMap != null) {

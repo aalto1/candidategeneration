@@ -52,6 +52,7 @@ public class BigramIndex {
         int[] posting = new int[3];                         //
         int currentTerm = -1;
         int [][] auxArray = null;
+        byte [] toskip = new byte[4*3*100];
         //DataOutputStream DOStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(metadata+"PLLength.bin")));
         if(!checkExistence(results+"top")) {
             for (int term = 0, post = 0; true; ) {
@@ -74,6 +75,9 @@ public class BigramIndex {
                     auxArray[post][0] = posting[1];
                     auxArray[post++][1] = posting[2];
                     if (post == 1000) check = false;
+                }else{
+                    DIStream.read(toskip);
+                    if(currentTerm!=java.nio.ByteBuffer.wrap(Arrays.copyOfRange(toskip, 4*3*99, (4*3*99)+4)).getInt()) notToSkip(toskip);
                 }
 
 
@@ -122,6 +126,16 @@ public class BigramIndex {
         }
         DOS.close();
         System.out.println(missing);
+    }
+
+    private static void notToSkip(byte [] noSkip){
+        java.nio.ByteBuffer.wrap(Arrays.copyOfRange(noSkip, 4*3*99, (4*3*99)+4)).getInt();
+        for (int i = 0; i < noSkip.length; i+=4) {
+            java.nio.ByteBuffer.wrap(Arrays.copyOfRange(noSkip, i, i+4)).getInt();
+            java.nio.ByteBuffer.wrap(Arrays.copyOfRange(noSkip, i+4, i+8)).getInt();
+            java.nio.ByteBuffer.wrap(Arrays.copyOfRange(noSkip, i+8, i+12)).getInt();
+        }
+
     }
 
     private static boolean  checkTheCheck(int term){

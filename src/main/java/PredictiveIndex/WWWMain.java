@@ -183,14 +183,6 @@ public class WWWMain extends WWW {
     }
 
 
-
-
-
-
-
-
-
-
     private static class MultiThread implements Runnable {
         private int threadNum;
         private InvertedIndex i2;
