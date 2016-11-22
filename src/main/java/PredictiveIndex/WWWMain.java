@@ -102,7 +102,7 @@ public class WWWMain extends WWW {
     }
 
     private static void buildQualityModels() throws IOException, ClassNotFoundException {
-        if(!checkExistence(dBiModel)) {
+        if(checkExistence(dBiModel)) {
             getBigramQualityModel(1, finalDBigram, dBigramDumpMap, dBiModel);
         }
         if(!checkExistence(hitModel)){
@@ -124,8 +124,8 @@ public class WWWMain extends WWW {
             ExternalSort.massiveBinaryMerge(new File(singleIndex+rawI2), finalSingle, false);
         if(!checkExistence(finalHIT))
             ExternalSort.massiveBinaryMerge(new File(HITIndex+rawI2), finalHIT, false);
-        //if(!checkExistence(finalDBigram))
-            //ExternalSort.massiveBinaryMerge(new File(dBigramIndex+rawI2), finalDBigram, true);
+        if(!checkExistence(finalDBigram))
+            ExternalSort.massiveBinaryMerge(new File(dBigramIndex+rawI2), finalDBigram, true);
     }
 
 
