@@ -5,14 +5,12 @@ import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 
 
 import static PredictiveIndex.Extra.*;
@@ -35,6 +33,15 @@ public class WWWMain extends WWW {
     /*/home/aalto/IdeaProjects/PredictiveIndex/aux/sort/bin/binsort --size 16 --length 12 --block-size=900000000  ./InvertedIndex.dat ./sortedInvertedIndex.dat*/
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
         //checkExtraData();
+        //System.out.println(Arrays.toString(getTerms(16273705471942L)));
+        //NestedQueryTrace.convertANDcleanQueryTrace();
+        //NestedQueryTrace.agumentedQueryTrace(false);
+        //NestedQueryTrace.getEmptyModel(trainQBigram, bigramEmptyModel);
+        //NestedQueryTrace.getEmptyModel(trainQconv, unigramEmptyModel);
+        //NestedQueryTrace.buildReference(trainQconv, fastQT2);
+        //buildDocIDMap();
+        //NewQualityModel.getModel(finalSingle, "output" ,fastQT2);
+        //sortComplexRanking();
         //printModels();
         //BigramIndex.getBigramIndex(finalSingle);
         //getUniqueTermsSet();
@@ -49,7 +56,8 @@ public class WWWMain extends WWW {
         //getFQT(10);
         //buildFastQT2(10);
         //System.out.println("klkn");
-        //System.exit(1);
+        finda();
+        System.exit(1);
         //getId2TermMap();
 
         InvertedIndex i2;
@@ -69,12 +77,13 @@ public class WWWMain extends WWW {
             //Single + HIT
             i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), (int[]) deserialize(hitScores), (long[]) deserialize(gStats), 1, false, singleIndex, numThreads);
             buildStructure(i2, numThreads);
+            BigramIndex.getBigramIndex(finalSingle);
         }
         //i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), (int[]) deserialize(hitScores), (long[]) deserialize(gStats), 1, false, singleIndex, numThreads);
         //startBatteria(i2, 0, numThreads);
         //serialize(i2.missingWords,results+"trueMissingSet");
         buildFinalStructures();
-        buildQualityModels();
+        //buildQualityModels();
         //printQualityModel();
 
 
@@ -137,6 +146,33 @@ public class WWWMain extends WWW {
         if(!checkExistence(accessMap))  uniquePairs();
         if(!checkExistence(uniqueTerms)) getUniqueTermsSet();
 
+    }
+
+    private static void finda() throws IOException {
+        int currentTerm = -1;
+        int previousBM25;
+        int newBM25 =0;
+        int [] posting = new int[3];
+        DataInputStream DIStream = getDIStream(finalSingle);
+
+        //DataOutputStream DOStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(metadata+"PLLength.bin")));
+        while (true) {
+            if ((posting = Selection.getEntry(DIStream, posting)) == null) break;
+            previousBM25 = newBM25;
+            newBM25 = posting[1];
+            //posting[2] = DM.get(posting[2]);
+
+
+            if(newBM25 > previousBM25 & posting[0] == currentTerm & posting[1]>0){
+                /** While I scan the posting list I the value of the bm25 should decrease with new<old */
+                //System.err.println(posting[0] +" - "+ currentTerm);
+                System.out.println(currentTerm+"-"+previousBM25+"-"+newBM25);
+            }
+
+            if (posting[0] != currentTerm) {
+                currentTerm = posting[0];
+            }
+        }
     }
 
     private static void tryTry() throws IOException {

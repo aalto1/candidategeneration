@@ -38,7 +38,7 @@ public class Extra extends WWW {
                         accMap.merge(Long.valueOf(term), 1, Integer::sum);
                 }
             }
-            for (long i : getCombinations(terms, 2)) {
+            for (long i : getCombinations(terms, 2, true)) {
                 if (accMap.putIfAbsent(i, 1) != null) accMap.merge(i, 1, Integer::sum);
             }
             terms.clear();
@@ -112,7 +112,7 @@ public class Extra extends WWW {
                 }
             }
 
-            for (long j : getCombinations(terms, 2)) smallFS.add(j);
+            for (long j : getCombinations(terms, 2, true)) smallFS.add(j);
             terms.clear();
         }
         System.out.println("Small Filter Size: " + smallFS.size());
