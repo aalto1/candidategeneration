@@ -160,7 +160,7 @@ public class InvertedIndex extends WWW {
             if (position.get(words[k]) > maxFreq) maxFreq = position.get(words[k]);
         }
         position.put(-99, maxFreq);
-        if(multipleOccurece>1) storeHashMap(position, DOS[tn], multipleOccurece+1); //we have to save the maxFreq map! DEFAULT VALUE COVERS ALL THE ERRORS
+        if(multipleOccurece>1) storeHashMap(position, DOS[tn], multipleOccurece+1); //WE have to save the maxFreq map! DEFAULT VALUE COVERS ALL THE ERRORS
         this.globalStats[0]++;
         this.globalStats[1]+= words.length;
     }
