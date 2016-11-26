@@ -72,8 +72,8 @@ public class WWWMain extends WWW {
         }
         if(true/*!checkExistence(dumpMap)*/){
             //D-Bigram
-            i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), null, (long[]) deserialize(gStats), distance, true, dBigramIndex, numThreads);
-            buildStructure(i2, numThreads);
+            //i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), null, (long[]) deserialize(gStats), distance, true, dBigramIndex, numThreads);
+            //buildStructure(i2, numThreads);
             //Single + HIT
             i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), (int[]) deserialize(hitScores), (long[]) deserialize(gStats), 1, false, singleIndex, numThreads);
             buildStructure(i2, numThreads);
