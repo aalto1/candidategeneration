@@ -101,7 +101,7 @@ class utilsClass extends WWW {
         for (int i = 0; i < a; i++) {
             map.put(DIS.readInt(),DIS.readInt());
         }
-        System.out.println(tn+ "-" + map.size() + "-" + a);
+        if(a != map.size())System.out.println(tn+ "-" + map.size() + "-" + a);
         return map;
     }
 
