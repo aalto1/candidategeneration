@@ -80,12 +80,11 @@ class utilsClass extends WWW {
         return document;
     }
 
-    
 
 
 
     static void storeHashMap(Int2IntMap map, DataOutputStream DOS, int len) throws IOException {
-        DOS.writeInt(len*2);
+        DOS.writeInt(len);
         for(int key : map.keySet()){
             if(map.get(key)>1){
                 DOS.writeInt(key);
@@ -95,9 +94,11 @@ class utilsClass extends WWW {
     }
 
     static Int2IntMap fetchHashMap(Int2IntMap map, DataInputStream DIS) throws IOException {
-        for (int i = 0; i <DIS.readInt()/2; i++) {
+        int a = DIS.readInt();
+        for (int i = 0; i < a; i++) {
             map.put(DIS.readInt(),DIS.readInt());
         }
+        System.out.println(map.size() + "-" + a);
         return map;
     }
 
@@ -113,6 +114,7 @@ class utilsClass extends WWW {
         double normalizedFreq = 0.5 + (0.5*termFreq/localMaxFreq);
         double IDF = java.lang.Math.log((N - n + 0.5 )/( n + 0.5));
         double BM25 = (IDF * normalizedFreq * (k + 1)) / (normalizedFreq + k * (1 - b + (b* docLen / avg)));
+        //System.out.println(localMaxFreq);
         //if(BM25<0) System.out.println(N + " " + n);
         //System.out.println(BM25*Math.pow(10, 7));
         return (int) (BM25*Math.pow(10, 7));
@@ -365,21 +367,11 @@ class utilsClass extends WWW {
    static void sortComplexRanking() throws IOException {
        BufferedReader br = getBuffReader(complexRank);
        BufferedWriter bw = getBuffWriter(complexRankN);
-       double [][] ranks = new double[85796224][3];
+       double [][] ranks = new double[85796224][4];
        int k = 0;
-       String line = br.readLine();
-       String [] record;
-       while(line != null){
-           try {
-               record = line.split(" ");
-               ranks[k][0] = Double.parseDouble(record[0]);
-               ranks[k][1] = Double.parseDouble(record[1]);
-               ranks[k][2] = Double.parseDouble(record[3]);
-               k++;
-               line = br.readLine();
-           }catch (EOFException e){
-               System.out.println(k);
-           }
+       String line;
+       while((line = br.readLine()) != null){
+               ranks[k++] = string2DoubleArray(line, " ");
        }
        br.close();
 

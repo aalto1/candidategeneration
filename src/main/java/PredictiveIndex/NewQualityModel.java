@@ -54,7 +54,8 @@ public class NewQualityModel extends Selection {
         //DataOutputStream DOStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(metadata+"PLLength.bin")));
         while (true) {
             if ((posting = Selection.getEntry(DIStream, posting)) == null) break;
-            posting[2] = DM.get(posting[2]);
+            //posting[2] = DM.get(posting[2]);
+            p(posting);
 
 
 
@@ -96,7 +97,7 @@ public class NewQualityModel extends Selection {
                 System.out.print(Arrays.toString(getTerms(i)));
             }
             System.out.println();
-            System.err.println("top: "+topBm25+" elem: "+bm25+ " diff: " + (topBm25-bm25) + " position: " + pos);
+            //System.err.println("top: "+topBm25+" elem: "+bm25+ " diff: " + (topBm25-bm25) + " position: " + pos);
             //break;
         }
     }
@@ -113,6 +114,10 @@ public class NewQualityModel extends Selection {
         for (int depth = keys.length-1; depth <= 0; depth--) {
             maze.get(1).put(keys[depth], maze.removeFirst());
         }
+    }
+
+    private static void p(int [] a){
+        System.out.println(Arrays.toString(a));
     }
 
 }

@@ -26,7 +26,7 @@ import static PredictiveIndex.utilsClass.*;
 
 
 public class InvertedIndex extends WWW {
-    static final int testLimit = 5022204;//50222043;
+    static final int testLimit = 5022204; //50222043;
     static final int bufferSize = (int) (2.8*Math.pow(10,7)*server);
     private int distance;
     private boolean isBigram;
@@ -160,7 +160,7 @@ public class InvertedIndex extends WWW {
             if (position.get(words[k]) > maxFreq) maxFreq = position.get(words[k]);
         }
         position.put(-99, maxFreq);
-        storeHashMap(position, DOS[tn], multipleOccurece);
+        storeHashMap(position, DOS[tn], multipleOccurece+1); //we have to save the maxFreq map! DEFAULT VALUE COVERS ALL THE ERRORS
         this.globalStats[0]++;
         this.globalStats[1]+= words.length;
     }
@@ -227,8 +227,8 @@ public class InvertedIndex extends WWW {
             else
                 singleBufferedIndex(document, field, bufferMap , noDuplicateSet, twoTerms, tn);
 
-            bufferMap.clear();
-            noDuplicateSet.clear();
+            bufferMap = new Int2IntOpenHashMap();
+            noDuplicateSet = new LongOpenHashSet();
             doc++;
         }
         if(isBigram)
@@ -345,6 +345,7 @@ public class InvertedIndex extends WWW {
 
     public void singleBufferedIndex(int[] words, String [] field, Int2IntMap localFrequencyMap, LongSet noDuplicateSet, int [] twoTerms, int tn) throws IOException, ClassNotFoundException, InterruptedException {
         //System.out.println(pointers[tn]);
+        System.out.println(localFrequencyMap);
         for (int wIx = 0; wIx < Integer.parseInt(field[4]); wIx++) {
             if(noDuplicateSet.add(words[wIx]) & uniTerms.contains(words[wIx])) {
                 buffer[tn][pointers[tn]][0] = words[wIx];
@@ -357,7 +358,7 @@ public class InvertedIndex extends WWW {
 
                 if (pointers[tn] == buffer[tn].length) {
                     singleFlush(singleComparator, singleIndex, twoTerms, 1, false, tn);
-                    singleFlush(hitComparator, HITIndex, twoTerms, 2, false, tn);
+                    //singleFlush(hitComparator, HITIndex, twoTerms, 2, false, tn);
                     pointers[tn]=0;
                 }
             }

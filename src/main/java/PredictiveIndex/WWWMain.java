@@ -40,7 +40,7 @@ public class WWWMain extends WWW {
         //NestedQueryTrace.getEmptyModel(trainQconv, unigramEmptyModel);
         //NestedQueryTrace.buildReference(trainQconv, fastQT2);
         //buildDocIDMap();
-        NewQualityModel.getModel(finalSingle, "output" ,fastQT2);
+        //NewQualityModel.getModel(finalSingle, "output" ,fastQT2);
         //sortComplexRanking();
         //printModels();
         //BigramIndex.getBigramIndex(finalSingle);
@@ -70,10 +70,10 @@ public class WWWMain extends WWW {
             //serialize(i2.termFreqArray, termFrequencyArray);
             serialize(i2.globalStats,   gStats);
         }
-        if(false/*!checkExistence(dumpMap)*/){
+        if(true/*!checkExistence(dumpMap)*/){
             //D-Bigram
-            i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), null, (long[]) deserialize(gStats), distance, true, dBigramIndex, numThreads);
-            buildStructure(i2, numThreads);
+            //i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), null, (long[]) deserialize(gStats), distance, true, dBigramIndex, numThreads);
+            //buildStructure(i2, numThreads);
             //Single + HIT
             i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), (int[]) deserialize(hitScores), (long[]) deserialize(gStats), 1, false, singleIndex, numThreads);
             buildStructure(i2, numThreads);
@@ -153,6 +153,7 @@ public class WWWMain extends WWW {
         int [] previousBM25 = new int[3];
         int [] newBM25 = new int[3];
         int [] posting = new int[3];
+        int max = -99;
         DataInputStream DIStream = getDIStream(finalSingle);
 
         //DataOutputStream DOStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(metadata+"PLLength.bin")));
@@ -164,7 +165,7 @@ public class WWWMain extends WWW {
 
             //System.out.println(Arrays.toString(newBM25));
             //System.out.println(Arrays.toString(previousBM25) +"d");
-
+            if(posting[1]>max) max = posting[1];
             if(newBM25[1] > previousBM25[1] & newBM25[0] == previousBM25[0]){
                 /** While I scan the posting list I the value of the bm25 should decrease with new<old */
                 //System.err.println(posting[0] +" - "+ currentTerm);
@@ -174,6 +175,7 @@ public class WWWMain extends WWW {
             previousBM25 = newBM25.clone();
 
         }
+        System.out.println(max);
     }
 
     private static void tryTry() throws IOException {
