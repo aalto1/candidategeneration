@@ -51,7 +51,7 @@ public class NewQualityModel extends Selection {
         int previousBM25 = 0;
         int newBM25 =0;
         LinkedList<Integer> a = new LinkedList<>();
-        Int2IntOpenHashMap DM = getDIDMap();
+        //Int2IntOpenHashMap DM = getDIDMap();
 
 
         //DataOutputStream DOStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(metadata+"PLLength.bin")));
