@@ -40,7 +40,7 @@ public class WWWMain extends WWW {
         //NestedQueryTrace.getEmptyModel(trainQconv, unigramEmptyModel);
         //NestedQueryTrace.buildReference(trainQconv, fastQT2);
         //buildDocIDMap();
-        //NewQualityModel.getModel(finalSingle, "output" ,fastQT2);
+        NewQualityModel.getModel(finalSingle, "output" ,fastQT2);
         //sortComplexRanking();
         //printModels();
         //BigramIndex.getBigramIndex(finalSingle);
@@ -56,8 +56,8 @@ public class WWWMain extends WWW {
         //getFQT(10);
         //buildFastQT2(10);
         //System.out.println("klkn");
-        finda();
-        System.exit(1);
+        //finda();
+        //System.exit(1);
         //getId2TermMap();
 
         InvertedIndex i2;
@@ -150,28 +150,29 @@ public class WWWMain extends WWW {
 
     private static void finda() throws IOException {
         int currentTerm = -1;
-        int previousBM25;
-        int newBM25 =0;
+        int [] previousBM25 = new int[3];
+        int [] newBM25 = new int[3];
         int [] posting = new int[3];
         DataInputStream DIStream = getDIStream(finalSingle);
 
         //DataOutputStream DOStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(metadata+"PLLength.bin")));
         while (true) {
             if ((posting = Selection.getEntry(DIStream, posting)) == null) break;
-            previousBM25 = newBM25;
-            newBM25 = posting[1];
+
+            newBM25 = posting;
             //posting[2] = DM.get(posting[2]);
 
+            //System.out.println(Arrays.toString(newBM25));
+            //System.out.println(Arrays.toString(previousBM25) +"d");
 
-            if(newBM25 > previousBM25 & posting[0] == currentTerm & posting[1]>0){
+            if(newBM25[1] > previousBM25[1] & newBM25[0] == previousBM25[0]){
                 /** While I scan the posting list I the value of the bm25 should decrease with new<old */
                 //System.err.println(posting[0] +" - "+ currentTerm);
-                System.out.println(currentTerm+"-"+previousBM25+"-"+newBM25);
+                System.out.println(Arrays.toString(previousBM25));
+                System.out.println(Arrays.toString(newBM25));
             }
+            previousBM25 = newBM25.clone();
 
-            if (posting[0] != currentTerm) {
-                currentTerm = posting[0];
-            }
         }
     }
 

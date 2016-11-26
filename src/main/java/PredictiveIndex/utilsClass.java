@@ -80,6 +80,8 @@ class utilsClass extends WWW {
         return document;
     }
 
+    
+
 
 
     static void storeHashMap(Int2IntMap map, DataOutputStream DOS, int len) throws IOException {
@@ -115,6 +117,21 @@ class utilsClass extends WWW {
         //System.out.println(BM25*Math.pow(10, 7));
         return (int) (BM25*Math.pow(10, 7));
     }
+
+    protected static int getBM25basic(long [] globalStats, int docLen, int termFreq , int localMaxFreq, int n) {
+        /*global statistics for BM25*/
+        long N = globalStats[0];
+        double avg = globalStats[1] / N;
+        double k = 1.6;
+        double b = 0.75;
+        double normalizedFreq = termFreq/localMaxFreq;
+        double IDF = java.lang.Math.log((N - n + 0.5 )/( n + 0.5));
+        double BM25 = (IDF * normalizedFreq * (k + 1)) / (normalizedFreq + k * (1 - b + (b* docLen / avg)));
+        //if(BM25<0) System.out.println(N + " " + n);
+        //System.out.println(BM25*Math.pow(10, 7));
+        return (int) (BM25*Math.pow(10, 7));
+    }
+
 
 
 

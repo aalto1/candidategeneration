@@ -29,8 +29,8 @@ public class NewQualityModel extends Selection {
      * thing that could change this is a line that you did not process the whole corpora
      *
      * negative number => full index can have negative bm25
-     * check score of the first one
-     * inverted index not sorted
+     * check score of the first one => always bigger
+     * inverted index not sorted => now sorted
      * */
 
     public static long[][][] getModel(String index, String output, String model) throws IOException, ClassNotFoundException {
@@ -48,22 +48,15 @@ public class NewQualityModel extends Selection {
         int previousBM25 = 0;
         int newBM25 =0;
         LinkedList<Integer> a = new LinkedList<>();
-        //Int2IntOpenHashMap DM = getDIDMap();
+        Int2IntOpenHashMap DM = getDIDMap();
 
 
         //DataOutputStream DOStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(metadata+"PLLength.bin")));
         while (true) {
             if ((posting = Selection.getEntry(DIStream, posting)) == null) break;
-            previousBM25 = newBM25;
-            newBM25 = posting[1];
-            //posting[2] = DM.get(posting[2]);
+            posting[2] = DM.get(posting[2]);
 
 
-            if(newBM25 > previousBM25 & posting[0] == currentTerm & posting[1]>0){
-                /** While I scan the posting list I the value of the bm25 should decrease with new<old */
-                //System.err.println(posting[0] +" - "+ currentTerm);
-                System.out.println(previousBM25+"-"+newBM25);
-            }
 
             if (posting[0] != currentTerm) {
                 currentTerm = posting[0];
@@ -71,13 +64,14 @@ public class NewQualityModel extends Selection {
                 documentsToFind = fastUnigramQueryTrace.get(posting[0]);
                 postingNumber += counter;
                 counter = 0;
+                newBM25 = posting[1];
             }
             try {
                 if (documentsToFind.size() > 0 & (scores = documentsToFind.remove(posting[2])) != null) {
                     for (int qID : scores.keySet()) {
                         try {
-                            emptymodel.get(qID).get(currentTerm)[scores.get(qID)] = getPair(posting[2], counter);
-                            if(qID==1753) printResult(emptymodel.get(qID), qID, 0, posting[1], scores.get(qID));
+                            emptymodel.get(qID).get(currentTerm)[scores.get(qID)+1] = getPair(posting[2], counter);
+                             printResult(emptymodel.get(qID), qID, newBM25, posting[1], scores.get(qID));
                         }catch (Exception e) {
                             System.err.println(e.getMessage());
                         }
