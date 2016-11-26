@@ -345,7 +345,7 @@ public class InvertedIndex extends WWW {
 
     public void singleBufferedIndex(int[] words, String [] field, Int2IntMap localFrequencyMap, LongSet noDuplicateSet, int [] twoTerms, int tn) throws IOException, ClassNotFoundException, InterruptedException {
         //System.out.println(pointers[tn]);
-        System.out.println(localFrequencyMap);
+        //System.out.println(localFrequencyMap);
         for (int wIx = 0; wIx < Integer.parseInt(field[4]); wIx++) {
             if(noDuplicateSet.add(words[wIx]) & uniTerms.contains(words[wIx])) {
                 buffer[tn][pointers[tn]][0] = words[wIx];
