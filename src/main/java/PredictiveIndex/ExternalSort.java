@@ -9,9 +9,7 @@ import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.ListIterator;
 
-import static PredictiveIndex.WWW.dBigramIndex;
-import static PredictiveIndex.WWW.getBuffWriter;
-import static PredictiveIndex.WWW.server;
+import static PredictiveIndex.WWW.*;
 import static PredictiveIndex.utilsClass.getTerms;
 
 /**
@@ -33,13 +31,27 @@ public class ExternalSort {
 
     static Comparator<long[]> comp = new Comparator<long[]>() {
         @Override
-        public int compare(long[] int1, long[] int2) {
+        public int compare(long[] long1, long[] long2) {
             //if we have the same doc ids sort them based on the bm25
-            if (int1[0] == int2[0]) {
-                return Long.compare(int2[1], int1[1]);
-            } else return Long.compare(int1[0], int2[0]);
+            if (long1[0] == long2[0]) {
+                return Long.compare(long2[1], long1[1]);
+            } else return Long.compare(long1[0], long2[0]);
         }
     };
+
+    /**static Comparator<long[]> comp = new Comparator<long[]>() {
+        @Override
+        public int compare(long[] long1, long[] long2) {
+            int1 = getTerms(long1[0]);
+            int2 = getTerms(long2[0]);
+            if(int1[0] == int2[0]){
+                return Integer.compare(int2[1], int1[1]);
+            }else return Integer.compare(int1[0], int2[0]);
+        }
+    };
+
+    static int [] int1;
+    static int [] int2;*/
 
     static long pairMax = Long.MAX_VALUE;
     static long BM25max = Long.MAX_VALUE;
@@ -50,7 +62,6 @@ public class ExternalSort {
         long [][] answer = new long[a.length + b.length][2];
         int i = 0, j = 0, k = 0;
         //if(step == 0) for (long  [] z : a) System.out.print(z[1]);
-
         //if(size < 5 & k%100000 == 0) for(long z[]:a) System.out.println(z[0]);
         while (i < a.length && j < b.length) {
             if (comp.compare(a[i], b[j])<0)
@@ -58,8 +69,17 @@ public class ExternalSort {
             else
                 answer[k++] = b[j++];
         }
-        System.arraycopy(a, i, answer, k, (a.length -i));
-        System.arraycopy(b, j, answer, k, (b.length -j));
+        System.arraycopy(a, i, answer, k, (a.length - i));
+        System.arraycopy(b, j, answer, k, (b.length - j));
+
+        /*for (int l = 1; l < answer.length ; l++) {
+            if(getTerms(answer[l][0])[0] == getTerms(answer[l-1][0])[0] & getTerms(answer[l][0])[1] > getTerms(answer[l-1][0])[1]){
+                System.out.println("########################");
+                System.out.println(Arrays.toString(getTerms(answer[l-1][0]))+" " +answer[l-1][0]);
+                System.out.println(Arrays.toString(getTerms(answer[l][0]))+ " "+ answer[l][0]);
+
+            }
+        }*/
         //if(step == 1) for (long  [] z : answer) System.out.print(z[1]);
         //System.out.println("Last Element: " + answer[answer.length-1][0]);
         return answer;
@@ -85,7 +105,8 @@ public class ExternalSort {
         long [] buffLong;
         int dumps =0;
         while(DIStreams.size()>1) {
-            int section =  (100000000*server)/(files.length+2);
+            int section =  (100000000/4)/(files.length+2);
+            int section2 = section;
             System.out.print("Loading data...");
             partialNow = System.currentTimeMillis();
             for (int i = 0; i < DIStreams.size(); i++) {
@@ -95,28 +116,27 @@ public class ExternalSort {
                     System.out.println(" "+LL.size());
                 }
                 bucketsAux = new long[section][2];
-                for (int z = 0; z < section; z++){
+                for (int z = 0; z < section2; z++){
                     try{
                         buffLong = buffer.get(i);
                         if(buffLong == null){
                             if(fourFields)
-                                buffLong = new long[]{DIStreams.get(i).readLong(),DIStreams.get(i).readLong()};
+                                buffLong = new long[]{DIStreams.get(i).readLong(), DIStreams.get(i).readLong()};
                             else
-                                buffLong = new long[]{DIStreams.get(i).readLong(),DIStreams.get(i).readInt()};
+                                buffLong = new long[]{(long) DIStreams.get(i).readInt(), DIStreams.get(i).readLong()};
                             //linesCount++; //sometimes reading from the stream fails
                         } else buffer.remove(i);
-                        if(buffLong[0]<pairMax){
+                        if(buffLong[0]<pairMax | (buffLong[0] == pairMax & buffLong[1] >= BM25max)){
                             bucketsAux[z] = buffLong;
                             linesCount++;
-                        }else if (buffLong[0] == pairMax & buffLong[0] <= BM25max){
-                            bucketsAux[z] = buffLong;
                         }else {
-                                buffer.put(i,buffLong);
-                                if(z!=0)
-                                    bucketsAux = Arrays.copyOfRange(bucketsAux,0,z-1);
-                                else
-                                    bucketsAux = null;
-                                break;
+                            System.out.println("OK");
+                            buffer.put(i,buffLong);
+                            if(z!=0)
+                                bucketsAux = Arrays.copyOfRange(bucketsAux,0,z-1);
+                            else
+                                bucketsAux = null;
+                            break;
                         }
                     }catch (EOFException e){
                         if(z!=0) bucketsAux = Arrays.copyOfRange(bucketsAux,0,z-1);
@@ -134,7 +154,8 @@ public class ExternalSort {
                             pairMax = bucketsAux[bucketsAux.length-1][0];
                             BM25max = bucketsAux[bucketsAux.length-1][1];
                         }
-                        section= section*4;
+                        section= section*8;
+                        section2 = Integer.MAX_VALUE;
                         System.out.println(Arrays.toString(getTerms(pairMax)));
                     }
                 }
@@ -182,8 +203,9 @@ public class ExternalSort {
             DOStream.writeLong(a[0]);
             DOStream.writeLong(a[1]);
         }else{
-            DOStream.writeLong(a[0]);
-            DOStream.writeInt((int) a[1]);
+            DOStream.writeInt((int) a[0]);
+            DOStream.writeLong(a[1]);
+
         }
     }
 
@@ -193,8 +215,8 @@ public class ExternalSort {
             bw.write(Arrays.toString(getTerms(a[1])));
             bw.newLine();
         }else {
-            bw.write(Arrays.toString(getTerms(a[0])));
-            bw.write((int) a[1]);
+            bw.write((int) a[0]);
+            bw.write(Arrays.toString(getTerms(a[1])));
             bw.newLine();
         }
     }

@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -19,6 +20,8 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import me.lemire.integercompression.differential.*;
 
@@ -77,6 +80,8 @@ class utilsClass extends WWW {
         return document;
     }
 
+    
+
 
 
     static void storeHashMap(Int2IntMap map, DataOutputStream DOS, int len) throws IOException {
@@ -112,6 +117,21 @@ class utilsClass extends WWW {
         //System.out.println(BM25*Math.pow(10, 7));
         return (int) (BM25*Math.pow(10, 7));
     }
+
+    protected static int getBM25basic(long [] globalStats, int docLen, int termFreq , int localMaxFreq, int n) {
+        /*global statistics for BM25*/
+        long N = globalStats[0];
+        double avg = globalStats[1] / N;
+        double k = 1.6;
+        double b = 0.75;
+        double normalizedFreq = termFreq/localMaxFreq;
+        double IDF = java.lang.Math.log((N - n + 0.5 )/( n + 0.5));
+        double BM25 = (IDF * normalizedFreq * (k + 1)) / (normalizedFreq + k * (1 - b + (b* docLen / avg)));
+        //if(BM25<0) System.out.println(N + " " + n);
+        //System.out.println(BM25*Math.pow(10, 7));
+        return (int) (BM25*Math.pow(10, 7));
+    }
+
 
 
 
@@ -344,14 +364,13 @@ class utilsClass extends WWW {
 
    static void sortComplexRanking() throws IOException {
        BufferedReader br = getBuffReader(complexRank);
-       BufferedWriter bw = getBuffWriter(complexRank+"New.csv");
-       double [][] ranks = new double[60794823][3];
+       BufferedWriter bw = getBuffWriter(complexRankN);
+       double [][] ranks = new double[85796224][3];
        int k = 0;
        String line = br.readLine();
        String [] record;
        while(line != null){
            try {
-
                record = line.split(" ");
                ranks[k][0] = Double.parseDouble(record[0]);
                ranks[k][1] = Double.parseDouble(record[1]);
@@ -382,6 +401,75 @@ class utilsClass extends WWW {
        bw.close();
    }
 
+    public static List<Integer> string2IntList(String orginal, String sep){
+        return Stream.of(orginal.split(sep)).mapToInt(Integer::parseInt).boxed().collect(Collectors.toList());
+
+    }
+
+    public static int[] string2IntArray(String orginal, String sep){
+        return Stream.of(orginal.split(sep)).mapToInt(Integer::parseInt).toArray();
+
+    }
+
+    public static List<Long> string2LongList(String orginal, String sep){
+        return Stream.of(orginal.split(sep)).mapToLong(Long::parseLong).boxed().collect(Collectors.toList());
+
+    }
+
+    public static long[] string2LongArray(String orginal, String sep){
+        return Stream.of(orginal.split(sep)).mapToLong(Long::parseLong).toArray();
+
+    }
+
+    public static List<Double> string2DoubleList(String orginal, String sep){
+        return Stream.of(orginal.split(sep)).mapToDouble(Double::parseDouble).boxed().collect(Collectors.toList());
+
+    }
+
+    public static double[] string2DoubleArray(String orginal, String sep){
+        return Stream.of(orginal.split(sep)).mapToDouble(Double::parseDouble).toArray();
+
+    }
+
+    public static void buildDocIDMap() throws IOException {
+        BufferedReader br1 = getBuffReader(didNameMap);
+        BufferedReader br2 = getBuffReader(oldDocInfo);
+        BufferedWriter bw = getBuffWriter(didMap);
+        bw.write("old, new\n");
+        String line;
+        String [] fields;
+        Object2IntOpenHashMap<String> map = new Object2IntOpenHashMap<>();
+        while((line= br1.readLine())!=null){
+            fields = line.split(" ");
+            map.put(fields[1], Integer.valueOf(fields[0]).intValue());
+        }
+        while((line= br2.readLine())!=null){
+            fields = line.split(" ");
+            bw.write(fields[1]+","+map.getInt(fields[0]));
+            bw.newLine();
+        }
+        br1.close();
+        br2.close();
+        bw.close();
+    }
+
+    public static Int2IntOpenHashMap getDIDMap() throws IOException {
+        Int2IntOpenHashMap map;
+        if(!checkExistence(serDIDMap)) {
+            BufferedReader br = getBuffReader(didMap);
+            br.readLine();
+            String line;
+            int[] entry;
+            map = new Int2IntOpenHashMap();
+            while ((line = br.readLine()) != null) {
+                entry = string2IntArray(line, ",");
+                map.put(entry[0], entry[1]);
+            }
+            serialize(map, serDIDMap);
+        }else
+            map = (Int2IntOpenHashMap) deserialize(serDIDMap);
+        return map;
+    }
 
 
 }

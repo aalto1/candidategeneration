@@ -45,14 +45,19 @@ public abstract class WWW {
     //source
     static final String nonStemClue = source + "noStemmerIndex";
     static final String lanModel    = source + "lanModel";
-    static final String complexRank = source + "complexRankerResultsTraining";
-    static final String complexRankN= source + "complexRankerResultsTrainingNew";
+    static final String complexRank = source + "complexRankerResultsTotal";
+    static final String complexRankN= source + "complexRankerResultsTotalNew";
     static final String trainQ      = source + "trainQ";
+    static final String trainQconv  = source + "trainQconverted";
+    static final String trainQBigram= source + "trainQBigram";
+    static final String trainQagu   = source + "trainQagumented";
     static final String allQ        = source + "million09_all";
     static final String tMap        = source + "termIDs";
     static final String oldDocInfo  = source + "oldDocInfo";
     static final String didNameMap  = source + "didNameMap";
     static final String finalDocInfo= source + "docInfo";
+    static final String didMap      = source + "didMap";
+
     static final String trentaDoc   = source + "10documents";
     static final String array30     = source + "array30";
     static final String hitScores   = source + "hitScores";
@@ -67,12 +72,14 @@ public abstract class WWW {
     static final String uniqueTerms         = metadata + "uniqueTerms";
     static final String dumpedPostings      = metadata + "dumpedPostings";
     static final String fastQT              = metadata + "fastQT";
+    static final String fastQT2              = metadata + "fastQT2";
     static final String toPick              = metadata + "toPick";
 
     //maps
     static final String unigramDumpMap      = maps + "unigramDumpMap";
     static final String hitDumpMap          = maps + "hitDumpMap";
     static final String dBigramDumpMap      = maps + "dbigramDumpMap";
+    static final String serDIDMap           = maps + "serDIDMap";
 
 
     static final String accessMap   = maps + "accessMap";
@@ -102,6 +109,11 @@ public abstract class WWW {
     static final String hitModel     =   models + "hitModel";
     static final String dBiModel     =   models + "dBiModel";
     static final String biModel      =   models + "biModel";
+    static final String bigramEmptyModel    = models + "bigramEmptyModel";
+    static final String unigramEmptyModel   = models + "unigramEmptyModel";
+
+
+
 
 
     static final String partialModel= models + "partialModel";
@@ -117,7 +129,7 @@ public abstract class WWW {
     static double minBM25 =2147388309;
     static int totNumDocs = 50220423;
 
-    static final int server = 2;
+    static final int server = 1;
 
     //comparators
     static Comparator<int[]> bigramBufferComparator = new Comparator<int[]>() {
@@ -227,11 +239,15 @@ public abstract class WWW {
         getSubsets(superSet, k, idx + 1, current, solution);
     }
 
-    static long[] getCombinations(List<Integer> superSet, int k) {
+    static long[] getCombinations(List<Integer> superSet, int k, boolean keepOriginal) {
         List<Set<Integer>> res = new ArrayList<>();
         superSet.removeIf(Objects::isNull);
         getSubsets(superSet, k, 0, new HashSet<>(), res);
-        long[] combo = new long[res.size() + superSet.size()];
+        long [] combo;
+        if(keepOriginal)
+            combo = new long[res.size() + superSet.size()];
+        else
+            combo = new long[res.size()];
         int[] pair;
         int p = 0;
         //System.out.println(res);
@@ -241,10 +257,13 @@ public abstract class WWW {
             combo[p] = getPair(pair[0], pair[1]);
             p++;
         }
-        for(int a : superSet){
-            combo[p]=a;
-            p++;
+        if(keepOriginal){
+            for(int a : superSet){
+                combo[p]=a;
+                p++;
+            }
         }
+
         return combo;
     }
 
@@ -265,7 +284,7 @@ public abstract class WWW {
             }
         }
         //We take every combination of our query terms. We save them in a long array using bit-shifting
-        return getCombinations(queryInt, 2);
+        return getCombinations(queryInt, 2, true);
     }
 
     static boolean checkExistence(String path){

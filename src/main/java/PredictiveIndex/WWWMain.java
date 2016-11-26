@@ -5,17 +5,16 @@ import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 
 
 import static PredictiveIndex.Extra.*;
+import static PredictiveIndex.FastQueryTrace.buildFastQT2;
 import static PredictiveIndex.FastQueryTrace.getFQT;
 import static PredictiveIndex.QualityModel.getBigramQualityModel;
 import static PredictiveIndex.QualityModel.printQualityModel;
@@ -34,6 +33,15 @@ public class WWWMain extends WWW {
     /*/home/aalto/IdeaProjects/PredictiveIndex/aux/sort/bin/binsort --size 16 --length 12 --block-size=900000000  ./InvertedIndex.dat ./sortedInvertedIndex.dat*/
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
         //checkExtraData();
+        //System.out.println(Arrays.toString(getTerms(16273705471942L)));
+        //NestedQueryTrace.convertANDcleanQueryTrace();
+        //NestedQueryTrace.agumentedQueryTrace(false);
+        //NestedQueryTrace.getEmptyModel(trainQBigram, bigramEmptyModel);
+        //NestedQueryTrace.getEmptyModel(trainQconv, unigramEmptyModel);
+        //NestedQueryTrace.buildReference(trainQconv, fastQT2);
+        //buildDocIDMap();
+        NewQualityModel.getModel(finalSingle, "output" ,fastQT2);
+        //sortComplexRanking();
         //printModels();
         //BigramIndex.getBigramIndex(finalSingle);
         //getUniqueTermsSet();
@@ -46,7 +54,9 @@ public class WWWMain extends WWW {
         //ExternalSort.massiveBinaryMerge(new File(dBigramIndex+rawI2),dBigramIndex+sortedI2);
         //sortComplexRanking();
         //getFQT(10);
+        //buildFastQT2(10);
         //System.out.println("klkn");
+        //finda();
         //System.exit(1);
         //getId2TermMap();
 
@@ -67,12 +77,13 @@ public class WWWMain extends WWW {
             //Single + HIT
             i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), (int[]) deserialize(hitScores), (long[]) deserialize(gStats), 1, false, singleIndex, numThreads);
             buildStructure(i2, numThreads);
+            BigramIndex.getBigramIndex(finalSingle);
         }
         //i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), (int[]) deserialize(hitScores), (long[]) deserialize(gStats), 1, false, singleIndex, numThreads);
         //startBatteria(i2, 0, numThreads);
         //serialize(i2.missingWords,results+"trueMissingSet");
         buildFinalStructures();
-        buildQualityModels();
+        //buildQualityModels();
         //printQualityModel();
 
 
@@ -100,7 +111,7 @@ public class WWWMain extends WWW {
     }
 
     private static void buildQualityModels() throws IOException, ClassNotFoundException {
-        if(!checkExistence(dBiModel)) {
+        if(checkExistence(dBiModel)) {
             getBigramQualityModel(1, finalDBigram, dBigramDumpMap, dBiModel);
         }
         if(!checkExistence(hitModel)){
@@ -135,6 +146,34 @@ public class WWWMain extends WWW {
         if(!checkExistence(accessMap))  uniquePairs();
         if(!checkExistence(uniqueTerms)) getUniqueTermsSet();
 
+    }
+
+    private static void finda() throws IOException {
+        int currentTerm = -1;
+        int [] previousBM25 = new int[3];
+        int [] newBM25 = new int[3];
+        int [] posting = new int[3];
+        DataInputStream DIStream = getDIStream(finalSingle);
+
+        //DataOutputStream DOStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(metadata+"PLLength.bin")));
+        while (true) {
+            if ((posting = Selection.getEntry(DIStream, posting)) == null) break;
+
+            newBM25 = posting;
+            //posting[2] = DM.get(posting[2]);
+
+            //System.out.println(Arrays.toString(newBM25));
+            //System.out.println(Arrays.toString(previousBM25) +"d");
+
+            if(newBM25[1] > previousBM25[1] & newBM25[0] == previousBM25[0]){
+                /** While I scan the posting list I the value of the bm25 should decrease with new<old */
+                //System.err.println(posting[0] +" - "+ currentTerm);
+                System.out.println(Arrays.toString(previousBM25));
+                System.out.println(Arrays.toString(newBM25));
+            }
+            previousBM25 = newBM25.clone();
+
+        }
     }
 
     private static void tryTry() throws IOException {
@@ -181,14 +220,6 @@ public class WWWMain extends WWW {
         System.exit(1);
 
     }
-
-
-
-
-
-
-
-
 
 
     private static class MultiThread implements Runnable {
