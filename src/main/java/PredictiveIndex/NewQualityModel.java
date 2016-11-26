@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.ints.Int2LongOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 
@@ -25,6 +26,7 @@ public class NewQualityModel extends Selection {
     static LongOpenHashSet hitPairs = new LongOpenHashSet();
     static long hit = 0;
 
+
     /**Once we process a porocess a posting list the corrispondent array is completly filled up. The only
      * thing that could change this is a line that you did not process the whole corpora
      *
@@ -37,6 +39,7 @@ public class NewQualityModel extends Selection {
         System.out.println("Fast Query Trace fetched!\n Processing Inverted Index...");
         Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>> fastUnigramQueryTrace = (Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>>) deserialize(fastQT2);
         Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>> emptymodel = (Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>>) deserialize(unigramEmptyModel);
+        dumped = (Int2LongOpenHashMap) deserialize(unigramDumpMap);
 
         DataInputStream DIStream = getDIStream(finalSingle);
         int[] posting = new int[3];                         //
@@ -55,7 +58,7 @@ public class NewQualityModel extends Selection {
         while (true) {
             if ((posting = Selection.getEntry(DIStream, posting)) == null) break;
             //posting[2] = DM.get(posting[2]);
-            p(posting);
+            //p(posting);
 
 
 
@@ -72,7 +75,7 @@ public class NewQualityModel extends Selection {
                     for (int qID : scores.keySet()) {
                         try {
                             emptymodel.get(qID).get(currentTerm)[scores.get(qID)+1] = getPair(posting[2], counter);
-                             printResult(emptymodel.get(qID), qID, newBM25, posting[1], scores.get(qID));
+                             printResult(emptymodel.get(qID), qID, newBM25, posting[1], scores.get(qID), currentTerm);
                         }catch (Exception e) {
                             System.err.println(e.getMessage());
                         }
@@ -90,13 +93,13 @@ public class NewQualityModel extends Selection {
         return QM;
     }
 
-    public static void printResult(Long2ObjectOpenHashMap<long[]> m, int qID, int topBm25, int bm25, int pos){
+    public static void printResult(Long2ObjectOpenHashMap<long[]> m, int qID, int topBm25, int bm25, int pos, long term){
         System.out.println(qID);
         for(long [] a : m.values()) {
             for (long i : a) {
                 System.out.print(Arrays.toString(getTerms(i)));
             }
-            System.out.println();
+            System.out.println(" " + dumped.get((int)term));
             //System.err.println("top: "+topBm25+" elem: "+bm25+ " diff: " + (topBm25-bm25) + " position: " + pos);
             //break;
         }

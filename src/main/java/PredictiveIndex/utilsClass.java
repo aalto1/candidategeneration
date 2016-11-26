@@ -81,10 +81,14 @@ class utilsClass extends WWW {
     }
 
 
+    /*This function saves the local statistics*/
 
-
-    static void storeHashMap(Int2IntMap map, DataOutputStream DOS, int len) throws IOException {
-        DOS.writeInt(len);
+    static void storeHashMap(Int2IntMap map, DataOutputStream DOS, int len, int docID) throws IOException {
+        //DOS.writeInt(docID);
+        if(len==1)
+            DOS.writeInt(0);
+        else
+            DOS.writeInt(len);
         //int k = 0;
         for(int key : map.keySet()){
             if(map.get(key)>1){
@@ -96,7 +100,8 @@ class utilsClass extends WWW {
         //if(k!=len)System.out.println(k +"-" + len);
     }
 
-    static Int2IntMap fetchHashMap(Int2IntMap map, DataInputStream DIS, int tn) throws IOException {
+    static Int2IntMap fetchHashMap(Int2IntMap map, DataInputStream DIS, int tn, int docID) throws IOException {
+        //if(DIS.readInt()!= docID) System.out.println("Not Matching Documents...");
         int a = DIS.readInt();
         for (int i = 0; i < a; i++) {
             map.put(DIS.readInt(),DIS.readInt());
@@ -119,7 +124,9 @@ class utilsClass extends WWW {
         double BM25 = (IDF * normalizedFreq * (k + 1)) / (normalizedFreq + k * (1 - b + (b* docLen / avg)));
         //System.out.println(localMaxFreq);
         //if(BM25<0) System.out.println(N + " " + n);
-        //System.out.println(BM25*Math.pow(10, 7));
+        long conv = (long) (BM25*Math.pow(10, 7));
+        if(conv > Integer.MAX_VALUE) System.out.println(conv);
+        //System.out.println(conv);
         return (int) (BM25*Math.pow(10, 7));
     }
 
