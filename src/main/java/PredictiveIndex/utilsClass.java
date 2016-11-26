@@ -85,20 +85,23 @@ class utilsClass extends WWW {
 
     static void storeHashMap(Int2IntMap map, DataOutputStream DOS, int len) throws IOException {
         DOS.writeInt(len);
+        //int k = 0;
         for(int key : map.keySet()){
             if(map.get(key)>1){
                 DOS.writeInt(key);
                 DOS.writeInt(map.get(key));
+                //k++;
             }
         }
+        //if(k!=len)System.out.println(k +"-" + len);
     }
 
-    static Int2IntMap fetchHashMap(Int2IntMap map, DataInputStream DIS) throws IOException {
+    static Int2IntMap fetchHashMap(Int2IntMap map, DataInputStream DIS, int tn) throws IOException {
         int a = DIS.readInt();
         for (int i = 0; i < a; i++) {
             map.put(DIS.readInt(),DIS.readInt());
         }
-        System.out.println(map.size() + "-" + a);
+        System.out.println(tn+ "-" + map.size() + "-" + a);
         return map;
     }
 

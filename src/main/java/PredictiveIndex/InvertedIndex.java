@@ -26,7 +26,7 @@ import static PredictiveIndex.utilsClass.*;
 
 
 public class InvertedIndex extends WWW {
-    static final int testLimit = 5022204; //50222043;
+    static final int testLimit = 50222043;
     static final int bufferSize = (int) (2.8*Math.pow(10,7)*server);
     private int distance;
     private boolean isBigram;
@@ -133,7 +133,7 @@ public class InvertedIndex extends WWW {
             if((field = line.split(" ")).length != 5) break;
             storeMetadata(readClueWebDocument(field, ClueDIS[tn], document), Integer.parseInt(field[1]), Integer.parseInt(field[4]), position, tn);
             //checkMissingWords(readClueWebDocument(field, ClueDIS[tn], document), Integer.parseInt(field[4]));
-            position.clear();
+            position = new Int2IntOpenHashMap();
             doc++;
         }
         DOS[tn].close();
@@ -150,7 +150,7 @@ public class InvertedIndex extends WWW {
 
     private void storeMetadata(int [] words, int docID, int docLen, Int2IntMap position, int tn) throws IOException {
         /*this function process the single wrac files */
-        int multipleOccurece = 0;
+        int multipleOccurece = 0; //you will always have the maxfreq
         int maxFreq = Integer.MIN_VALUE;
         for (int k = 0; k<docLen; k++) {
             if (position.putIfAbsent(words[k], 1) == null) {
@@ -160,7 +160,7 @@ public class InvertedIndex extends WWW {
             if (position.get(words[k]) > maxFreq) maxFreq = position.get(words[k]);
         }
         position.put(-99, maxFreq);
-        storeHashMap(position, DOS[tn], multipleOccurece+1); //we have to save the maxFreq map! DEFAULT VALUE COVERS ALL THE ERRORS
+        if(multipleOccurece>1) storeHashMap(position, DOS[tn], multipleOccurece+1); //we have to save the maxFreq map! DEFAULT VALUE COVERS ALL THE ERRORS
         this.globalStats[0]++;
         this.globalStats[1]+= words.length;
     }
@@ -220,7 +220,7 @@ public class InvertedIndex extends WWW {
             //if(consistencyCheck(document, Integer.parseInt(field[4]), bw, field[0], tn)) break;
             //if(doc>10000) break;
 
-            fetchHashMap(bufferMap, localStatsDIS[tn]);
+            fetchHashMap(bufferMap, localStatsDIS[tn], tn);
 
             if(isBigram)
                 bufferedIndex(      document, field, bufferMap , noDuplicateSet, twoTerms, tn);
