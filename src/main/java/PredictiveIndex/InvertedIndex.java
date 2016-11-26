@@ -26,7 +26,7 @@ import static PredictiveIndex.utilsClass.*;
 
 
 public class InvertedIndex extends WWW {
-    static final int testLimit = 5022204;//50222043;
+    static final int testLimit = 50222043/20;
     static final int bufferSize = (int) (2.8*Math.pow(10,7)*server);
     private int distance;
     private boolean isBigram;
@@ -125,15 +125,15 @@ public class InvertedIndex extends WWW {
         System.out.println("Collecting ClueWeb09 global statistics...");
         start = System.currentTimeMillis();
         String line;
-        String [] field = new String[5];
+        String [] field;
         Int2IntMap position = new Int2IntOpenHashMap();
         int [] document = new int[127525*2];
 
-        for(line = BR[tn].readLine() ; line!=null & checkProgress(doc, totNumDocs, 500000, start, testLimit); line = BR[tn].readLine()){
-            if((field = line.split(" ")).length != 5) break;
+        while((line = BR[tn].readLine())!=null & checkProgress(doc, totNumDocs, 500000, start, testLimit)){
+            field = line.split(" ");
             storeMetadata(readClueWebDocument(field, ClueDIS[tn], document), Integer.parseInt(field[1]), Integer.parseInt(field[4]), position, tn);
             //checkMissingWords(readClueWebDocument(field, ClueDIS[tn], document), Integer.parseInt(field[4]));
-            position.clear();
+            position = new Int2IntOpenHashMap();
             doc++;
         }
         DOS[tn].close();
@@ -150,7 +150,7 @@ public class InvertedIndex extends WWW {
 
     private void storeMetadata(int [] words, int docID, int docLen, Int2IntMap position, int tn) throws IOException {
         /*this function process the single wrac files */
-        int multipleOccurece = 0;
+        int multipleOccurece = 0; //you will always have the maxfreq
         int maxFreq = Integer.MIN_VALUE;
         for (int k = 0; k<docLen; k++) {
             if (position.putIfAbsent(words[k], 1) == null) {
@@ -159,8 +159,9 @@ public class InvertedIndex extends WWW {
 
             if (position.get(words[k]) > maxFreq) maxFreq = position.get(words[k]);
         }
+        Int2IntOpenHashMap map = new Int2IntOpenHashMap();
         position.put(-99, maxFreq);
-        storeHashMap(position, DOS[tn], multipleOccurece);
+        storeHashMap(position, DOS[tn], multipleOccurece+1, docID); //WE have to save the maxFreq map! DEFAULT VALUE COVERS ALL THE ERRORS
         this.globalStats[0]++;
         this.globalStats[1]+= words.length;
     }
@@ -198,7 +199,7 @@ public class InvertedIndex extends WWW {
     }
 
     protected void buildDBigramInvertedIndex(int tn) throws IOException, ClassNotFoundException, InterruptedException {
-        System.out.println("Building D-Bigram Inverted Index. Posting list number:" + smallFS.size() );
+        System.out.println("Building " + prefix + " Inverted Index. Posting list number:" + smallFS.size() );
         start = System.currentTimeMillis();
 
         String [] field;
@@ -212,7 +213,7 @@ public class InvertedIndex extends WWW {
         //int [][] check = (int[][]) deserialize(array30);
         //BufferedWriter bw = getBuffWriter(results+tn+"converted");
 
-        for(line = BR[tn].readLine(); line!=null & checkProgress(doc, totNumDocs, 500000, start, testLimit); line = BR[tn].readLine()){
+        while((line = BR[tn].readLine())!=null & checkProgress(doc, totNumDocs, 500000, start, testLimit)){
             field = line.split(" ");
             if(field.length != 5) break;
             readClueWebDocument(field, ClueDIS[tn], document);
@@ -220,15 +221,15 @@ public class InvertedIndex extends WWW {
             //if(consistencyCheck(document, Integer.parseInt(field[4]), bw, field[0], tn)) break;
             //if(doc>10000) break;
 
-            fetchHashMap(bufferMap, localStatsDIS[tn]);
+            fetchHashMap(bufferMap, localStatsDIS[tn], tn, Integer.parseInt(field[1]));
 
             if(isBigram)
-                bufferedIndex(      document, field, bufferMap , noDuplicateSet, twoTerms, tn);
+                bufferedIndex(document, field, bufferMap , noDuplicateSet, twoTerms, tn);
             else
                 singleBufferedIndex(document, field, bufferMap , noDuplicateSet, twoTerms, tn);
 
-            bufferMap.clear();
-            noDuplicateSet.clear();
+            bufferMap = new Int2IntOpenHashMap();
+            noDuplicateSet = new LongOpenHashSet();
             doc++;
         }
         if(isBigram)
@@ -320,19 +321,6 @@ public class InvertedIndex extends WWW {
         int counter = 0;
         for (int i = 0; i < pointers[tn]; i++) {
             writeEntry(pre, i , tn);
-            /*if(buffer[tn][i][0] != currentTerm){
-                currentTerm = buffer[tn][i][0];
-                counter = 0;
-            }
-            if(counter<500) {
-                if (counter < 50){
-                    writeEntry(pre, i, tn);
-                    counter++;
-                } else if (buffer[tn][i][entry] > threshold){
-                    writeEntry(pre, i, tn);
-                    counter++;
-                } else uniIncrementDumpCounter(pre, tn, twoTerms, buffer[tn][i][0]);
-            }else uniIncrementDumpCounter(pre, tn, twoTerms, buffer[tn][i][0]); */
         }
         if(end) {
             if (pre == singleIndex)
@@ -357,7 +345,7 @@ public class InvertedIndex extends WWW {
 
                 if (pointers[tn] == buffer[tn].length) {
                     singleFlush(singleComparator, singleIndex, twoTerms, 1, false, tn);
-                    singleFlush(hitComparator, HITIndex, twoTerms, 2, false, tn);
+                    //singleFlush(hitComparator, HITIndex, twoTerms, 2, false, tn);
                     pointers[tn]=0;
                 }
             }
@@ -370,7 +358,7 @@ public class InvertedIndex extends WWW {
             uniMap.put(term, getPair(t[0], t[1]++));
         }else {
             t = getTerms(hitMap.get(term));
-            hitMap.put(term, getPair(t[0], t[1]));
+            hitMap.put(term, getPair(t[0], t[1])); /**?no increment*/
         }
     }
 

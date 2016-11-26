@@ -185,7 +185,7 @@ public abstract class WWW {
         @Override
         public int compare(double[] int1, double[] int2) {
             if (int1[0] == int2[0]) {
-                return Double.compare(int2[2],int1[2]);
+                return Double.compare(int2[3],int1[3]);
             } else return Double.compare(int1[0], int2[0]);
         }
     };
