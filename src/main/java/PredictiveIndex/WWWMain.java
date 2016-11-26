@@ -40,7 +40,7 @@ public class WWWMain extends WWW {
         //NestedQueryTrace.getEmptyModel(trainQconv, unigramEmptyModel);
         //NestedQueryTrace.buildReference(trainQconv, fastQT2);
         //buildDocIDMap();
-        //NewQualityModel.getModel(finalSingle, "output" ,fastQT2);
+        NewQualityModel.getModel(finalSingle, "output" ,fastQT2);
         //sortComplexRanking();
         //printModels();
         //BigramIndex.getBigramIndex(finalSingle);
@@ -57,7 +57,7 @@ public class WWWMain extends WWW {
         //buildFastQT2(10);
         //System.out.println("klkn");
         //finda();
-        //System.exit(1);
+        System.exit(1);
         //getId2TermMap();
 
         InvertedIndex i2;
