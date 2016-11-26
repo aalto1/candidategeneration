@@ -198,7 +198,7 @@ public class InvertedIndex extends WWW {
     }
 
     protected void buildDBigramInvertedIndex(int tn) throws IOException, ClassNotFoundException, InterruptedException {
-        System.out.println("Building D-Bigram Inverted Index. Posting list number:" + smallFS.size() );
+        System.out.println("Building " + prefix + " Inverted Index. Posting list number:" + smallFS.size() );
         start = System.currentTimeMillis();
 
         String [] field;
