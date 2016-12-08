@@ -63,7 +63,7 @@ public class WWWMain extends WWW {
         //System.out.println("klkn");
         //finda();
         //elaborateQi();
-        //System.exit(1);
+        //System.exit(1);hhh
         //getId2TermMap();
 
         InvertedIndex i2;
