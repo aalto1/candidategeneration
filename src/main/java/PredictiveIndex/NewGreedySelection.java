@@ -29,8 +29,8 @@ public class NewGreedySelection extends Selection {
                 x = counterMap.merge(aguTerm, 1, Integer::sum);
                 if(x<model[0].length) {
                     y = bucketMap.get(aguTerm);
-                    score = probMap.get(aguTerm) * model[x][y][0];
-                    range = deltaRanges[(int) model[x][y][1]];
+                    score = probMap.get(aguTerm) * model[y][x][0];
+                    range = deltaRanges[(int) model[y][x][1]];
 
                     if (heap.size() < counterMap.size()) {
                         heap.put(score, new long[]{aguTerm, range});
@@ -42,12 +42,12 @@ public class NewGreedySelection extends Selection {
                 }
             }
         }
-        serialize(getSubMap(budget, heap), "chunkstotake");
+        serialize(getSubMap(budget, heap), output);
     }
 
 
     /** */
-    private static Long2LongOpenHashMap getSubMap(int budget, Double2ObjectRBTreeMap<long[]> heap ){
+    private static Long2LongOpenHashMap getSubMap(int budget, Double2ObjectRBTreeMap<long[]> heap){
         Long2LongOpenHashMap result = new Long2LongOpenHashMap();
         for (long [] value: heap.values()) {
             result.put(value[0], value[1]);
