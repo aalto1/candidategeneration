@@ -18,7 +18,6 @@ import static PredictiveIndex.utilsClass.getTerms;
  * Created by aalto on 10/1/16.
  */
 public class GreedySelection extends Selection {
-
     static Long2IntOpenHashMap fetchPPLength(DataInputStream DIStream) throws IOException {
         Long2IntOpenHashMap PPLength = new Long2IntOpenHashMap();
         while(true){
@@ -40,6 +39,7 @@ public class GreedySelection extends Selection {
             System.exit(1);
         }
     }
+
 
     private static void buildFinalModel() throws IOException {
         System.out.println("Final Model Not Found. Building Final Model...");

@@ -45,7 +45,7 @@ public class WWWMain extends WWW {
         //elaborateMe(unigramModel);
         //uniquePairs();
         //Tests.december7();
-        //buildQualityMatrix(model1);
+        buildQualityMatrix(model1);
         //sortComplexRanking();
         //printModels();
         //BigramIndex.getBigramIndex(finalSingle);
@@ -63,7 +63,7 @@ public class WWWMain extends WWW {
         //System.out.println("klkn");
         //finda();
         //elaborateQi();
-        //System.exit(1);hhh
+        System.exit(1);
         //getId2TermMap();
 
         InvertedIndex i2;

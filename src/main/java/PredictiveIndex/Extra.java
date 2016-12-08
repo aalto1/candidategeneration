@@ -9,6 +9,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 //import org.lemurproject.kstem.KrovetzStemmer;
 
 import java.io.*;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 
@@ -31,9 +32,7 @@ public class Extra extends WWW {
                         accMap.merge(field[i], 1, Integer::sum);
                 }
             }
-
         serialize(accMap, accessMap);
-
     }
 
     private static int[] getQueryInts(String[] queryTerms) {
@@ -155,8 +154,6 @@ public class Extra extends WWW {
             br.close();
             System.out.println("Merging Completed");
         }
-
-
     }
 
     public static void november13(){

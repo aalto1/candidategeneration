@@ -27,7 +27,7 @@ public class UnigramQualityModel extends Selection {
     static LongOpenHashSet hitPairs = new LongOpenHashSet();
     static long hit = 0;
 
-    public static long[][][] getUnigramQualityModel(int function, String index, String dumpMap,  String model) throws IOException, ClassNotFoundException {
+    public static void getUnigramQualityModel(int function, String index, String dumpMap,  String model) throws IOException, ClassNotFoundException {
         accMap = (Long2IntOpenHashMap) deserialize(accessMap);
         dumped = (Int2LongOpenHashMap) deserialize(dumpMap);
         //Long2ObjectOpenHashMap<Int2IntMap> fastUnigramQueryTrace = getFQT(10);
@@ -85,7 +85,7 @@ public class UnigramQualityModel extends Selection {
         serialize(QM, model);
         restructResults(model2);
         printQualityModel(model);
-        return QM;
+        //return QM;
     }
 
     private static BiFunction<LinkedList<long[]>, long[], LinkedList<long[]>> mergeList = (x,y) -> {

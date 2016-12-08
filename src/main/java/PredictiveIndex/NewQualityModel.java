@@ -3,20 +3,13 @@ package PredictiveIndex;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2LongOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
-import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 
-import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.*;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-
-import static PredictiveIndex.utilsClass.getDIDMap;
 
 /**
  * Created by aalto on 11/23/16.
@@ -36,7 +29,7 @@ public class NewQualityModel extends Selection {
      * inverted index not sorted => now sorted
      * */
 
-    public static long[][][] getModel(String index, String output, String model) throws IOException, ClassNotFoundException {
+    public static double[][][] getModel(String index, String output, String model) throws IOException, ClassNotFoundException {
         System.out.println("Fast Query Trace fetched!\n Processing Inverted Index...");
         Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>> fastUnigramQueryTrace = (Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>>) deserialize(fastQT2);
         Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>> emptymodel = (Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>>) deserialize(unigramEmptyModel);
@@ -111,9 +104,10 @@ public class NewQualityModel extends Selection {
         Int2IntOpenHashMap lenMap = (Int2IntOpenHashMap) deserialize(localFreqMap);
         accMap = (Long2IntOpenHashMap) deserialize(accessMap);
         double value = 0;
-        int x = 0;
-        int y = 0;
+        int x,y;
+        int [] gapExtremes;
         Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>> model = (Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>>) deserialize(unigramModel);
+
         for (Long2ObjectOpenHashMap<long[]> aguTerms: model.values()) {
             for(long aguTerm: aguTerms.keySet()){
                 x = getLenBucket(lenMap.get((int)aguTerm));
@@ -121,31 +115,42 @@ public class NewQualityModel extends Selection {
                 for (long score: aguTerms.get(aguTerm)) {
                     y = getRankBucket(0, (int) score);
                     QM[x][y][0]++;
-
-
                 }
             }
         }
         for (long aguTerm:accMap.keySet()) {
             x = getLenBucket(lenMap.get((int)aguTerm));
-            y = getLenBucket(lenMap.get((int)aguTerm));
+            y = rRanges.length-1;
             for (int k = 0; k < y ; k++) {
-//                QM[x][k][1] += accMap.get((int)aguTerm)*deltaRanges[k];
+                gapExtremes = getTerms(deltaRanges[k]);
+                QM[x][k][1] += accMap.get((int)aguTerm)*(gapExtremes[1]-gapExtremes[0]);
             }
         }
+
         for (int i = 0; i < QM.length; i++) {
             for (int j = 0; j < QM[0].length; j++) {
-                finMod[i][j] = (QM[i][j][0]*1.0) ;
+                QM[i][j][0] = (QM[i][j][0]*1.0)/(QM[i][j][1]);
+                QM[i][j][1] = j;
             }
         }
-        System.out.print("X");
-        System.out.println(Arrays.toString(rRanges));
-        for (int i = 0; i < finMod.length; i++) {
-            System.out.print(lRanges[i] + " ");
-            System.out.println(Arrays.toString(finMod[i]));
+
+        for (double[][] aQM : QM)
+            Arrays.sort(aQM, (int1, int2) -> Double.compare(int2[0], int1[0]));
+
+
+        for (double[][] xQM : QM){
+            for (double [] yQM : xQM) {
+                System.out.print(Arrays.toString(yQM));
+            }
+            System.out.println();
         }
-        System.out.println(value);
-        serialize(finMod, output);
+
     }
+
+
+
+
+
+
 
 }

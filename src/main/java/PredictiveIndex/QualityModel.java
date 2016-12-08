@@ -32,7 +32,7 @@ public class QualityModel extends Selection {
     * 1) Number of Varbytes to read
     * 2) Number of documents */
 
-    public static long[][][] getBigramQualityModel(int function, String index, String dumpMap, String model) throws IOException, ClassNotFoundException {
+    public static void getBigramQualityModel(int function, String index, String dumpMap, String model) throws IOException, ClassNotFoundException {
         accMap = (Long2IntOpenHashMap) deserialize(accessMap);
         dumped = (Long2LongOpenHashMap) deserialize(dumpMap);
         //Long2ObjectOpenHashMap<Int2IntMap> fastQueryTrace = getFQT(10);
@@ -77,7 +77,6 @@ public class QualityModel extends Selection {
 
         serialize(QM, model);
         printQualityModel(model);
-        return QM;
     }
 
     private static Int2ObjectOpenHashMap<Int2IntLinkedOpenHashMap> processPostingListNew(Int2ObjectOpenHashMap<Int2IntLinkedOpenHashMap> qt, int [] postingList){

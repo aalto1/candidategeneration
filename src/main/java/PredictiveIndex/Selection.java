@@ -1,6 +1,7 @@
 package PredictiveIndex;
 
 import com.google.common.primitives.Ints;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 
 import java.io.DataInputStream;
 import java.io.EOFException;
@@ -21,7 +22,7 @@ public class Selection extends WWW {
     static int[] lRanges = computelRanges(1.1);
     static int[] rRanges = computerRanges(1.4, minBM25, maxBM25);
     static long[] deltaRanges = diff(rRanges);
-    static long[][][] QM = new long[lRanges.length][rRanges.length][2];
+    static double[][][] QM = new double[lRanges.length][rRanges.length][2];
     static long postingCounter = 0;
 
 
@@ -159,6 +160,15 @@ public class Selection extends WWW {
 
         serialize(bucketOrder,  model+"_sortedRange");
         serialize(finalQM,      model+"_qualityModel");
+    }
+
+    public static void getLenBucketMap(){
+        Int2IntOpenHashMap lengths = (Int2IntOpenHashMap) deserialize(localFreqMap);
+        Int2IntOpenHashMap bucMap = (Int2IntOpenHashMap) deserialize(localFreqMap);
+        for (int key : lengths.keySet()) {
+            bucMap.put(key, getLenBucket(lengths.get(key)));
+        }
+        serialize(bucMap, "bucketMap");
     }
 
 
