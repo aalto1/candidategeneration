@@ -9,15 +9,17 @@ import java.util.HashSet;
  * Created by aalto on 12/7/16.
  */
 public class NewGreedySelection extends Selection {
+    static Double2ObjectRBTreeMap<long[]> heap;
     static Long2IntOpenHashMap counterMap;
-    static Long2DoubleOpenHashMap probMap = new Long2DoubleOpenHashMap();
-    static Long2IntOpenHashMap bucketMap  = (Long2IntOpenHashMap) deserialize("bucketMap");
-    static double [][][] model = (double[][][]) deserialize("");
 
 
-    private static void greedySelection(int budget, String output){
+    public static void greedySelection(int budget, String input, String output){
+
+        double [][][] model = (double[][][]) deserialize(input);
+        Long2DoubleOpenHashMap probMap = (Long2DoubleOpenHashMap) deserialize(lanModel);
+        Long2IntOpenHashMap bukMap  = (Long2IntOpenHashMap) deserialize(bucketMap);
         initCounters();
-        Double2ObjectRBTreeMap<long[]> heap = new Double2ObjectRBTreeMap<>();
+        heap = new Double2ObjectRBTreeMap<>();
         int x, y;
         double score, last;
         long range;
@@ -28,7 +30,7 @@ public class NewGreedySelection extends Selection {
             for (long aguTerm : counterMap.keySet()) {
                 x = counterMap.merge(aguTerm, 1, Integer::sum);
                 if(x<model[0].length) {
-                    y = bucketMap.get(aguTerm);
+                    y = bukMap.get(aguTerm);
                     score = probMap.get(aguTerm) * model[y][x][0];
                     range = deltaRanges[(int) model[y][x][1]];
 

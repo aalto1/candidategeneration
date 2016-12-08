@@ -168,7 +168,7 @@ public class Selection extends WWW {
         for (int key : lengths.keySet()) {
             bucMap.put(key, getLenBucket(lengths.get(key)));
         }
-        serialize(bucMap, "bucketMap");
+        serialize(bucMap, bucketMap);
     }
 
 

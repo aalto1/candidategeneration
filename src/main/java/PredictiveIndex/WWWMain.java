@@ -19,6 +19,7 @@ import static PredictiveIndex.FastQueryTrace.getFQT;
 import static PredictiveIndex.NewQualityModel.buildQualityMatrix;
 import static PredictiveIndex.QualityModel.getBigramQualityModel;
 import static PredictiveIndex.QualityModel.printQualityModel;
+import static PredictiveIndex.Selection.getLenBucketMap;
 import static PredictiveIndex.utilsClass.*;
 
 /**
@@ -33,38 +34,11 @@ public class WWWMain extends WWW {
     //30k
     /*/home/aalto/IdeaProjects/PredictiveIndex/aux/sort/bin/binsort --size 16 --length 12 --block-size=900000000  ./InvertedIndex.dat ./sortedInvertedIndex.dat*/
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
-        //checkExtraData();
-        //System.out.println(Arrays.toString(getTerms(16273705471942L)));
-        //NestedQueryTrace.convertANDcleanQueryTrace();
-        //NestedQueryTrace.agumentedQueryTrace(false);
-        //NestedQueryTrace.getEmptyModel(trainQBigram, bigramEmptyModel);
-        //NestedQueryTrace.getEmptyModel(trainQconv, unigramEmptyModel);
-        //NestedQueryTrace.buildReference(trainQconv, fastQT2);
-        //buildDocIDMap();
-        //NewQualityModel.getModel(finalSingle, "output" ,fastQT2);
-        //elaborateMe(unigramModel);
-        //uniquePairs();
-        //Tests.december7();
+        //NewQualityModel.getModel(finalSingle, unigramModel, fastQT2);
         buildQualityMatrix(model1);
-        //sortComplexRanking();
-        //printModels();
-        //BigramIndex.getBigramIndex(finalSingle);
-        //getUniqueTermsSet();
-        //BigramIndex.checkFilterSets();
-        //getDocIDMap();
-        //splitCollection();
-        //november13();
-        //tryTry();
-        //printQualityModel();
-        //ExternalSort.massiveBinaryMerge(new File(dBigramIndex+rawI2),dBigramIndex+sortedI2);
-        //sortComplexRanking();
-        //getFQT(10);
-        //buildFastQT2(10);
-        //System.out.println("klkn");
-        //finda();
-        //elaborateQi();
+        getLenBucketMap();
+        NewGreedySelection.greedySelection(1000, model1, "chunk");
         System.exit(1);
-        //getId2TermMap();
 
         InvertedIndex i2;
         int distance = 5;

@@ -80,6 +80,7 @@ public abstract class WWW {
     static final String hitDumpMap          = maps + "hitDumpMap";
     static final String dBigramDumpMap      = maps + "dbigramDumpMap";
     static final String serDIDMap           = maps + "serDIDMap";
+    static final String bucketMap           = maps + "bucketMap";
 
 
     static final String accessMap   = maps + "accessMap";

@@ -81,7 +81,7 @@ public class NewQualityModel extends Selection {
         }
         System.out.println(hitPairs.size());
         System.out.println(postingNumber);
-        serialize(emptymodel, unigramModel);
+        serialize(emptymodel, output);
         //printQualityModel(model);
         return QM;
     }
@@ -144,6 +144,7 @@ public class NewQualityModel extends Selection {
             }
             System.out.println();
         }
+        serialize(QM,output);
 
     }
 
