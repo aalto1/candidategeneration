@@ -1,11 +1,11 @@
 package PredictiveIndex;
 
-import it.unimi.dsi.fastutil.ints.Int2IntMap;
-import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.*;
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 
 import java.io.*;
+import java.nio.Buffer;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
@@ -16,6 +16,7 @@ import java.util.LinkedList;
 import static PredictiveIndex.Extra.*;
 import static PredictiveIndex.FastQueryTrace.buildFastQT2;
 import static PredictiveIndex.FastQueryTrace.getFQT;
+import static PredictiveIndex.NewQualityModel.buildQualityMatrix;
 import static PredictiveIndex.QualityModel.getBigramQualityModel;
 import static PredictiveIndex.QualityModel.printQualityModel;
 import static PredictiveIndex.utilsClass.*;
@@ -40,7 +41,11 @@ public class WWWMain extends WWW {
         //NestedQueryTrace.getEmptyModel(trainQconv, unigramEmptyModel);
         //NestedQueryTrace.buildReference(trainQconv, fastQT2);
         //buildDocIDMap();
-        NewQualityModel.getModel(finalSingle, "output" ,fastQT2);
+        //NewQualityModel.getModel(finalSingle, "output" ,fastQT2);
+        //elaborateMe(unigramModel);
+        //uniquePairs();
+        //Tests.december7();
+        //buildQualityMatrix(model1);
         //sortComplexRanking();
         //printModels();
         //BigramIndex.getBigramIndex(finalSingle);
@@ -57,7 +62,8 @@ public class WWWMain extends WWW {
         //buildFastQT2(10);
         //System.out.println("klkn");
         //finda();
-        System.exit(1);
+        //elaborateQi();
+        //System.exit(1);
         //getId2TermMap();
 
         InvertedIndex i2;
@@ -278,6 +284,41 @@ public class WWWMain extends WWW {
 
        // System.exit(1);
 
+    public static void elaborateMe(String modelPath) throws IOException {
+        Int2LongOpenHashMap posTListLength = (Int2LongOpenHashMap) deserialize(unigramDumpMap);
+        BufferedWriter bw = getBuffWriter(results+"me.csv");
+        double value = 0;
+        Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>> model = (Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>>) deserialize(modelPath);
+        for (Long2ObjectOpenHashMap<long[]> aguTerms: model.values()) {
+            for(long aguTerm: aguTerms.keySet()){
+                for (long score: aguTerms.get(aguTerm)) {
+                    value = (score*100.0)/posTListLength.get((int)aguTerm);
+                    System.out.println(value);
+                    bw.write(value+",");
+                }
+            }
+        }
+        bw.close();
+    }
+
+    public static void elaborateQi() throws IOException {
+        BufferedReader br = getBuffReader("/home/aalto/dio/query/QM/unigram_training_posting_model");
+        String line;
+        int [] field;
+        StringBuffer sb = new StringBuffer();
+        while((line=br.readLine())!=null){
+            field = string2IntArray(line, " ");
+            for (int i = 0; i < field.length ; i+=2) {
+                sb.append(field[i+1]*100.0/field[i] + ",");
+            }
+        }
+        BufferedWriter bw = getBuffWriter(metadata+"qiresults.csv");
+        bw.write(sb.toString());
+        bw.close();
+        br.close();
+
+
+    }
 
 
 

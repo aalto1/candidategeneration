@@ -120,7 +120,7 @@ public class GreedySelection extends Selection {
     }
 
     static double getScore(float prob, int[] info, float[][] qualityModel, int[] lRanges){
-        if(info[0] < 43167165)  return qualityModel[getLenBucket(info[0], lRanges)][info[1]] * prob ;
+        if(info[0] < 43167165)  return qualityModel[getLenBucket(info[0])][info[1]] * prob ;
         else return 0;
     }
 

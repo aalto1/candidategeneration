@@ -146,7 +146,7 @@ public class NestedQueryTrace extends Selection{
             fields = line.split(":");
             queryModel = new Long2ObjectOpenHashMap<>();
             for(long aguTerm : string2LongArray(fields[1], " ")){
-                queryModel.put(aguTerm, new long[11]);
+                queryModel.put(aguTerm, new long[10]);
             }
             if(emptyMod.put(Integer.valueOf(fields[0]).intValue(), queryModel)!=null){
                 System.out.println("Duplicate: " + Integer.valueOf(fields[0]));

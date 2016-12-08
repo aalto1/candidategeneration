@@ -72,7 +72,7 @@ public abstract class WWW {
     static final String uniqueTerms         = metadata + "uniqueTerms";
     static final String dumpedPostings      = metadata + "dumpedPostings";
     static final String fastQT              = metadata + "fastQT";
-    static final String fastQT2              = metadata + "fastQT2";
+    static final String fastQT2             = metadata + "fastQT2";
     static final String toPick              = metadata + "toPick";
 
     //maps
@@ -109,6 +109,12 @@ public abstract class WWW {
     static final String hitModel     =   models + "hitModel";
     static final String dBiModel     =   models + "dBiModel";
     static final String biModel      =   models + "biModel";
+    static final String model1       =   models + "model1";
+    static final String model2       =   models + "model2";
+    static final String model3       =   models + "model3";
+    static final String model4       =   models + "model4";
+
+
     static final String bigramEmptyModel    = models + "bigramEmptyModel";
     static final String unigramEmptyModel   = models + "unigramEmptyModel";
 
@@ -189,9 +195,6 @@ public abstract class WWW {
             } else return Double.compare(int1[0], int2[0]);
         }
     };
-
-
-
 
     static void getTerm2IdMap() throws IOException {
         System.out.println("Fetching Term-TermID map...");

@@ -18,31 +18,20 @@ import java.util.LinkedList;
 public class Extra extends WWW {
 
     public static void uniquePairs() throws IOException {
-        getTerm2IdMap();
         Long2IntOpenHashMap accMap = new Long2IntOpenHashMap();
-        BufferedReader br = new BufferedReader(new FileReader(trainQ));
+        BufferedReader br = new BufferedReader(new FileReader(trainQagu));
         String line;
-        String [] field;
-        Integer term;
-        LinkedList<Integer> terms = new LinkedList<>();
-        //KrovetzStemmer stemmer = new KrovetzStemmer();
+        long [] field;
 
-        for (line = br.readLine(); line != null; line = br.readLine()) {
-            field = line.split(":")[1].split(" ");
+        while((line = br.readLine())!= null) {
+            field = utilsClass.string2LongArray(line.split(":")[1]," ");
 
             for (int i = 0; i < field.length; i++) {
-                term = term2IdMap.get(field[i]);
-                if (term != null) {
-                    terms.addLast(term);
-                    if (accMap.putIfAbsent(Long.valueOf(term), 1) != null)
-                        accMap.merge(Long.valueOf(term), 1, Integer::sum);
+                    if (accMap.putIfAbsent(field[i], 1) != null)
+                        accMap.merge(field[i], 1, Integer::sum);
                 }
             }
-            for (long i : getCombinations(terms, 2, true)) {
-                if (accMap.putIfAbsent(i, 1) != null) accMap.merge(i, 1, Integer::sum);
-            }
-            terms.clear();
-        }
+
         serialize(accMap, accessMap);
 
     }

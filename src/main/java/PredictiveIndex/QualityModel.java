@@ -93,8 +93,8 @@ public class QualityModel extends Selection {
 
         //access increment
         int increment = accMap.get(t1) + accMap.get(t2) + accMap.get(pair);
-        int lbucket = getLenBucket((postingList.length) +  getTerms(dumped.get(pair))[1], lRanges);
-        int range = getRankBucket(0, (postingList.length), rRanges);
+        int lbucket = getLenBucket((postingList.length) +  getTerms(dumped.get(pair))[1]);
+        int range = getRankBucket(0, (postingList.length));
 
         for (int k = 0; k < range; k++) {
             QM[lbucket][k][1] += increment * deltaRanges[k];
@@ -106,7 +106,7 @@ public class QualityModel extends Selection {
             increment = aggregatedTopK.get(postingList[i]);
             if (increment > 0) {
                 hitPairs.add(pair);
-                rankBucket = getRankBucket(rankBucket, i, rRanges);
+                rankBucket = getRankBucket(rankBucket, i);
                 QM[lbucket][rankBucket][0] += increment;
                 hit+=increment;
                 System.out.println("Number of HITS: " + (hit));

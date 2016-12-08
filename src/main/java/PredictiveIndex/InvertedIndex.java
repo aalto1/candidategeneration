@@ -340,7 +340,6 @@ public class InvertedIndex extends WWW {
                 buffer[tn][pointers[tn]][2] = HITS[Integer.parseInt(field[1])];
                 buffer[tn][pointers[tn]][3] = Integer.parseInt(field[1]);
                 uniIncrementPostingList(tn, twoTerms, words[wIx]);
-                uniIncrementPostingList(tn, twoTerms, words[wIx]);
                 pointers[tn]++;
 
                 if (pointers[tn] == buffer[tn].length) {
@@ -363,10 +362,10 @@ public class InvertedIndex extends WWW {
     }
 
     private synchronized void uniIncrementPostingList(int tn, int [] t, int term){
-        t = getTerms(uniMap.get(term));
-        uniMap.put(term,getPair(t[0]++, t[1]));
-        t = getTerms(hitMap.get(term));
-        hitMap.put(term,getPair(t[0]++, t[1]));
+        if(uniMap.putIfAbsent(term, 1L) != null)
+            uniMap.merge(term, 1L, Long::sum);
+        if(hitMap.putIfAbsent(term, 1L) != null)
+            hitMap.merge(term, 1L, Long::sum);
     }
 
 

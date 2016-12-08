@@ -15,7 +15,7 @@ import static PredictiveIndex.InvertedIndex.now;
  * Created by aalto on 10/1/16.
  */
 public class Selection extends WWW {
-    static int maxBM25 = 367041008;
+    static int maxBM25 = 50220423;
     static int minBM25 = 1;//80992396;
     static int maxLength = 0;
     static int[] lRanges = computelRanges(1.1);
@@ -44,7 +44,6 @@ public class Selection extends WWW {
     static int[] computerRanges(double rankRule, int min, int max) {
         rankRule = 1.4;
         LinkedList<Integer> rankBuckets = new LinkedList<>();
-        rankBuckets.add(0);
         for (int i = 11; i < max; i += i * rankRule) {
             rankBuckets.addLast(i);
         }
@@ -55,10 +54,12 @@ public class Selection extends WWW {
 
     /*Getter for the bucket length*/
 
-    static int getLenBucket(int len, int[] lenBuckets) {
+    static int getLenBucket(int len) {
         int i;
         //System.out.println(len);
-        for (i = 0; lenBuckets[i] < len; i++) ;
+        for (i = 0; lRanges[i] < len; i++){
+            //System.out.println(i + " " + lenBuckets[i] +" " + len);
+        }
         return i;
     }
 
@@ -70,10 +71,9 @@ public class Selection extends WWW {
      * OPEN ISSUES:
     * - */
 
-    static int getRankBucket(int nowRank, int rank, int[] rankBuckets) {
+    static int getRankBucket(int nowRank, int rank) {
         int i;
-        //System.out.println(rank);
-        for (i = nowRank; rankBuckets[i] < rank; i++) ;
+        for (i = nowRank; rRanges[i] < rank; i++) ;
         return i;
     }
 

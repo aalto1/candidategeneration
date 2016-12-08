@@ -9,6 +9,7 @@ import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 
+import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.*;
@@ -60,8 +61,6 @@ public class NewQualityModel extends Selection {
             //posting[2] = DM.get(posting[2]);
             //p(posting);
 
-
-
             if (posting[0] != currentTerm) {
                 currentTerm = posting[0];
                 //System.out.println(currentTerm);
@@ -74,10 +73,10 @@ public class NewQualityModel extends Selection {
                 if (documentsToFind.size() > 0 & (scores = documentsToFind.remove(posting[2])) != null) {
                     for (int qID : scores.keySet()) {
                         try {
-                            emptymodel.get(qID).get(currentTerm)[scores.get(qID)+1] = getPair(posting[2], counter);
-                             printResult(emptymodel.get(qID), qID, newBM25, posting[1], scores.get(qID), currentTerm);
+                            emptymodel.get(qID).get(currentTerm)[scores.get(qID)] = counter; //getPair(posting[2], counter);
+                             //printResult(emptymodel.get(qID), qID, newBM25, posting[1], scores.get(qID), currentTerm);
                         }catch (Exception e) {
-                            System.err.println(e.getMessage());
+                            //System.err.println(e.getMessage());
                         }
                     }
                 }
@@ -89,6 +88,7 @@ public class NewQualityModel extends Selection {
         }
         System.out.println(hitPairs.size());
         System.out.println(postingNumber);
+        serialize(emptymodel, unigramModel);
         //printQualityModel(model);
         return QM;
     }
@@ -106,21 +106,46 @@ public class NewQualityModel extends Selection {
     }
 
 
-    public static void deepOperation(Map m, long[] keys, long lastKey, Object value, BiFunction operation){
-        LinkedList<Map> maze = new LinkedList<>();
-        maze.add(m);
-        for (int depth = 0; depth < keys.length; depth++) {
-            maze.addFirst((Map) maze.getFirst().get(keys[depth]));
-        }
-        maze.getFirst().merge(lastKey, value, operation);
+    public static void buildQualityMatrix(String output) throws IOException {
+        double [][] finMod = new double[QM.length][QM[0].length];
+        Int2IntOpenHashMap lenMap = (Int2IntOpenHashMap) deserialize(localFreqMap);
+        accMap = (Long2IntOpenHashMap) deserialize(accessMap);
+        double value = 0;
+        int x = 0;
+        int y = 0;
+        Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>> model = (Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>>) deserialize(unigramModel);
+        for (Long2ObjectOpenHashMap<long[]> aguTerms: model.values()) {
+            for(long aguTerm: aguTerms.keySet()){
+                x = getLenBucket(lenMap.get((int)aguTerm));
+                //System.out.println(lenMap.get((int)aguTerm) + " " + x);
+                for (long score: aguTerms.get(aguTerm)) {
+                    y = getRankBucket(0, (int) score);
+                    QM[x][y][0]++;
 
-        for (int depth = keys.length-1; depth <= 0; depth--) {
-            maze.get(1).put(keys[depth], maze.removeFirst());
-        }
-    }
 
-    private static void p(int [] a){
-        System.out.println(Arrays.toString(a));
+                }
+            }
+        }
+        for (long aguTerm:accMap.keySet()) {
+            x = getLenBucket(lenMap.get((int)aguTerm));
+            y = getLenBucket(lenMap.get((int)aguTerm));
+            for (int k = 0; k < y ; k++) {
+//                QM[x][k][1] += accMap.get((int)aguTerm)*deltaRanges[k];
+            }
+        }
+        for (int i = 0; i < QM.length; i++) {
+            for (int j = 0; j < QM[0].length; j++) {
+                finMod[i][j] = (QM[i][j][0]*1.0) ;
+            }
+        }
+        System.out.print("X");
+        System.out.println(Arrays.toString(rRanges));
+        for (int i = 0; i < finMod.length; i++) {
+            System.out.print(lRanges[i] + " ");
+            System.out.println(Arrays.toString(finMod[i]));
+        }
+        System.out.println(value);
+        serialize(finMod, output);
     }
 
 }

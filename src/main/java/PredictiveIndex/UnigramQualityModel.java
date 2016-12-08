@@ -160,8 +160,8 @@ public class UnigramQualityModel extends Selection {
 
         //access increment
         int increment = accMap.get(term);
-        int lbucket = getLenBucket(getTerms(dumped.get(term))[0], lRanges);
-        int range = getRankBucket(0, (postingList.length), rRanges);
+        int lbucket = getLenBucket(getTerms(dumped.get(term))[0]);
+        int range = getRankBucket(0, (postingList.length));
 
         for (int k = 0; k < range; k++) {
             QM[lbucket][k][1] += increment * deltaRanges[k];
@@ -172,7 +172,7 @@ public class UnigramQualityModel extends Selection {
         for (int i = 0; i < postingList.length - 1; i++){
             increment = aggregatedTopK.get(postingList[i]);
             if (increment > 0) {
-                rankBucket = getRankBucket(rankBucket, i, rRanges);
+                rankBucket = getRankBucket(rankBucket, i);
                 QM[lbucket][rankBucket][0] += increment;
                 hit+=increment;
                 System.out.println("Number of HITS: " + (hit));
