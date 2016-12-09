@@ -171,5 +171,14 @@ public class Selection extends WWW {
         serialize(bucMap, bucketMap);
     }
 
+    public static void getProbMap(String input){
+        Int2IntOpenHashMap lengths = (Int2IntOpenHashMap) deserialize(localFreqMap);
+        Int2IntOpenHashMap bucMap = (Int2IntOpenHashMap) deserialize(localFreqMap);
+        for (int key : lengths.keySet()) {
+            bucMap.put(key, getLenBucket(lengths.get(key)));
+        }
+        serialize(bucMap, bucketMap);
+    }
+
 
 }
