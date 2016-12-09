@@ -34,10 +34,11 @@ public class WWWMain extends WWW {
     //30k
     /*/home/aalto/IdeaProjects/PredictiveIndex/aux/sort/bin/binsort --size 16 --length 12 --block-size=900000000  ./InvertedIndex.dat ./sortedInvertedIndex.dat*/
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
-        NewQualityModel.getModel(finalSingle, unigramModel, fastQT2);
+        //NewQualityModel.getModel(finalSingle, unigramModel, fastQT2);
+        //Selection.getProbInfo(uniLanModel, uniConvLanModel, uniProbMap);
         getLenBucketMap();
-        buildQualityMatrix(model1);
-        NewGreedySelection.greedySelection(1000, model1, "chunk");
+        //buildQualityMatrix(model1);
+        NewGreedySelection.greedySelection(100000, model1, "chunk");
         System.exit(1);
 
         InvertedIndex i2;

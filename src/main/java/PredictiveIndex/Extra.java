@@ -55,7 +55,7 @@ public class Extra extends WWW {
     static void  getBigFilterSet() throws IOException {
         if (term2IdMap == null) getTerm2IdMap();
         LongOpenHashSet fSet = new LongOpenHashSet();
-        BufferedReader br = getBuffReader(lanModel);
+        BufferedReader br = getBuffReader(uniLanModel);
         String line;
         String [] field;
         int t1, t2, removed = 0;

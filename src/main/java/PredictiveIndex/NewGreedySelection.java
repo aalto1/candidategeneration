@@ -1,9 +1,12 @@
 package PredictiveIndex;
 
 import it.unimi.dsi.fastutil.doubles.Double2ObjectRBTreeMap;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.longs.*;
 
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedList;
 
 /**
  * Created by aalto on 12/7/16.
@@ -16,7 +19,7 @@ public class NewGreedySelection extends Selection {
     public static void greedySelection(int budget, String input, String output){
 
         double [][][] model = (double[][][]) deserialize(input);
-        Long2DoubleOpenHashMap probMap = (Long2DoubleOpenHashMap) deserialize(lanModel);
+        Long2DoubleOpenHashMap probMap = (Long2DoubleOpenHashMap) deserialize(uniProbMap);
         Long2IntOpenHashMap bukMap  = (Long2IntOpenHashMap) deserialize(bucketMap);
         initCounters();
         heap = new Double2ObjectRBTreeMap<>();
@@ -24,26 +27,32 @@ public class NewGreedySelection extends Selection {
         double score, last;
         long range;
         boolean change = true;
+        int counter =0;
 
-        while(heap.size()<counterMap.size() | change) {
+        while(heap.size()< budget | change) {
             change = false;
             for (long aguTerm : counterMap.keySet()) {
                 x = counterMap.merge(aguTerm, 1, Integer::sum);
                 if(x<model[0].length) {
                     y = bukMap.get(aguTerm);
-                    score = probMap.get(aguTerm) * model[y][x][0];
+                    score = -probMap.get(aguTerm) * model[y][x][0];
                     range = deltaRanges[(int) model[y][x][1]];
 
-                    if (heap.size() < counterMap.size()) {
+                    if (heap.size() < budget) {
                         heap.put(score, new long[]{aguTerm, range});
-                    } else if ((last = heap.lastDoubleKey()) < score) {
+                    } else if ((last = heap.lastDoubleKey()) > score) {
                         heap.remove(last);
                         heap.put(score, new long[]{aguTerm, range});
                         change = true;
                     }
+                    if(++counter%10000==0){
+                        System.out.println(counter);
+                        System.out.println(heap.lastDoubleKey());
+                    }
                 }
             }
         }
+        System.out.println(heap.size());
         serialize(getSubMap(budget, heap), output);
     }
 
@@ -51,18 +60,22 @@ public class NewGreedySelection extends Selection {
     /** */
     private static Long2LongOpenHashMap getSubMap(int budget, Double2ObjectRBTreeMap<long[]> heap){
         Long2LongOpenHashMap result = new Long2LongOpenHashMap();
-        for (long [] value: heap.values()) {
+        LinkedList<Long> list = new LinkedList<>();
+        for (long [] value: heap.values()){
             result.put(value[0], value[1]);
+            list.add(value[1]);
             if(result.size()>budget) break;
         }
+        System.out.println(Arrays.toString(getTerms(list.getFirst())));
+        //System.out.println(result.toString());
         return result;
     }
 
     //the greedy selection select up to the moment when it doesn't find anything new, than take the top-budget
     public static void initCounters(){
         counterMap = new Long2IntOpenHashMap();
-        LongOpenHashSet trainAguTerms = (LongOpenHashSet) deserialize("set");
-        for (long aguTerm : trainAguTerms) {
+        IntOpenHashSet trainAguTerms = (IntOpenHashSet) deserialize(uniqueTerms);
+        for (int aguTerm : trainAguTerms) {
             counterMap.put(aguTerm, 0);
         }
     }

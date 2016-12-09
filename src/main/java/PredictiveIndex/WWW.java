@@ -44,7 +44,6 @@ public abstract class WWW {
 
     //source
     static final String nonStemClue = source + "noStemmerIndex";
-    static final String lanModel    = source + "lanModel";
     static final String complexRank = source + "complexRankerResultsTotal";
     static final String complexRankN= source + "complexRankerResultsTotalNew";
     static final String trainQ      = source + "trainQ";
@@ -62,6 +61,16 @@ public abstract class WWW {
     static final String array30     = source + "array30";
     static final String hitScores   = source + "hitScores";
     static final String hitScoresCSV= source + "hitScores.csv";
+
+    //prob
+    static final String prob                = source +"prob/";
+
+    static final String uniLanModel         = prob + "uniLanModel";
+    static final String uniConvLanModel     = prob + "uniConvLanModel";
+    static final String uniProbMap          = prob + "uniProbMap";
+    static final String biLanModel          = prob + "biLanModel";
+    static final String biConvLanModel      = prob + "biConvLanModel";
+    static final String biProbMap           = prob + "biProbMap";
 
     //metadata
     static final String localFreqMap        = metadata + "localFreqMap";

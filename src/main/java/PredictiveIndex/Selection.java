@@ -2,10 +2,11 @@ package PredictiveIndex;
 
 import com.google.common.primitives.Ints;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2DoubleArrayMap;
+import it.unimi.dsi.fastutil.longs.Long2DoubleOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 
-import java.io.DataInputStream;
-import java.io.EOFException;
-import java.io.IOException;
+import java.io.*;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -164,21 +165,56 @@ public class Selection extends WWW {
 
     public static void getLenBucketMap(){
         Int2IntOpenHashMap lengths = (Int2IntOpenHashMap) deserialize(localFreqMap);
-        Int2IntOpenHashMap bucMap = (Int2IntOpenHashMap) deserialize(localFreqMap);
+        Long2IntOpenHashMap bucMap = new Long2IntOpenHashMap();
         for (int key : lengths.keySet()) {
             bucMap.put(key, getLenBucket(lengths.get(key)));
         }
         serialize(bucMap, bucketMap);
     }
 
-    public static void getProbMap(String input){
-        Int2IntOpenHashMap lengths = (Int2IntOpenHashMap) deserialize(localFreqMap);
-        Int2IntOpenHashMap bucMap = (Int2IntOpenHashMap) deserialize(localFreqMap);
-        for (int key : lengths.keySet()) {
-            bucMap.put(key, getLenBucket(lengths.get(key)));
-        }
-        serialize(bucMap, bucketMap);
+    public static void getProbInfo(String one, String two, String three) throws IOException {
+        getConvLanModel(one, two);
+        getProbMap(two, three);
+        System.exit(1);
     }
+
+    public static void getConvLanModel(String input, String output) throws IOException {
+        BufferedReader br = getBuffReader(input);
+        BufferedWriter bw = getBuffWriter(output);
+        String line;
+        String fields[];
+        getTerm2IdMap();
+        long k=0;
+        while((line = br.readLine())!=null){
+            fields = line.split(" ");
+            bw.write(term2IdMap.get(fields[0]) + "," + fields[3] + "\n");
+            if(++k%100000==0){
+                bw.flush();
+                System.out.println(k);
+            }
+        }
+        br.close();
+        bw.close();
+    }
+
+    public static void getProbMap(String input, String output) throws IOException {
+        Long2DoubleOpenHashMap probMap =  new Long2DoubleOpenHashMap();
+        BufferedReader br = getBuffReader(input);
+        String line;
+        String [] fields;
+        while((line=br.readLine())!=null){
+            fields = line.split(",");
+            try{
+                probMap.put(Long.valueOf(fields[0]).longValue(),Double.valueOf(fields[1]).doubleValue());
+            }catch (Exception e){
+                //System.out.println(line);
+            }
+        }
+        br.close();
+        System.out.println(probMap.size());
+        serialize(probMap, output);
+    }
+
 
 
 }
