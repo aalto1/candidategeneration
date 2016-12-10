@@ -16,7 +16,7 @@ public class NewGreedySelection extends Selection {
     static Long2IntOpenHashMap counterMap;
 
 
-    public static void greedySelection(int budget, String input, String output){
+    public static void greedySelection(int limitBudget, String input, String output){
 
         double [][][] model = (double[][][]) deserialize(input);
         Long2DoubleOpenHashMap probMap = (Long2DoubleOpenHashMap) deserialize(uniProbMap);
@@ -27,9 +27,10 @@ public class NewGreedySelection extends Selection {
         double score, last;
         long range;
         boolean change = true;
+        int budget =0;
         int counter =0;
 
-        while(heap.size()< budget | change) {
+        while(budget < limitBudget | change) {
             change = false;
             for (long aguTerm : counterMap.keySet()) {
                 x = counterMap.merge(aguTerm, 1, Integer::sum);
@@ -38,11 +39,13 @@ public class NewGreedySelection extends Selection {
                     score = -probMap.get(aguTerm) * model[y][x][0];
                     range = deltaRanges[(int) model[y][x][1]];
 
-                    if (heap.size() < budget) {
+                    if (budget < limitBudget) {
                         heap.put(score, new long[]{aguTerm, range});
+                        budget+=range;
                     } else if ((last = heap.lastDoubleKey()) > score) {
                         heap.remove(last);
                         heap.put(score, new long[]{aguTerm, range});
+                        budget+=range;
                         change = true;
                     }
                     if(++counter%10000==0){
@@ -53,25 +56,28 @@ public class NewGreedySelection extends Selection {
             }
         }
         System.out.println(heap.size());
-        serialize(getSubMap(budget, heap), output);
+        System.out.println(Arrays.toString(deltaRanges));
+        serialize(getSubMap(limitBudget, heap), output);
     }
 
 
     /** */
-    private static Long2LongOpenHashMap getSubMap(int budget, Double2ObjectRBTreeMap<long[]> heap){
+    private static Long2LongOpenHashMap getSubMap(int limitBudget, Double2ObjectRBTreeMap<long[]> heap){
         Long2LongOpenHashMap result = new Long2LongOpenHashMap();
         LinkedList<Long> list = new LinkedList<>();
+        int budget = 0;
         for (long [] value: heap.values()){
             result.put(value[0], value[1]);
+            budget+=value[1];
             list.add(value[1]);
-            if(result.size()>budget) break;
+            if(budget>limitBudget) break;
         }
         System.out.println(Arrays.toString(getTerms(list.getFirst())));
         //System.out.println(result.toString());
         return result;
     }
 
-    //the greedy selection select up to the moment when it doesn't find anything new, than take the top-budget
+    //the greedy selection select up to the moment when it doesn't find anything new, than take the top-limitBudget
     public static void initCounters(){
         counterMap = new Long2IntOpenHashMap();
         IntOpenHashSet trainAguTerms = (IntOpenHashSet) deserialize(uniqueTerms);

@@ -81,7 +81,8 @@ public class Selection extends WWW {
 
     static long[] diff(int [] bcks){
         long [] bcksSize = new long [bcks.length-1];
-        for (int i = 0; i < bcksSize.length ; i++) {
+        bcksSize[0] = bcks[0];
+        for (int i = 1; i < bcksSize.length ; i++) {
             bcksSize[i] = bcks[i+1]-bcks[i];
         }
         return  bcksSize;
