@@ -31,17 +31,17 @@ public class FastQueryTrace extends WWW {
 
 
     public static Long2ObjectOpenHashMap<Int2IntMap> getFQT(int k) throws IOException {
-        if (checkExistence(fastQT+k)) {
-            return (Long2ObjectOpenHashMap<Int2IntMap>) deserialize(fastQT+k);
+        if (checkExistence(FILLEDGROUND)) {
+            return (Long2ObjectOpenHashMap<Int2IntMap>) deserialize(FILLEDGROUND);
         } else {
             return buildFastQT(k);
         }
     }
 
     private static Long2ObjectOpenHashMap<Int2IntMap> buildFastQT(int k) throws IOException {
-        int[][] topKMatrix = getTopKMatrixNew(new int[173800][], getBuffReader(complexRankN), k);
+        int[][] topKMatrix = getTopKMatrixNew(new int[173800][], getBuffReader(COMPLEXRANKERTOP), k);
         getTerm2IdMap();
-        BufferedReader br= getBuffReader(trainQ);
+        BufferedReader br= getBuffReader(TRAINQ);
         FQT = new Long2ObjectOpenHashMap<>();
         String line;
         String [] field;
@@ -62,7 +62,7 @@ public class FastQueryTrace extends WWW {
 
             }
         }
-        serialize(FQT, fastQT+k);
+        serialize(FQT, FILLEDGROUND);
         System.out.println(FQT.size());
         System.exit(1);
         return FQT;
@@ -87,9 +87,9 @@ public class FastQueryTrace extends WWW {
     }
 
     public static Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>> buildFastQT2(int k) throws IOException {
-        int[][] topKMatrix = getTopKMatrixNew(new int[173800][], getBuffReader(complexRankN), k);
+        int[][] topKMatrix = getTopKMatrixNew(new int[173800][], getBuffReader(COMPLEXRANKERTOP), k);
         getTerm2IdMap();
-        BufferedReader br= getBuffReader(trainQ);
+        BufferedReader br= getBuffReader(TRAINQ);
         FQT2 = new Long2ObjectOpenHashMap<>();
         String line;
         String [] field;
@@ -109,7 +109,7 @@ public class FastQueryTrace extends WWW {
                 System.out.println(counter++);
             }
         }
-        serialize(FQT2, fastQT+k+"2");
+        serialize(FQT2, FILLEDGROUD);
         System.out.println(FQT2.size());
         System.exit(1);
         return FQT2;

@@ -165,7 +165,7 @@ public class Selection extends WWW {
     }
 
     public static void getLenBucketMap(){
-        Int2IntOpenHashMap lengths = (Int2IntOpenHashMap) deserialize(localFreqMap);
+        Int2IntOpenHashMap lengths = (Int2IntOpenHashMap) deserialize(LOCALTERMFREQ);
         Long2IntOpenHashMap bucMap = new Long2IntOpenHashMap();
         for (int key : lengths.keySet()) {
             bucMap.put(key, getLenBucket(lengths.get(key)));

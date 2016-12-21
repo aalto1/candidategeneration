@@ -237,7 +237,7 @@ class utilsClass extends WWW {
 
     public static double[] getHitScore() throws IOException {
         int numbeOfDocs = 50025479;
-        BufferedReader br = getBuffReader(hitScores);
+        BufferedReader br = getBuffReader(HITSCORES);
         String line = br.readLine();
         double [] hitScores = new double[numbeOfDocs];
         double [] aux;
@@ -252,7 +252,7 @@ class utilsClass extends WWW {
     public static void getHitScore2() throws IOException {
         System.out.println("Getting HITS score");
         int numbeOfDocs = 50222043; //50025479; attention!
-        BufferedReader br = getBuffReader(hitScoresCSV);
+        BufferedReader br = getBuffReader(HITSCORESCSV);
         String line = br.readLine();
         int [] HITS = new int[numbeOfDocs];
         for(int i = 0; line!= null; i++){
@@ -260,7 +260,7 @@ class utilsClass extends WWW {
             line = br.readLine();
             if(i%1000000==0) System.out.print(i+",");
         }
-        serialize(HITS, hitScores);
+        serialize(HITS, HITSCORES);
     }
 
     /*public static void tryMap(){
@@ -307,11 +307,11 @@ class utilsClass extends WWW {
         int flag = 0;
 
 
-        DataInputStream DIS = new DataInputStream(new BufferedInputStream( new FileInputStream(nonStemClue)));
-        BufferedReader br = new BufferedReader(new FileReader(finalDocInfo));
+        DataInputStream DIS = new DataInputStream(new BufferedInputStream( new FileInputStream(CLUEWEB)));
+        BufferedReader br = new BufferedReader(new FileReader(DOCINFO));
 
-        DataOutputStream DOS = getDOStream(folder[split] + "clueweb");
-        BufferedWriter bw = getBuffWriter(folder[split] + "docInfo.csv");
+        DataOutputStream DOS = getDOStream(FOLDER[split] + "clueweb");
+        BufferedWriter bw = getBuffWriter(FOLDER[split] + "docInfo.csv");
 
         String line = br.readLine();
         String [] record;
@@ -325,8 +325,8 @@ class utilsClass extends WWW {
                 //System.exit(1);
                 split++;
                 flag=0;
-                bw = getBuffWriter(folder[split] + "docInfo.csv");
-                DOS = getDOStream(folder[split] + "clueweb");
+                bw = getBuffWriter(FOLDER[split] + "docInfo.csv");
+                DOS = getDOStream(FOLDER[split] + "clueweb");
             }
             for (int i = 0; i < Integer.parseInt(record[3]); i++) {
                 DOS.writeByte(DIS.readByte());
@@ -352,7 +352,7 @@ class utilsClass extends WWW {
                if(mergedMap.putIfAbsent(key, map.get(key)) != null) mergedMap.merge(key, map.get(key), Integer::sum);
            }
        }
-       serialize(mergedMap, dBigramDumpMap);
+       serialize(mergedMap, DBILENGTHS);
    }
 
     static void getLocFreqMap(int [] locFreqArr, IntOpenHashSet uniTerms) throws IOException, ClassNotFoundException { /***NO-Need***/
@@ -363,7 +363,7 @@ class utilsClass extends WWW {
             k++;
         }
         System.out.println(k);
-        serialize(mergedMap, localFreqMap);
+        serialize(mergedMap, LOCALTERMFREQ);
     }
 
    static float[] scalarPerArray(float scalar, float[] array){
@@ -375,8 +375,8 @@ class utilsClass extends WWW {
    }
 
    static void sortComplexRanking() throws IOException {
-       BufferedReader br = getBuffReader(complexRank);
-       BufferedWriter bw = getBuffWriter(complexRankN);
+       BufferedReader br = getBuffReader(COMPLEXRANKERTOP);
+       BufferedWriter bw = getBuffWriter(COMPLEXRANKERTOP);
        double [][] ranks = new double[85796224][4];
        int k = 0;
        String line;
@@ -434,9 +434,9 @@ class utilsClass extends WWW {
     }
 
     public static void buildDocIDMap() throws IOException {
-        BufferedReader br1 = getBuffReader(didNameMap);
-        BufferedReader br2 = getBuffReader(oldDocInfo);
-        BufferedWriter bw = getBuffWriter(didMap);
+        BufferedReader br1 = getBuffReader(DIDNAMEMAP);
+        BufferedReader br2 = getBuffReader(OLDDOCINFO);
+        BufferedWriter bw = getBuffWriter(DIDMAP);
         bw.write("old, new\n");
         String line;
         String [] fields;
@@ -457,8 +457,8 @@ class utilsClass extends WWW {
 
     public static Int2IntOpenHashMap getDIDMap() throws IOException {
         Int2IntOpenHashMap map;
-        if(!checkExistence(serDIDMap)) {
-            BufferedReader br = getBuffReader(didMap);
+        if(!checkExistence(DIDMAPSER)) {
+            BufferedReader br = getBuffReader(DIDMAP);
             br.readLine();
             String line;
             int[] entry;
@@ -467,9 +467,9 @@ class utilsClass extends WWW {
                 entry = string2IntArray(line, ",");
                 map.put(entry[0], entry[1]);
             }
-            serialize(map, serDIDMap);
+            serialize(map, DIDMAPSER);
         }else
-            map = (Int2IntOpenHashMap) deserialize(serDIDMap);
+            map = (Int2IntOpenHashMap) deserialize(DIDMAPSER);
         return map;
     }
 

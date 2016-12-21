@@ -29,13 +29,13 @@ public class NewQualityModel extends Selection {
      * inverted index not sorted => now sorted
      * */
 
-    public static double[][][] getModel(String index, String output, String model) throws IOException, ClassNotFoundException {
+    public static double[][][] getModel(String index, String output, String model, String length) throws IOException, ClassNotFoundException {
         System.out.println("Fast Query Trace fetched!\n Processing Inverted Index...");
         Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>> fastUnigramQueryTrace = (Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>>) deserialize(fastQT2);
-        Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>> emptymodel = (Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>>) deserialize(unigramEmptyModel);
-        dumped = (Int2LongOpenHashMap) deserialize(unigramDumpMap);
+        Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>> emptymodel = (Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>>) deserialize(EMPTYGROUND);
+        dumped = (Int2LongOpenHashMap) deserialize(length);
 
-        DataInputStream DIStream = getDIStream(finalSingle);
+        DataInputStream DIStream = getDIStream(SINGLEINDEX);
         int[] posting = new int[3];                         //
         long currentTerm = -1;
         Int2ObjectOpenHashMap<Int2IntOpenHashMap> documentsToFind = new Int2ObjectOpenHashMap();
@@ -101,8 +101,8 @@ public class NewQualityModel extends Selection {
 
     public static void buildQualityMatrix(String output) throws IOException {
         double [][] finMod = new double[QM.length][QM[0].length];
-        Int2IntOpenHashMap lenMap = (Int2IntOpenHashMap) deserialize(localFreqMap);
-        accMap = (Long2IntOpenHashMap) deserialize(accessMap);
+        Int2IntOpenHashMap lenMap = (Int2IntOpenHashMap) deserialize(LOCALTERMFREQ);
+        accMap = (Long2IntOpenHashMap) deserialize(ACCESSMAP);
         double value = 0;
         int x,y;
         int [] gapExtremes;

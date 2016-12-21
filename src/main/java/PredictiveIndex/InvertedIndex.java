@@ -87,7 +87,14 @@ public class InvertedIndex extends WWW {
         }
     }
 
-    public InvertedIndex(Int2IntOpenHashMap termFreqMap, int [] HITS, long[] globalStats, int distance, boolean isBgram, String prefix, int numThreads) throws IOException, ClassNotFoundException {
+    public InvertedIndex(Int2IntOpenHashMap termFreqMap,
+                         int [] HITS, long[] globalStats,
+                         int distance, boolean isBgram,
+                         String prefix,
+                         int numThreads)
+            throws IOException, ClassNotFoundException {
+
+
         if(!isBgram){
             this.uniTerms = (IntOpenHashSet) deserialize(uniqueTerms);
             this.HITS = HITS;
@@ -97,8 +104,8 @@ public class InvertedIndex extends WWW {
         this.distance = distance;
         this.isBigram = isBgram;
         this.prefix = prefix ;
-        this.bigFS = (LongOpenHashSet) deserialize(bigFilterSet);
-        this.smallFS = (LongOpenHashSet) deserialize((smallFilterSet));
+        this.bigFS = (LongOpenHashSet) deserialize(BIG_FILTER_SET);
+        this.smallFS = (LongOpenHashSet) deserialize((SMALL_FILTER_SET));
 
         for (int tn = 0; tn < numThreads ; tn++) {
             ClueDIS[tn]  = getDIStream(CW[tn]);
@@ -235,8 +242,8 @@ public class InvertedIndex extends WWW {
         if(isBigram)
             sampledSelection(tn, twoTerms, true);
         else{
-            singleFlush(singleComparator, singleIndex, twoTerms, 1, true, tn);
-            singleFlush(hitComparator, HITIndex, twoTerms, 2, true, tn);
+            singleFlush(singleComparator, SINGLE, twoTerms, 1, true, tn);
+            singleFlush(hitComparator, HIT, twoTerms, 2, true, tn);
         }
 
 
@@ -254,7 +261,13 @@ public class InvertedIndex extends WWW {
         System.out.println("D-Bigram Inverted Index Built!");
     }
 
-    public void bufferedIndex(int[] words, String [] field, Int2IntMap localFrequencyMap, LongSet noDuplicateSet, int [] twoTerms, int tn) throws IOException, ClassNotFoundException, InterruptedException {
+    public void bufferedIndex(int[] words,
+                              String [] field,
+                              Int2IntMap localFrequencyMap,
+                              LongSet noDuplicateSet,
+                              int [] twoTerms,
+                              int tn) throws IOException, ClassNotFoundException, InterruptedException {
+
         /* For each document we take the pairs between documents within a distance. We add each entry to a buffer and
         * compute the BM25 for that specific term-pair*/
 
@@ -311,7 +324,15 @@ public class InvertedIndex extends WWW {
 
     }
 
-    private void singleFlush(Comparator c, String pre, int [] twoTerms, int entry, boolean end, int tn) throws IOException {
+    private void singleFlush(Comparator c,
+                             String pre,
+                             int [] twoTerms,
+                             int entry,
+                             boolean end,
+                             int tn)
+            throws IOException {
+
+
         System.out.println("Flushing " + pre);
         int threshold = getThreshold(entry, tn);
         DOS[tn]  = getDOStream(pre+rawI2+dump.getAndAdd(1));
@@ -331,7 +352,14 @@ public class InvertedIndex extends WWW {
         DOS[tn].close();
     }
 
-    public void singleBufferedIndex(int[] words, String [] field, Int2IntMap localFrequencyMap, LongSet noDuplicateSet, int [] twoTerms, int tn) throws IOException, ClassNotFoundException, InterruptedException {
+    public void singleBufferedIndex(int[] words,
+                                    String [] field,
+                                    Int2IntMap localFrequencyMap,
+                                    LongSet noDuplicateSet,
+                                    int [] twoTerms,
+                                    int tn)
+            throws IOException, ClassNotFoundException, InterruptedException {
+
         //System.out.println(pointers[tn]);
         for (int wIx = 0; wIx < Integer.parseInt(field[4]); wIx++) {
             if(noDuplicateSet.add(words[wIx]) & uniTerms.contains(words[wIx])) {

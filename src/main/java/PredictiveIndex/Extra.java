@@ -18,9 +18,15 @@ import java.util.LinkedList;
  */
 public class Extra extends WWW {
 
+    /*You have to decide which kind of "terms" you want to use
+    *
+    * singleterms
+    * bigrams
+    * single + bigrams = aguterms*/
+
     public static void uniquePairs() throws IOException {
         Long2IntOpenHashMap accMap = new Long2IntOpenHashMap();
-        BufferedReader br = new BufferedReader(new FileReader(trainQagu));
+        BufferedReader br = new BufferedReader(new FileReader(TRAINQAGUMENTED));
         String line;
         long [] field;
 
@@ -32,7 +38,7 @@ public class Extra extends WWW {
                         accMap.merge(field[i], 1, Integer::sum);
                 }
             }
-        serialize(accMap, accessMap);
+        serialize(accMap, AGUTERMACCES);
     }
 
     private static int[] getQueryInts(String[] queryTerms) {
@@ -55,7 +61,7 @@ public class Extra extends WWW {
     static void  getBigFilterSet() throws IOException {
         if (term2IdMap == null) getTerm2IdMap();
         LongOpenHashSet fSet = new LongOpenHashSet();
-        BufferedReader br = getBuffReader(uniLanModel);
+        BufferedReader br = getBuffReader(TRAIN_TESTQ);
         String line;
         String [] field;
         int t1, t2, removed = 0;
@@ -72,7 +78,7 @@ public class Extra extends WWW {
         }
         System.out.println("Absent Terms: " + removed + " removed.");
         System.out.println("Filter Set Size: " + fSet.size());
-        serialize(fSet, bigFilterSet);
+        serialize(fSet, BIG_FILTER_SET);
     }
 
     /***
@@ -84,7 +90,7 @@ public class Extra extends WWW {
     public static void getSmallFilterSet() throws IOException {
         if (term2IdMap == null) getTerm2IdMap();
         LongOpenHashSet smallFS = new LongOpenHashSet();
-        BufferedReader br = new BufferedReader(new FileReader(allQ));
+        BufferedReader br = new BufferedReader(new FileReader(QUERY_TRACE));
         String line;
         String [] field;
         Integer term;
@@ -104,14 +110,14 @@ public class Extra extends WWW {
             terms.clear();
         }
         System.out.println("Small Filter Size: " + smallFS.size());
-        serialize(smallFS, smallFilterSet);
+        serialize(smallFS, SMALL_FILTER_SET);
 
     }
 
     public static void getUniqueTermsSet() throws IOException {
         if (term2IdMap == null) getTerm2IdMap();
         IntOpenHashSet uniTerms = new IntOpenHashSet();
-        BufferedReader br = new BufferedReader(new FileReader(allQ));
+        BufferedReader br = new BufferedReader(new FileReader(TRAIN_TESTQ));
         String line;
         String [] field;
         Integer term;
@@ -127,12 +133,12 @@ public class Extra extends WWW {
                 }
             }
         }
-        serialize(uniTerms, uniqueTerms);
+        serialize(uniTerms, SMALL_FILTER_SET);
 
     }
 
     static void getDocIDMap() throws IOException {
-        BufferedReader br = getBuffReader(didNameMap);
+        BufferedReader br = getBuffReader(DIDNAMEMAP);
         Object2IntOpenHashMap<String> doc2IDmap = new Object2IntOpenHashMap<>();
         String line;
         String [] field;
@@ -157,7 +163,7 @@ public class Extra extends WWW {
     }
 
     public static void november13(){
-        IntOpenHashSet sTerms = (IntOpenHashSet) deserialize(uniqueTerms);
+        IntOpenHashSet sTerms = (IntOpenHashSet) deserialize(FILTER_SETS);
         System.out.println(sTerms.size());
         System.exit(1);
     }

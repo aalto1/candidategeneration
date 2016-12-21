@@ -44,8 +44,8 @@ public class NestedQueryTrace extends Selection{
     * */
 
     public static void convertANDcleanQueryTrace() throws IOException {
-        BufferedReader br = getBuffReader(trainQ);
-        BufferedWriter bw = getBuffWriter(trainQconv);
+        BufferedReader br = getBuffReader(TRAINQ);
+        BufferedWriter bw = getBuffWriter(TRAINQCONVERTED);
         getTerm2IdMap();
         String line;
         String [] fields;
@@ -86,13 +86,13 @@ public class NestedQueryTrace extends Selection{
      * */
 
     public static void agumentedQueryTrace(boolean total) throws IOException {
-        BufferedReader br = getBuffReader(trainQconv);
+        BufferedReader br = getBuffReader(TRAINQCONVERTED);
         BufferedWriter bw;
 
         if(total){
-            bw = getBuffWriter(trainQagu);
+            bw = getBuffWriter(TRAINQAGUMENTED);
         }else{
-            bw = getBuffWriter(trainQBigram);
+            bw = getBuffWriter(TRAINQBIGRAM);
         }
 
         String line;
@@ -172,7 +172,7 @@ public class NestedQueryTrace extends Selection{
     static Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>> reference;
 
     public static Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>> buildReference(String input, String output) throws IOException {
-        int[][] topKMatrix = getTopDoc(new int[173800][], getBuffReader(complexRankN));
+        int[][] topKMatrix = getTopDoc(new int[173800][], getBuffReader(COMPLEXRANKERTOP));
         reference = new Long2ObjectOpenHashMap<>();
         BufferedReader br= getBuffReader(input);
         String line;

@@ -34,7 +34,7 @@ public class WWWMain extends WWW {
     //30k
     /*/home/aalto/IdeaProjects/PredictiveIndex/aux/sort/bin/binsort --size 16 --length 12 --block-size=900000000  ./InvertedIndex.dat ./sortedInvertedIndex.dat*/
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
-        //NewQualityModel.getModel(finalSingle, unigramModel, fastQT2);
+        //NewQualityModel.getModel(SINGLEINDEX, UNIGRAMQUALITYMODEL, F2);
         //Selection.getProbInfo(uniLanModel, uniConvLanModel, uniProbMap);
         getLenBucketMap();
         //buildQualityMatrix(model1);
@@ -44,23 +44,23 @@ public class WWWMain extends WWW {
         InvertedIndex i2;
         int distance = 5;
         int numThreads = 4;
-        if (!checkExistence(localFreqMap)){
+        if (!checkExistence(LOCALTERMFREQ)){
             i2 = new InvertedIndex(distance, numThreads);
             startBatteria(i2, 0, numThreads);
             getLocFreqMap(i2.termFreqArray, i2.uniTerms); //no need
             //serialize(i2.termFreqArray, termFrequencyArray);
-            serialize(i2.globalStats,   gStats);
+            serialize(i2.globalStats,   GLOBALSTATS);
         }
         if(true/*!checkExistence(dumpMap)*/){
             //D-Bigram
-            //i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), null, (long[]) deserialize(gStats), distance, true, dBigramIndex, numThreads);
-            //buildStructure(i2, numThreads);
-            //Single + HIT
-            i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), (int[]) deserialize(hitScores), (long[]) deserialize(gStats), 1, false, singleIndex, numThreads);
+            i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(LOCALTERMFREQ), null, (long[]) deserialize(GLOBALSTATS), distance, true, dBigramIndex, numThreads);
             buildStructure(i2, numThreads);
-            //BigramIndex.getBigramIndex(finalSingle);
+            //Single + HIT
+            i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(LOCALTERMFREQ), (int[]) deserialize(HITSCORES), (long[]) deserialize(GLOBALSTATS), 1, false, singleIndex, numThreads);
+            buildStructure(i2, numThreads);
+            BigramIndex.getBigramIndex(SINGLEINDEX);
         }
-        //i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(localFreqMap), (int[]) deserialize(hitScores), (long[]) deserialize(gStats), 1, false, singleIndex, numThreads);
+        //i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(LOCALTERMFREQ), (int[]) deserialize(HITSCORES), (long[]) deserialize(GLOBALSTATS), 1, false, singleIndex, numThreads);
         //startBatteria(i2, 0, numThreads);
         //serialize(i2.missingWords,results+"trueMissingSet");
         buildFinalStructures();
@@ -92,38 +92,38 @@ public class WWWMain extends WWW {
     }
 
     private static void buildQualityModels() throws IOException, ClassNotFoundException {
-        if(checkExistence(dBiModel)) {
-            getBigramQualityModel(1, finalDBigram, dBigramDumpMap, dBiModel);
+        if(checkExistence(DBIGRAMQUALITYMODEL)) {
+            getBigramQualityModel(1, DBIGRAMINDEX, dBigramDumpMap, DBIGRAMQUALITYMODEL);
         }
-        if(!checkExistence(hitModel)){
-            UnigramQualityModel.getUnigramQualityModel(1, finalHIT, hitDumpMap, hitModel);
+        if(!checkExistence(HITQUALITYMODEL)){
+            UnigramQualityModel.getUnigramQualityModel(1, HITINDEX, hitDumpMap, HITQUALITYMODEL);
         }
-        if(!checkExistence(unigramModel)) {
-            UnigramQualityModel.getUnigramQualityModel(1, finalSingle, unigramDumpMap, unigramModel);
+        if(!checkExistence(UNIGRAMQUALITYMODEL)) {
+            UnigramQualityModel.getUnigramQualityModel(1, SINGLEINDEX, unigramDumpMap, UNIGRAMQUALITYMODEL);
         }
     }
 
     private static void printModels() throws IOException, ClassNotFoundException {
-        printQualityModel(dBiModel);
-        printQualityModel(hitModel);
-        printQualityModel(unigramModel);
+        printQualityModel(DBIGRAMQUALITYMODEL);
+        printQualityModel(HITQUALITYMODEL);
+        printQualityModel(UNIGRAMQUALITYMODEL);
     }
 
     private static void buildFinalStructures() throws IOException {
-        if(!checkExistence(finalSingle))
-            ExternalSort.massiveBinaryMerge(new File(singleIndex+rawI2), finalSingle, false);
-        if(!checkExistence(finalHIT))
-            ExternalSort.massiveBinaryMerge(new File(HITIndex+rawI2), finalHIT, false);
-        if(!checkExistence(finalDBigram))
-            ExternalSort.massiveBinaryMerge(new File(dBigramIndex+rawI2), finalDBigram, true);
+        if(!checkExistence(SINGLEINDEX))
+            ExternalSort.massiveBinaryMerge(new File(singleIndex+rawI2), SINGLEINDEX, false);
+        if(!checkExistence(HITINDEX))
+            ExternalSort.massiveBinaryMerge(new File(HITIndex+rawI2), HITINDEX, false);
+        if(!checkExistence(DBIGRAMINDEX))
+            ExternalSort.massiveBinaryMerge(new File(dBigramIndex+rawI2), DBIGRAMINDEX, true);
     }
 
 
     private static void checkExtraData() throws IOException {
-        if(!checkExistence(hitScores))  getHitScore2();
-        if(!checkExistence(bigFilterSet))  getBigFilterSet();
-        if(!checkExistence(smallFilterSet)) getSmallFilterSet();
-        if(!checkExistence(fastQT))     getFQT(10)  ;
+        if(!checkExistence(HITSCORES))  getHitScore2();
+        if(!checkExistence(BIG_FILTER_SET))  getBigFilterSet();
+        if(!checkExistence(SMALL_FILTER_SET)) getSmallFilterSet();
+        if(!checkExistence(F))     getFQT(10)  ;
         if(!checkExistence(accessMap))  uniquePairs();
         if(!checkExistence(uniqueTerms)) getUniqueTermsSet();
 
@@ -135,7 +135,7 @@ public class WWWMain extends WWW {
         int [] newBM25 = new int[3];
         int [] posting = new int[3];
         int max = -99;
-        DataInputStream DIStream = getDIStream(finalSingle);
+        DataInputStream DIStream = getDIStream(SINGLEINDEX);
 
         //DataOutputStream DOStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(metadata+"PLLength.bin")));
         while (true) {
@@ -185,7 +185,7 @@ public class WWWMain extends WWW {
         }
 
         if(false){
-            Long2ObjectOpenHashMap<Int2IntMap> h = (Long2ObjectOpenHashMap<Int2IntMap>) deserialize(fastQT);
+            Long2ObjectOpenHashMap<Int2IntMap> h = (Long2ObjectOpenHashMap<Int2IntMap>) deserialize(F);
             for (long key: h.keySet()) {
                 for(int m : h.get(key).keySet()){
                     System.out.println(Arrays.toString(getTerms(key)) + " " + m +" "+ h.get(key).get(m));

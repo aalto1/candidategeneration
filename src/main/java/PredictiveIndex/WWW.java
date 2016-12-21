@@ -25,116 +25,134 @@ public abstract class WWW {
      *
      */
 
-    //root
-    static final String root        = System.getProperty("user.dir")+"/data/";
+
+    static final String ROOT        = System.getProperty("user.dir")+"/data/";
 
     //folders
-    static final String [] folder  = new String[]{root + 0 +"/", root + 1 +"/", root + 2 +"/", root + 3 +"/"};
+    static final String [] FOLDER  = new String[]{
+            ROOT + 0 +"/",
+            ROOT + 1 +"/",
+            ROOT + 2 +"/",
+            ROOT + 3 +"/"};
 
-    static final String metadata    = root + "metadata/";
-    static final String results     = root + "results/";
-    static final String models      = root + "models/";
-    static final String source      = root + "source/";
-    static final String maps        = root + "maps/";
-
-    //threads
-    static final String [] CW       = new String[]{folder[0]+"clueweb",folder[1]+"clueweb",folder[2]+"clueweb",folder[3]+"clueweb"};
-    static final String [] docStat  = new String[]{folder[0]+"localTermStats",folder[1]+"localTermStats",folder[2]+"localTermStats",folder[3]+"localTermStats"};
-    static final String [] docInfo  = new String[]{folder[0]+"docInfo.csv",folder[1]+"docInfo.csv",folder[2]+"docInfo.csv",folder[3]+"docInfo.csv"};
-
-    //source
-    static final String nonStemClue = source + "noStemmerIndex";
-    static final String complexRank = source + "complexRankerResultsTotal";
-    static final String complexRankN= source + "complexRankerResultsTotalNew";
-    static final String trainQ      = source + "trainQ";
-    static final String trainQconv  = source + "trainQconverted";
-    static final String trainQBigram= source + "trainQBigram";
-    static final String trainQagu   = source + "trainQagumented";
-    static final String allQ        = source + "million09_all";
-    static final String tMap        = source + "termIDs";
-    static final String oldDocInfo  = source + "oldDocInfo";
-    static final String didNameMap  = source + "didNameMap";
-    static final String finalDocInfo= source + "docInfo";
-    static final String didMap      = source + "didMap";
-
-    static final String trentaDoc   = source + "10documents";
-    static final String array30     = source + "array30";
-    static final String hitScores   = source + "hitScores";
-    static final String hitScoresCSV= source + "hitScores.csv";
-
-    //prob
-    static final String prob                = source +"prob/";
-
-    static final String uniLanModel         = prob + "uniLanModel";
-    static final String uniConvLanModel     = prob + "uniConvLanModel";
-    static final String uniProbMap          = prob + "uniProbMap";
-    static final String biLanModel          = prob + "biLanModel";
-    static final String biConvLanModel      = prob + "biConvLanModel";
-    static final String biProbMap           = prob + "biProbMap";
-
-    //metadata
-    static final String localFreqMap        = metadata + "localFreqMap";
-    static final String termFrequencyArray  = metadata + "termFrequencyArray";
-    static final String gStats              = metadata + "globalStats";
-    static final String smallFilterSet      = metadata + "smallFilterSet";
-    static final String bigFilterSet        = metadata + "bigFilterSet";
-    static final String uniqueTerms         = metadata + "uniqueTerms";
-    static final String dumpedPostings      = metadata + "dumpedPostings";
-    static final String fastQT              = metadata + "fastQT";
-    static final String fastQT2             = metadata + "fastQT2";
-    static final String toPick              = metadata + "toPick";
-
-    //maps
-    static final String unigramDumpMap      = maps + "unigramDumpMap";
-    static final String hitDumpMap          = maps + "hitDumpMap";
-    static final String dBigramDumpMap      = maps + "dbigramDumpMap";
-    static final String serDIDMap           = maps + "serDIDMap";
-    static final String bucketMap           = maps + "bucketMap";
+    static final String [] CW       = new String[]{FOLDER[0]+"clueweb",FOLDER[1]+"clueweb",FOLDER[2]+"clueweb",FOLDER[3]+"clueweb"};
+    static final String [] docStat  = new String[]{FOLDER[0]+"localTermStats",FOLDER[1]+"localTermStats",FOLDER[2]+"localTermStats",FOLDER[3]+"localTermStats"};
+    static final String [] docInfo  = new String[]{FOLDER[0]+"docInfo.csv",FOLDER[1]+"docInfo.csv",FOLDER[2]+"docInfo.csv",FOLDER[3]+"docInfo.csv"};
 
 
-    static final String accessMap   = maps + "accessMap";
+    //////////////////////////////////////////////////////////////////////////////////////////
 
-    //results
-    static final String singleIndex = results + "singleIndex/";
-    static final String bigramIndex = results + "bigramIndex/";
-    static final String dBigramIndex= results + "dBigramIndex/";
-    static final String HITIndex    = results + "HITIndex/";
+    static final String SOURCE	    	= ROOT + "SOURCE/";                                             //F
+        static final String MODELS	    	= SOURCE + "MODELS/";                                       //F
+            static final String LANGUAGE	    = MODELS + "LANGUAGE/";                                   //F
+                static final String UNIGRAMLANGUAGEMODEL	        = LANGUAGE + "UNIGRAMLANGUAGEMODEL";
+                static final String UNIGRAMLANGUAGEMODELCONVERTED	= LANGUAGE + "UNIGRAMLANGUAGEMODELCONVERTED";
+                static final String UNIGRAMLANGUAGEMODELMAPPING	    = LANGUAGE + "UNIGRAMLANGUAGEMODELMAPPING";
+                static final String BIGRAMLANGUAGEMODEL	    	    = LANGUAGE + "BIGRAMLANGUAGEMODEL";
+                static final String BIGRAMLANGUAGEMODELCONVERTED    = LANGUAGE + "BIGRAMLANGUAGEMODELCONVERTED";
+                static final String BIGRAMLANGUAGEMODELMAPPING	    = LANGUAGE + "BIGRAMLANGUAGEMODELMAPPING";
+            static final String QUALITY         = MODELS + "QUALITY/";                                   //F
+                static final String UNIGRAMQUALITYMODEL     = QUALITY + "source/";
+                static final String HITQUALITYMODEL	        = QUALITY + "source/";
+                static final String BIGRAMQUALITYMODEL	    = QUALITY + "source/";
+                static final String DBIGRAMQUALITYMODEL 	= QUALITY + "source/";
+             static final String EMPTY          = MODELS + "source/";                                   //F
+                static final String EMPTYGROUND	            = EMPTY + "source/";
+                static final String EMPTYINDEX	            = EMPTY + "source/";
+        static final String GROUND_TRUTH	= SOURCE + "GROUND_TRUTH/";                                       //F
+            static final String COMPLEXRANKERTOP    =   GROUND_TRUTH + "complexRankerResultsTotalNew";
+        static final String TRAIN	    	= SOURCE + "TRAIN/";                                       //F
+            static final String TRAINQ          = TRAIN + "trainQ";
+            static final String TRAINQAGUMENTED  = TRAIN + "trainQconverted";
+            static final String TRAINQBIGRAM    = TRAIN + "trainQBigram";
+            static final String TRAINQCONVERTED = TRAIN + "trainQAgumented";
+        static final String TEST	    	= SOURCE + "TEST/";                                       //F
+            static final String TESTQ           = TEST + "testQ";
+            static final String TESTQAGUMENTED   = TEST + "testQconverted";
+            static final String TESTQBIGRAM     = TEST + "testQBigram";
+            static final String TESTQCONVERTED  = TEST + "trestQAgumented";
+        static final String TRAIN_TEST	    = SOURCE + "TRAIN_TEST/";                                       //F
+            static final String TRAIN_TESTQ               = TRAIN_TEST + "million09_all";
+        static final String HITDATA         = SOURCE + "HITDATA/";                                          //F
+            static final String HITSCORES         = HITDATA + "hitScores";
+            static final String HITSCORESCSV      = HITDATA + "hitScores.csv";
+    static final String CLUEWEBDATA     = SOURCE + "CLUEWEBDATA/";                                              //F
+            static final String CLUEWEB         = CLUEWEBDATA + "noStemmerIndex";
+            static final String TERMMAP         = CLUEWEBDATA + "termIDs";
+            static final String OLDDOCINFO      = CLUEWEBDATA + "oldDocInfo";
+            static final String DOCINFO         = CLUEWEBDATA + "docInfo";
+            static final String DIDNAMEMAP      = CLUEWEBDATA + "didNameMap";
+            static final String DIDMAP          = CLUEWEBDATA + "didMap";
+            static final String DIDMAPSER       = CLUEWEBDATA + "didMap";
 
-    //result final index
-    static final String finalIndex  = results + "finalIndex/";
-    static final String finalSingle = finalIndex + "single";
-    static final String finalHIT    = finalIndex + "hit";
-    static final String finalDBigram= finalIndex + "dbigram";
-    static final String finalBigram= finalIndex + "bigram";
+
+    //////////////////////////////////////////////////////////////////////////////////////////
+
+    static final String TRAIN_RESULTS	    = ROOT + "source/";
+        static final String METADATA	    	= TRAIN_RESULTS + "source/";
+            static final String LENGTHS	    	    = METADATA + "source/";
+                static final String UNILENGTHS      = LENGTHS;
+                static final String HITLENGTHS      = LENGTHS;
+                static final String BILENGTHS       = LENGTHS;
+                static final String DBILENGTHS   = LENGTHS;
+                static final String AGUTERMACCES      = LENGTHS + "";
+            static final String FILTER_SETS	    	= METADATA + "source/";
+                static final String SMALL_FILTER_SET      = FILTER_SETS + "smallFilterSet";
+                static final String BIG_FILTER_SET        = FILTER_SETS + "bigFilterSet";
+            static final String LOCALTERMFREQ	    = METADATA + "LOCALTERMFREQ";
+            static final String GLOBALSTATS	    	= METADATA + "GLOBALSTATS";
+            static final String ACCESSMAP	    	= METADATA + "soTRAINQurce/";
+        static final String QUERY_TRACE	    = ROOT + "source/";
+            static final String FILLEDGROUND        = QUERY_TRACE + "";
+            static final String FILLEDUNIGRAM       = QUERY_TRACE + "";
+            static final String FILLEDBIGRAM        = QUERY_TRACE + "";
+            static final String FILLEDDBIGRAM       = QUERY_TRACE + "";
+            static final String FILLEDHIT           = QUERY_TRACE + "";
+    static final String INDEXES	    	    = TRAIN_RESULTS + "source/";
+            static final String SINGLE	    	    = INDEXES + "source/";
+            static final String BIGRAM	    	    = INDEXES + "source/";
+            static final String DBIGRAM	    	    = INDEXES + "source/";
+            static final String HIT	    	        = INDEXES + "source/";
+            static final String FINAL               = INDEXES + "source/";
+                static final String SINGLEINDEX	    	    = FINAL + "source/";
+                static final String BIGRAMINDEX	    	    = FINAL + "source/";
+                static final String DBIGRAMINDEX	    	= FINAL + "source/";
+                static final String HITINDEX	    	    = FINAL + "source/";
+
+    //////////////////////////////////////////////////////////////////////////////////////////
+    /*
+    static final String TEST_RESULTS	    	= ROOT + "source/";
+        static final String METADATA	    	= TEST_RESULT + "source/";
+            static final String LENGTHS	    	    = METADATA + "source/";
+                static final String UNILENGTHS      = LENGTHS;
+                static final String HITLENGTHS      = LENGTHS;
+                static final String BILENGTHS       = LENGTHS;
+                static final String DBIUNILENGTHS   = LENGTHS;
+                static final String AGUTERMACCESS   = LENGTHS
+
+            static final String FILTER_SETS	    	= METADATA + "source/";
+                static final String SMALL_FILTER_SET      = FILTER_SETS + "smallFilterSet";
+                static final String BIG_FILTER_SET        = FILTER_SETS + "bigFilterSet";
+            static final String TERMFREQ	    	= METADATA + "source/";
+            static final String GLOBALSTATS	    	= METADATA + "source/";
+            static final String ACCESSMAP	    	= METADATA + "source/";
+
+        static final String SELECTED_CHUNKS	    	= TEST_RESULTS + "source/";
+                static final String SELECTED_CHUNKS_UNIGRAM	    = SELECTED_CHUNKS + "source/";
+                static final String SELECTED_CHUNKS_HIT	    	= SELECTED_CHUNKS + "source/";
+                static final String SELECTED_CHUNKS_BIGRAM	    = SELECTED_CHUNKS + "source/";
+                static final String SELECTED_CHUNKS_DBIGRAM    	= SELECTED_CHUNKS + "source/";
 
 
-    static final String rawI2       = "rawI2/";
-    static final String sortedI2    = "sortedI2" ;
-    static final String pListLength = results + "PListLength";
-    static final String pairProbLen = results + "PairProbLen";
-    static final String selected    = results + "selected";
+        static final String INDEXES	    	    = TEST_RESULTS + "source/";
+            static final String SINGLE	    	    = INDEXES + "source/";
+            static final String BIGRAM	    	    = INDEXES + "source/";
+            static final String DBIGRAM	    	    = INDEXES + "source/";
+            static final String HIT	    	        = INDEXES + "source/";
+            static final String FINAL               = INDEXES + "source/";
+            */
+    //////////////////////////////////////////////////////////////////////////////////////////
 
-    //models
-    static final String unigramModel =   models + "unigramModel";
-    static final String hitModel     =   models + "hitModel";
-    static final String dBiModel     =   models + "dBiModel";
-    static final String biModel      =   models + "biModel";
-    static final String model1       =   models + "model1";
-    static final String model2       =   models + "model2";
-    static final String model3       =   models + "model3";
-    static final String model4       =   models + "model4";
-
-
-    static final String bigramEmptyModel    = models + "bigramEmptyModel";
-    static final String unigramEmptyModel   = models + "unigramEmptyModel";
-
-
-
-
-
-    static final String partialModel= models + "partialModel";
-    static final String qualityModel= models + "qualityModel";
-    static final String sortedRange = models + "sortedRanges";
 
 
     static Object2IntMap<String> term2IdMap;
@@ -208,7 +226,7 @@ public abstract class WWW {
 
     static void getTerm2IdMap() throws IOException {
         System.out.println("Fetching Term-TermID map...");
-        BufferedReader br = getBuffReader(tMap);
+        BufferedReader br = getBuffReader(TERMMAP);
         term2IdMap = new Object2IntOpenHashMap<>();
         String line;
         String [] record;
@@ -222,7 +240,7 @@ public abstract class WWW {
 
     static void getId2TermMap() throws IOException {
         System.out.println("Fetching TermID-Term map...");
-        BufferedReader br = getBuffReader(tMap);
+        BufferedReader br = getBuffReader(TERMMAP);
         id2TermMap = new Int2ObjectOpenHashMap<>();
         String line;
         String [] record;
