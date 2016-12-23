@@ -45,7 +45,7 @@ public class GreedySelection extends Selection {
         System.out.println("Final Model Not Found. Building Final Model...");
         checkPostingListLength();
         Long2IntOpenHashMap PLLen = fetchPPLength(getDIStream(pListLength));
-        BufferedReader br = getBuffReader(uniLanModel);
+        BufferedReader br = getBuffReader(UNIGRAMLANGUAGEMODEL);
         DataOutputStream DOStream = getDOStream(pairProbLen);
         getTerm2IdMap();
 

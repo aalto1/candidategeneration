@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.function.BiFunction;
 
-import static PredictiveIndex.FastQueryTrace.getFQT;
 import static PredictiveIndex.utilsClass.getDIDMap;
 
 /**
@@ -28,10 +27,10 @@ public class UnigramQualityModel extends Selection {
     static long hit = 0;
 
     public static void getUnigramQualityModel(int function, String index, String dumpMap,  String model) throws IOException, ClassNotFoundException {
-        accMap = (Long2IntOpenHashMap) deserialize(accessMap);
+        accMap = (Long2IntOpenHashMap) deserialize(ACCESSMAP);
         dumped = (Int2LongOpenHashMap) deserialize(dumpMap);
         //Long2ObjectOpenHashMap<Int2IntMap> fastUnigramQueryTrace = getFQT(10);
-        Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>> fastUnigramQueryTrace = (Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>>) deserialize(fastQT+"102");
+        Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>> fastUnigramQueryTrace = (Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>>) deserialize(FILLEDGROUND);
 
         System.out.println(fastUnigramQueryTrace.size());
 
@@ -115,7 +114,7 @@ public class UnigramQualityModel extends Selection {
             }
         }*/
 
-        BufferedWriter bw = getBuffWriter(results+"modelResult");
+        BufferedWriter bw = getBuffWriter(METADATA+"modelResult");
         for(int k : toPrint.keySet()){
             bw.write("############################################\n");
             bw.write("Query: " + k);

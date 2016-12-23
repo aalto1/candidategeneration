@@ -11,7 +11,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedList;
 
-import static PredictiveIndex.FastQueryTrace.getFQT;
 import static PredictiveIndex.InvertedIndex.now;
 import static PredictiveIndex.WWW.getDIStream;
 import static PredictiveIndex.utilsClass.getPair;

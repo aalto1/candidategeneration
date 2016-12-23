@@ -16,11 +16,11 @@ public class NewGreedySelection extends Selection {
     static Long2IntOpenHashMap counterMap;
 
 
-    public static void greedySelection(int limitBudget, String input, String output){
+    public static void greedySelection(int limitBudget, String input, String output, String lanMap ,String bucketmap){
 
         double [][][] model = (double[][][]) deserialize(input);
-        Long2DoubleOpenHashMap probMap = (Long2DoubleOpenHashMap) deserialize(uniProbMap);
-        Long2IntOpenHashMap bukMap  = (Long2IntOpenHashMap) deserialize(bucketMap);
+        Long2DoubleOpenHashMap probMap = (Long2DoubleOpenHashMap) deserialize(lanMap);
+        Long2IntOpenHashMap bukMap  = (Long2IntOpenHashMap) deserialize(bucketmap);
         initCounters();
         heap = new Double2ObjectRBTreeMap<>();
         int x, y;
@@ -80,7 +80,7 @@ public class NewGreedySelection extends Selection {
     //the greedy selection select up to the moment when it doesn't find anything new, than take the top-limitBudget
     public static void initCounters(){
         counterMap = new Long2IntOpenHashMap();
-        IntOpenHashSet trainAguTerms = (IntOpenHashSet) deserialize(uniqueTerms);
+        IntOpenHashSet trainAguTerms = (IntOpenHashSet) deserialize(SMALL_FILTER_SET);
         for (int aguTerm : trainAguTerms) {
             counterMap.put(aguTerm, 0);
         }

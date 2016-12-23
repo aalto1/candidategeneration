@@ -164,13 +164,13 @@ public class Selection extends WWW {
         serialize(finalQM,      model+"_qualityModel");
     }
 
-    public static void getLenBucketMap(){
+    public static void getLenBucketMap(String bucket){
         Int2IntOpenHashMap lengths = (Int2IntOpenHashMap) deserialize(LOCALTERMFREQ);
         Long2IntOpenHashMap bucMap = new Long2IntOpenHashMap();
         for (int key : lengths.keySet()) {
             bucMap.put(key, getLenBucket(lengths.get(key)));
         }
-        serialize(bucMap, bucketMap);
+        serialize(bucMap, bucket);
     }
 
     public static void getProbInfo(String one, String two, String three) throws IOException {

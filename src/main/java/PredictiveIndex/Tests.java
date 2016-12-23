@@ -12,7 +12,7 @@ import java.util.Arrays;
 public class Tests extends WWWMain{
 
     public static void december7() throws IOException {
-        Int2IntOpenHashMap map = (Int2IntOpenHashMap) deserialize(localFreqMap);
+        Int2IntOpenHashMap map = (Int2IntOpenHashMap) deserialize(LOCALTERMFREQ);
         int [] a = new int[map.size()];
         map.values().toArray(a);
         Arrays.sort(a);

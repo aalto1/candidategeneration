@@ -77,7 +77,7 @@ public class InvertedIndex extends WWW {
         termFreqArray = new int[91553702];
         this.distance = distance;
 
-        this.uniTerms = (IntOpenHashSet) deserialize(uniqueTerms);
+        this.uniTerms = (IntOpenHashSet) deserialize(SMALL_FILTER_SET);
 
         for (int i = 0; i < numThreads ; i++) {
             ClueDIS[i]  = getDIStream(CW[i]);
@@ -96,7 +96,7 @@ public class InvertedIndex extends WWW {
 
 
         if(!isBgram){
-            this.uniTerms = (IntOpenHashSet) deserialize(uniqueTerms);
+            this.uniTerms = (IntOpenHashSet) deserialize(SMALL_FILTER_SET);
             this.HITS = HITS;
         }
         this.termFreqMap = termFreqMap;
@@ -114,7 +114,7 @@ public class InvertedIndex extends WWW {
 
             localStatsDIS[tn] = getDIStream(docStat[tn]);
 
-            DOS[tn]  = getDOStream(prefix+rawI2+dump.getAndAdd(1));
+            DOS[tn]  = getDOStream(prefix+dump.getAndAdd(1));
 
             buffer[tn]   = new int[bufferSize][4];
             //dMap[i]     = new Long2LongOpenHashMap();
@@ -242,8 +242,8 @@ public class InvertedIndex extends WWW {
         if(isBigram)
             sampledSelection(tn, twoTerms, true);
         else{
-            singleFlush(singleComparator, SINGLE, twoTerms, 1, true, tn);
-            singleFlush(hitComparator, HIT, twoTerms, 2, true, tn);
+            singleFlush(singleComparator, UNIGRAMRAW, twoTerms, 1, true, tn);
+            singleFlush(hitComparator, HITRAW, twoTerms, 2, true, tn);
         }
 
 
@@ -315,7 +315,7 @@ public class InvertedIndex extends WWW {
     private void writeEntry(String pre, int i, int tn) throws IOException {
         DOS[tn].writeInt(buffer[tn][i][0]);
 
-        if (pre == singleIndex)
+        if (pre == UNIGRAMRAW)
             DOS[tn].writeInt(buffer[tn][i][1]);
         else
             DOS[tn].writeInt(buffer[tn][i][2]);
@@ -335,7 +335,7 @@ public class InvertedIndex extends WWW {
 
         System.out.println("Flushing " + pre);
         int threshold = getThreshold(entry, tn);
-        DOS[tn]  = getDOStream(pre+rawI2+dump.getAndAdd(1));
+        DOS[tn]  = getDOStream(pre+dump.getAndAdd(1));
         Arrays.sort(buffer[tn], 0 , pointers[tn], c);
         getThreshold(1,tn);
         int currentTerm = -1;
@@ -344,10 +344,10 @@ public class InvertedIndex extends WWW {
             writeEntry(pre, i , tn);
         }
         if(end) {
-            if (pre == singleIndex)
-                serialize(uniMap, unigramDumpMap);
+            if (pre == UNIGRAMRAW)
+                serialize(uniMap, UNILENGTHS);
             else
-                serialize(hitMap, hitDumpMap);
+                serialize(hitMap, HITLENGTHS);
         }
         DOS[tn].close();
     }
@@ -371,7 +371,7 @@ public class InvertedIndex extends WWW {
                 pointers[tn]++;
 
                 if (pointers[tn] == buffer[tn].length) {
-                    singleFlush(singleComparator, singleIndex, twoTerms, 1, false, tn);
+                    singleFlush(singleComparator, UNIGRAMRAW, twoTerms, 1, false, tn);
                     //singleFlush(hitComparator, HITIndex, twoTerms, 2, false, tn);
                     pointers[tn]=0;
                 }
@@ -380,7 +380,7 @@ public class InvertedIndex extends WWW {
     }
 
     private synchronized void uniIncrementDumpCounter(String pre, int tn, int [] t, int term){
-        if (pre == singleIndex) {
+        if (pre == UNIGRAMRAW) {
             t = getTerms(uniMap.get(term));
             uniMap.put(term, getPair(t[0], t[1]++));
         }else {
@@ -475,9 +475,9 @@ public class InvertedIndex extends WWW {
         //System.out.println("Processed docs: " + doc + "Sampled Natural Selection:" + (System.currentTimeMillis() - now) + "ms.\tThreshold: " + threshold +"\t MaxBM25: " + maxBM25);
         DOS[tn].close();
         if(end)
-            serialize(dBiMap, dBigramDumpMap);
+            serialize(dBiMap, DBILENGTHS);
         else
-            DOS[tn]  = getDOStream(prefix+rawI2+dump.getAndAdd(1));
+            DOS[tn]  = getDOStream(prefix+dump.getAndAdd(1));
         keepPointers[tn] = 0;
 
     }

@@ -88,7 +88,7 @@ public class ExternalSort {
 
 
     public static void massiveBinaryMerge(File folder, String output, boolean fFields) throws IOException {
-        bw = getBuffWriter(dBigramIndex+"index.csv");
+        bw = getBuffWriter(METADATA+"index.csv");
         fourFields = fFields;
 
         LinkedList<long[][]> LL = new LinkedList<>();

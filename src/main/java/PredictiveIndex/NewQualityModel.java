@@ -31,11 +31,11 @@ public class NewQualityModel extends Selection {
 
     public static double[][][] getModel(String index, String output, String model, String length) throws IOException, ClassNotFoundException {
         System.out.println("Fast Query Trace fetched!\n Processing Inverted Index...");
-        Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>> fastUnigramQueryTrace = (Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>>) deserialize(fastQT2);
+        Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>> fastUnigramQueryTrace = (Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>>) deserialize(FILLEDGROUND);
         Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>> emptymodel = (Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>>) deserialize(EMPTYGROUND);
         dumped = (Int2LongOpenHashMap) deserialize(length);
 
-        DataInputStream DIStream = getDIStream(SINGLEINDEX);
+        DataInputStream DIStream = getDIStream(UNIGRAMINDEX);
         int[] posting = new int[3];                         //
         long currentTerm = -1;
         Int2ObjectOpenHashMap<Int2IntOpenHashMap> documentsToFind = new Int2ObjectOpenHashMap();
@@ -106,7 +106,7 @@ public class NewQualityModel extends Selection {
         double value = 0;
         int x,y;
         int [] gapExtremes;
-        Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>> model = (Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>>) deserialize(unigramModel);
+        Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>> model = (Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>>) deserialize(UNIGRAMQUALITYMODEL);
 
         for (Long2ObjectOpenHashMap<long[]> aguTerms: model.values()) {
             for(long aguTerm: aguTerms.keySet()){

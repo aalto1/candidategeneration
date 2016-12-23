@@ -13,7 +13,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedList;
 
-import static PredictiveIndex.FastQueryTrace.getFQT;
 import static PredictiveIndex.Selection.deltaRanges;
 import static PredictiveIndex.Selection.getEntry;
 import static PredictiveIndex.WWW.*;
@@ -32,7 +31,7 @@ public class BigramIndex {
     };
 
     static boolean check= false;
-    static IntOpenHashSet unigram = (IntOpenHashSet) deserialize(uniqueTerms);
+    static IntOpenHashSet unigram = (IntOpenHashSet) deserialize(SMALL_FILTER_SET);
 
     /*The code has a strange outcome since in the final single inverted index we have just
     * 19752 posting list vs the 20856 terms. 1104 terms missing saved in a set
@@ -54,7 +53,7 @@ public class BigramIndex {
         int [][] auxArray = null;
         byte [] toskip = new byte[4*3*100];
         //DataOutputStream DOStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(metadata+"PLLength.bin")));
-        if(!checkExistence(results+"top")) {
+        if(!checkExistence(UNIGRAMINDEX1000)) {
             for (int term = 0, post = 0; true; ) {
                 posting = getEntry(DIStream, posting);
                 if (posting == null) break;
@@ -82,16 +81,16 @@ public class BigramIndex {
 
 
             }
-            serialize(top1000I2, results+"top");
+            serialize(top1000I2, UNIGRAMINDEX1000);
 
         }else{
-            top1000I2 = (Int2ObjectOpenHashMap<int[][]>) deserialize(results+"top");
+            top1000I2 = (Int2ObjectOpenHashMap<int[][]>) deserialize(UNIGRAMINDEX1000);
         }
 
         System.out.println(top1000I2.size());
         //System.out.println(top1000I2.containsKey(185));
         //serialize(unigram.removeAll(top1000I2.keySet()), results+"missingSet");
-        serialize(unigram, results+"missingSet");
+        //serialize(unigram, results+"missingSet");
         System.out.println(unigram.size());
         System.out.println(top1000I2.size());
 
@@ -100,10 +99,10 @@ public class BigramIndex {
 
         int [] bA;
         int [][] aux = new int[2000][2];
-        DataOutputStream DOS = getDOStream(finalBigram);
+        DataOutputStream DOS = getDOStream(BIGRAMINDEX);
         int intersectionLen;
         int missing = 0;
-        for (long bigram: (LongOpenHashSet) deserialize(smallFilterSet)){
+        for (long bigram: (LongOpenHashSet) deserialize(SMALL_FILTER_SET)){
             bA = getTerms(bigram);
             try {
                 System.arraycopy(top1000I2.get(bA[0]), 0, aux, 0, top1000I2.get(bA[0]).length);
@@ -145,8 +144,8 @@ public class BigramIndex {
 
     //use train and query set togheter
     public static void checkFilterSets(){
-        IntOpenHashSet  terms = (IntOpenHashSet) deserialize(uniqueTerms);
-        LongOpenHashSet bigrams = (LongOpenHashSet) deserialize(smallFilterSet);
+        IntOpenHashSet  terms = (IntOpenHashSet) deserialize(SMALL_FILTER_SET);
+        LongOpenHashSet bigrams = (LongOpenHashSet) deserialize(SMALL_FILTER_SET);
         int [] aux;
         int counter=0;
         for(long bigram : bigrams){

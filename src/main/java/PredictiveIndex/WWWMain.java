@@ -1,25 +1,11 @@
 package PredictiveIndex;
 
 import it.unimi.dsi.fastutil.ints.*;
-import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-
 import java.io.*;
-import java.nio.Buffer;
-import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-
-
 import static PredictiveIndex.Extra.*;
-import static PredictiveIndex.FastQueryTrace.buildFastQT2;
-import static PredictiveIndex.FastQueryTrace.getFQT;
-import static PredictiveIndex.NewQualityModel.buildQualityMatrix;
-import static PredictiveIndex.QualityModel.getBigramQualityModel;
-import static PredictiveIndex.QualityModel.printQualityModel;
-import static PredictiveIndex.Selection.getLenBucketMap;
+import static PredictiveIndex.Selection.printQualityModel;
 import static PredictiveIndex.utilsClass.*;
 
 /**
@@ -36,9 +22,9 @@ public class WWWMain extends WWW {
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
         //NewQualityModel.getModel(SINGLEINDEX, UNIGRAMQUALITYMODEL, F2);
         //Selection.getProbInfo(uniLanModel, uniConvLanModel, uniProbMap);
-        getLenBucketMap();
+        //getLenBucketMap(UNIBUCKET);
         //buildQualityMatrix(model1);
-        NewGreedySelection.greedySelection(100000, model1, "chunk");
+        //NewGreedySelection.greedySelection(100000, model1, "chunk");
         System.exit(1);
 
         InvertedIndex i2;
@@ -53,12 +39,12 @@ public class WWWMain extends WWW {
         }
         if(true/*!checkExistence(dumpMap)*/){
             //D-Bigram
-            i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(LOCALTERMFREQ), null, (long[]) deserialize(GLOBALSTATS), distance, true, dBigramIndex, numThreads);
-            buildStructure(i2, numThreads);
+            i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(LOCALTERMFREQ), null, (long[]) deserialize(GLOBALSTATS), distance, true, DBIGRAMINDEX, numThreads);
+            buildStructure(i2, numThreads, DBIGRAMRAW);
             //Single + HIT
-            i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(LOCALTERMFREQ), (int[]) deserialize(HITSCORES), (long[]) deserialize(GLOBALSTATS), 1, false, singleIndex, numThreads);
-            buildStructure(i2, numThreads);
-            BigramIndex.getBigramIndex(SINGLEINDEX);
+            i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(LOCALTERMFREQ), (int[]) deserialize(HITSCORES), (long[]) deserialize(GLOBALSTATS), 1, false, UNIGRAMINDEX, numThreads);
+            buildStructure(i2, numThreads, UNIGRAMRAW);
+            BigramIndex.getBigramIndex(UNIGRAMINDEX);
         }
         //i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(LOCALTERMFREQ), (int[]) deserialize(HITSCORES), (long[]) deserialize(GLOBALSTATS), 1, false, singleIndex, numThreads);
         //startBatteria(i2, 0, numThreads);
@@ -70,7 +56,7 @@ public class WWWMain extends WWW {
 
     }
 
-    private static void buildStructure(InvertedIndex i2, int numThreads) throws IOException, ClassNotFoundException, InterruptedException {
+    private static void buildStructure(InvertedIndex i2, int numThreads, String dumpedPostings) throws IOException, ClassNotFoundException, InterruptedException {
         System.out.println("");
         startBatteria(i2, 1, numThreads);
         serialize(Arrays.stream(i2.dmpPost).sum(), dumpedPostings);
@@ -93,13 +79,15 @@ public class WWWMain extends WWW {
 
     private static void buildQualityModels() throws IOException, ClassNotFoundException {
         if(checkExistence(DBIGRAMQUALITYMODEL)) {
-            getBigramQualityModel(1, DBIGRAMINDEX, dBigramDumpMap, DBIGRAMQUALITYMODEL);
+            //NewQualityModel.getModel(1, DBIGRAMINDEX, DBILENGTHS, DBIGRAMQUALITYMODEL);
+            NewQualityModel.getModel(DBIGRAMINDEX, DBILENGTHS, DBIGRAMQUALITYMODEL,"dw");
+
         }
         if(!checkExistence(HITQUALITYMODEL)){
-            UnigramQualityModel.getUnigramQualityModel(1, HITINDEX, hitDumpMap, HITQUALITYMODEL);
+            UnigramQualityModel.getUnigramQualityModel(1, HITINDEX, HITLENGTHS, HITQUALITYMODEL);
         }
         if(!checkExistence(UNIGRAMQUALITYMODEL)) {
-            UnigramQualityModel.getUnigramQualityModel(1, SINGLEINDEX, unigramDumpMap, UNIGRAMQUALITYMODEL);
+            UnigramQualityModel.getUnigramQualityModel(1, UNIGRAMINDEX, UNILENGTHS, UNIGRAMQUALITYMODEL);
         }
     }
 
@@ -110,12 +98,12 @@ public class WWWMain extends WWW {
     }
 
     private static void buildFinalStructures() throws IOException {
-        if(!checkExistence(SINGLEINDEX))
-            ExternalSort.massiveBinaryMerge(new File(singleIndex+rawI2), SINGLEINDEX, false);
+        if(!checkExistence(UNIGRAMINDEX))
+            ExternalSort.massiveBinaryMerge(new File(UNIGRAMRAW), UNIGRAMINDEX, false);
         if(!checkExistence(HITINDEX))
-            ExternalSort.massiveBinaryMerge(new File(HITIndex+rawI2), HITINDEX, false);
+            ExternalSort.massiveBinaryMerge(new File(HITRAW), HITINDEX, false);
         if(!checkExistence(DBIGRAMINDEX))
-            ExternalSort.massiveBinaryMerge(new File(dBigramIndex+rawI2), DBIGRAMINDEX, true);
+            ExternalSort.massiveBinaryMerge(new File(DBIGRAMRAW), DBIGRAMINDEX, true);
     }
 
 
@@ -123,9 +111,8 @@ public class WWWMain extends WWW {
         if(!checkExistence(HITSCORES))  getHitScore2();
         if(!checkExistence(BIG_FILTER_SET))  getBigFilterSet();
         if(!checkExistence(SMALL_FILTER_SET)) getSmallFilterSet();
-        if(!checkExistence(F))     getFQT(10)  ;
-        if(!checkExistence(accessMap))  uniquePairs();
-        if(!checkExistence(uniqueTerms)) getUniqueTermsSet();
+        if(!checkExistence(ACCESSMAP))  uniquePairs();
+        if(!checkExistence(SMALL_FILTER_SET)) getUniqueTermsSet();
 
     }
 
@@ -135,7 +122,7 @@ public class WWWMain extends WWW {
         int [] newBM25 = new int[3];
         int [] posting = new int[3];
         int max = -99;
-        DataInputStream DIStream = getDIStream(SINGLEINDEX);
+        DataInputStream DIStream = getDIStream(UNIGRAMINDEX);
 
         //DataOutputStream DOStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(metadata+"PLLength.bin")));
         while (true) {
@@ -157,51 +144,6 @@ public class WWWMain extends WWW {
 
         }
         System.out.println(max);
-    }
-
-    private static void tryTry() throws IOException {
-
-        if(true) {
-            int[][] decodingCheck = new int[30][];
-            BufferedReader br = getBuffReader(trentaDoc);
-            String line;
-            int[] termID;
-            String[] auxBuff;
-            line = br.readLine();
-            line = br.readLine();
-            for (int k = 0; (line = br.readLine()) != null; k++) {
-                auxBuff = line.split(" ");
-                termID = new int[auxBuff.length];
-                for (int i = 0; i < auxBuff.length; i++) {
-                    termID[i] = Integer.valueOf(auxBuff[i]);
-                }
-                decodingCheck[k] = termID;
-                line = br.readLine();
-            }
-            for (int [] a : decodingCheck) System.out.println(Arrays.toString(a));
-            serialize(decodingCheck,array30);
-
-
-        }
-
-        if(false){
-            Long2ObjectOpenHashMap<Int2IntMap> h = (Long2ObjectOpenHashMap<Int2IntMap>) deserialize(F);
-            for (long key: h.keySet()) {
-                for(int m : h.get(key).keySet()){
-                    System.out.println(Arrays.toString(getTerms(key)) + " " + m +" "+ h.get(key).get(m));
-                }
-            }
-        }
-        System.exit(1);
-
-    }
-
-    public static void x(){
-        IntOpenHashSet a = (IntOpenHashSet) deserialize(uniqueTerms);
-        System.out.println(a.size());
-        System.out.println(Collections.max(a));
-        System.exit(1);
-
     }
 
 
@@ -260,8 +202,8 @@ public class WWWMain extends WWW {
        // System.exit(1);
 
     public static void elaborateMe(String modelPath) throws IOException {
-        Int2LongOpenHashMap posTListLength = (Int2LongOpenHashMap) deserialize(unigramDumpMap);
-        BufferedWriter bw = getBuffWriter(results+"me.csv");
+        Int2LongOpenHashMap posTListLength = (Int2LongOpenHashMap) deserialize(ACCESSMAP);
+        BufferedWriter bw = getBuffWriter(METADATA+"me.csv");
         double value = 0;
         Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>> model = (Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>>) deserialize(modelPath);
         for (Long2ObjectOpenHashMap<long[]> aguTerms: model.values()) {
@@ -287,7 +229,7 @@ public class WWWMain extends WWW {
                 sb.append(field[i+1]*100.0/field[i] + ",");
             }
         }
-        BufferedWriter bw = getBuffWriter(metadata+"qiresults.csv");
+        BufferedWriter bw = getBuffWriter(METADATA+"QI.CSV");
         bw.write(sb.toString());
         bw.close();
         br.close();
