@@ -39,36 +39,35 @@ public abstract class WWW {
     static final String [] docStat  = new String[]{FOLDER[0]+"localTermStats",FOLDER[1]+"localTermStats",FOLDER[2]+"localTermStats",FOLDER[3]+"localTermStats"};
     static final String [] docInfo  = new String[]{FOLDER[0]+"docInfo.csv",FOLDER[1]+"docInfo.csv",FOLDER[2]+"docInfo.csv",FOLDER[3]+"docInfo.csv"};
 
-
     //////////////////////////////////////////////////////////////////////////////////////////
 
-    static final String SOURCE	    	= ROOT + "SOURCE/";                                             //F
-        static final String MODELS	    	= SOURCE + "MODELS/";                                       //F
-            static final String LANGUAGE	    = MODELS + "LANGUAGE/";                                   //F
+    static final String SOURCE	    	= ROOT + "SOURCE/";                                                 //F
+        static final String MODELS	    	= SOURCE + "MODELS/";                                           //F
+            static final String LANGUAGE	    = MODELS + "LANGUAGE/";                                     //F
                 static final String UNIGRAMLANGUAGEMODEL	        = LANGUAGE + "UNIGRAMLANGUAGEMODEL";
                 static final String UNIGRAMLANGUAGEMODELCONVERTED	= LANGUAGE + "UNIGRAMLANGUAGEMODELCONVERTED";
                 static final String UNIGRAMLANGUAGEMODELMAPPING	    = LANGUAGE + "UNIGRAMLANGUAGEMODELMAPPING";
                 static final String BIGRAMLANGUAGEMODEL	    	    = LANGUAGE + "BIGRAMLANGUAGEMODEL";
                 static final String BIGRAMLANGUAGEMODELCONVERTED    = LANGUAGE + "BIGRAMLANGUAGEMODELCONVERTED";
                 static final String BIGRAMLANGUAGEMODELMAPPING	    = LANGUAGE + "BIGRAMLANGUAGEMODELMAPPING";
-            static final String QUALITY         = MODELS + "QUALITY/";                                   //F
-                static final String UNIGRAMQUALITYMODEL     = QUALITY + "source/";
-                static final String HITQUALITYMODEL	        = QUALITY + "source/";
-                static final String BIGRAMQUALITYMODEL	    = QUALITY + "source/";
-                static final String DBIGRAMQUALITYMODEL 	= QUALITY + "source/";
-             static final String EMPTY          = MODELS + "source/";                                   //F
-                static final String EMPTYGROUND	            = EMPTY + "source/";
-                static final String EMPTYINDEX	            = EMPTY + "source/";
-        static final String GROUND_TRUTH	= SOURCE + "GROUND_TRUTH/";                                       //F
+            static final String QUALITY         = MODELS + "QUALITY/";                                      //F
+                static final String UNIGRAMQUALITYMODEL     = QUALITY + "UNIGRAMQUALITYMODEL";
+                static final String HITQUALITYMODEL	        = QUALITY + "HITQUALITYMODEL";
+                static final String BIGRAMQUALITYMODEL	    = QUALITY + "BIGRAMQUALITYMODEL";
+                static final String DBIGRAMQUALITYMODEL 	= QUALITY + "DBIGRAMQUALITYMODEL";
+             static final String EMPTY          = MODELS + "EMPTY/";                                        //F
+                static final String EMPTYGROUND	            = EMPTY + "EMPTYGROUND";
+                static final String EMPTYINDEX	            = EMPTY + "EMPTYINDEX";
+        static final String GROUND_TRUTH	= SOURCE + "GROUND_TRUTH/";                                     //F
             static final String COMPLEXRANKERTOP    =   GROUND_TRUTH + "complexRankerResultsTotalNew";
-        static final String TRAIN	    	= SOURCE + "TRAIN/";                                       //F
+        static final String TRAIN	    	= SOURCE + "TRAIN/";                                            //F
             static final String TRAINQ          = TRAIN + "trainQ";
-            static final String TRAINQAGUMENTED  = TRAIN + "trainQconverted";
+            static final String TRAINQAGUMENTED = TRAIN + "trainQconverted";
             static final String TRAINQBIGRAM    = TRAIN + "trainQBigram";
             static final String TRAINQCONVERTED = TRAIN + "trainQAgumented";
-        static final String TEST	    	= SOURCE + "TEST/";                                       //F
+        static final String TEST	    	= SOURCE + "TEST/";                                             //F
             static final String TESTQ           = TEST + "testQ";
-            static final String TESTQAGUMENTED   = TEST + "testQconverted";
+            static final String TESTQAGUMENTED  = TEST + "testQconverted";
             static final String TESTQBIGRAM     = TEST + "testQBigram";
             static final String TESTQCONVERTED  = TEST + "trestQAgumented";
         static final String TRAIN_TEST	    = SOURCE + "TRAIN_TEST/";                                       //F
@@ -76,53 +75,52 @@ public abstract class WWW {
         static final String HITDATA         = SOURCE + "HITDATA/";                                          //F
             static final String HITSCORES         = HITDATA + "hitScores";
             static final String HITSCORESCSV      = HITDATA + "hitScores.csv";
-    static final String CLUEWEBDATA     = SOURCE + "CLUEWEBDATA/";                                              //F
+    static final String CLUEWEBDATA     = SOURCE + "CLUEWEBDATA/";                                          //F
             static final String CLUEWEB         = CLUEWEBDATA + "noStemmerIndex";
             static final String TERMMAP         = CLUEWEBDATA + "termIDs";
             static final String OLDDOCINFO      = CLUEWEBDATA + "oldDocInfo";
             static final String DOCINFO         = CLUEWEBDATA + "docInfo";
             static final String DIDNAMEMAP      = CLUEWEBDATA + "didNameMap";
             static final String DIDMAP          = CLUEWEBDATA + "didMap";
-            static final String DIDMAPSER       = CLUEWEBDATA + "didMap";
-
+            static final String DIDMAPSER       = CLUEWEBDATA + "didMapser";
 
     //////////////////////////////////////////////////////////////////////////////////////////
 
-    static final String TRAIN_RESULTS	    = ROOT + "source/";
-        static final String METADATA	    	= TRAIN_RESULTS + "source/";
-            static final String LENGTHS	    	    = METADATA + "source/";
-                static final String UNILENGTHS      = LENGTHS;
-                static final String HITLENGTHS      = LENGTHS;
-                static final String BILENGTHS       = LENGTHS;
-                static final String DBILENGTHS      = LENGTHS;
-                static final String UNIBUCKET      = LENGTHS;
-                static final String HITBUCKET      = LENGTHS;
-                static final String BIBUCKET       = LENGTHS;
-                static final String DBIBUCKET      = LENGTHS;
-                static final String AGUTERMACCES    = LENGTHS + "";
-    static final String FILTER_SETS	    	= METADATA + "source/";
+    static final String TRAIN_RESULTS	    = ROOT + "TRAIN_RESULTS/";                                 //F
+        static final String METADATA	    	= TRAIN_RESULTS + "METADATA/";                    //F
+            static final String LENGTHS	    	    = METADATA + "LENGTHS/";                     //F
+                static final String UNILENGTHS      = LENGTHS + "UNILENGTHS";
+                static final String HITLENGTHS      = LENGTHS + "HITLENGTHS";
+                static final String BILENGTHS       = LENGTHS + "BILENGTHS";
+                static final String DBILENGTHS      = LENGTHS + "DBILENGTHS";
+                static final String UNIBUCKET       = LENGTHS + "UNIBUCKET";
+                static final String HITBUCKET       = LENGTHS + "HITBUCKET";
+                static final String BIBUCKET        = LENGTHS + "BIBUCKET";
+                static final String DBIBUCKET       = LENGTHS + "DBIBUCKET";
+                static final String AGUTERMACCES    = LENGTHS + "AGUTERMACCES";
+            static final String FILTER_SETS	    	= METADATA ;                                //F
                 static final String SMALL_FILTER_SET      = FILTER_SETS + "smallFilterSet";
                 static final String BIG_FILTER_SET        = FILTER_SETS + "bigFilterSet";
             static final String LOCALTERMFREQ	    = METADATA + "LOCALTERMFREQ";
             static final String GLOBALSTATS	    	= METADATA + "GLOBALSTATS";
-            static final String ACCESSMAP	    	= METADATA + "soTRAINQurce/";
-        static final String QUERY_TRACE	    = ROOT + "source/";
-            static final String FILLEDGROUND        = QUERY_TRACE + "";
-            static final String FILLEDUNIGRAM       = QUERY_TRACE + "";
-            static final String FILLEDBIGRAM        = QUERY_TRACE + "";
-            static final String FILLEDDBIGRAM       = QUERY_TRACE + "";
-            static final String FILLEDHIT           = QUERY_TRACE + "";
-    static final String INDEXES	    	    = TRAIN_RESULTS + "source/";
-            static final String UNIGRAMRAW	    	    = INDEXES + "source/";
-            static final String BIGRAMRAW	    	    = INDEXES + "source/";
-            static final String DBIGRAMRAW	    	    = INDEXES + "source/";
-            static final String HITRAW   	        = INDEXES + "source/";
-            static final String FINAL               = INDEXES + "source/";
-                static final String UNIGRAMINDEX	    	    = FINAL + "source/";
-                static final String UNIGRAMINDEX1000  	        = FINAL + "source/";
-                static final String BIGRAMINDEX	    	    = FINAL + "source/";
-                static final String DBIGRAMINDEX	    	= FINAL + "source/";
-                static final String HITINDEX	    	    = FINAL + "source/";
+            static final String ACCESSMAP	    	= METADATA + "ACCESSMAP";
+        static final String QUERY_TRACE	        = ROOT + "QUERY_TRACE/";                        //F
+            static final String FILLEDGROUND        = QUERY_TRACE + "FILLEDGROUND";
+            static final String FILLEDUNIGRAM       = QUERY_TRACE + "FILLEDUNIGRAM";
+            static final String FILLEDBIGRAM        = QUERY_TRACE + "FILLEDBIGRAM";
+            static final String FILLEDDBIGRAM       = QUERY_TRACE + "FILLEDDBIGRAM";
+            static final String FILLEDHIT           = QUERY_TRACE + "FILLEDHIT";
+        static final String INDEXES	    	    = TRAIN_RESULTS + "INDEXES/";                   //F
+            static final String UNIGRAMRAW	    	    = INDEXES + "UNIGRAMRAW/";              //F
+            static final String BIGRAMRAW	    	    = INDEXES + "BIGRAMRAW/";               //F
+            static final String DBIGRAMRAW	    	    = INDEXES + "DBIGRAMRAW/";              //F
+            static final String HITRAW   	            = INDEXES + "HITRAW/";                  //F
+            static final String FINAL                   = INDEXES + "FINAL/";                   //F
+                static final String UNIGRAMINDEX	    	= FINAL + "UNIGRAMINDEX/";
+                static final String UNIGRAMINDEX1000  	    = FINAL + "UNIGRAMINDEX1000/";
+                static final String BIGRAMINDEX	    	    = FINAL + "BIGRAMINDEX/";
+                static final String DBIGRAMINDEX	    	= FINAL + "DBIGRAMINDEX/";
+                static final String HITINDEX	    	    = FINAL + "HITINDEX/";
 
     //////////////////////////////////////////////////////////////////////////////////////////
     /*
@@ -158,8 +156,7 @@ public abstract class WWW {
             */
     //////////////////////////////////////////////////////////////////////////////////////////
 
-
-
+    
     static Object2IntMap<String> term2IdMap;
     static Int2ObjectOpenHashMap<String>  id2TermMap;
     static double start;

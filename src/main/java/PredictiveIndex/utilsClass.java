@@ -35,7 +35,6 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipFile.*;
 import java.util.zip.ZipInputStream;
 
-import static PredictiveIndex.PredictiveIndex.globalFold;
 import static java.lang.System.exit;
 import static java.lang.System.out;
 

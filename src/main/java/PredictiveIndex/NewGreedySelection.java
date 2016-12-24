@@ -16,6 +16,10 @@ public class NewGreedySelection extends Selection {
     static Long2IntOpenHashMap counterMap;
 
 
+    private static void fe(){
+
+    }
+
     public static void greedySelection(int limitBudget, String input, String output, String lanMap ,String bucketmap){
 
         double [][][] model = (double[][][]) deserialize(input);

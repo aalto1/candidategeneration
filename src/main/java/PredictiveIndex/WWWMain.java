@@ -7,6 +7,9 @@ import java.util.Arrays;
 import static PredictiveIndex.Extra.*;
 import static PredictiveIndex.Selection.printQualityModel;
 import static PredictiveIndex.utilsClass.*;
+import static PredictiveIndex.NewQualityModel.*;
+import static PredictiveIndex.ExternalSort.*;
+import static PredictiveIndex.NewGreedySelection.*;
 
 /**
  * Created by aalto on 10/1/16.
@@ -14,7 +17,10 @@ import static PredictiveIndex.utilsClass.*;
  * Minimum Distance is 1: this value takes into account just the prox term.
  */
 public class WWWMain extends WWW {
-
+    static InvertedIndex i2;
+    static int distance = 5;
+    static int numThreads = 4;
+    static int budget = 1000;
         //14k
 
     //30k
@@ -27,41 +33,63 @@ public class WWWMain extends WWW {
         //NewGreedySelection.greedySelection(100000, model1, "chunk");
         System.exit(1);
 
-        InvertedIndex i2;
-        int distance = 5;
-        int numThreads = 4;
-        if (!checkExistence(LOCALTERMFREQ)){
-            i2 = new InvertedIndex(distance, numThreads);
-            startBatteria(i2, 0, numThreads);
-            getLocFreqMap(i2.termFreqArray, i2.uniTerms); //no need
-            //serialize(i2.termFreqArray, termFrequencyArray);
-            serialize(i2.globalStats,   GLOBALSTATS);
-        }
-        if(true/*!checkExistence(dumpMap)*/){
-            //D-Bigram
-            i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(LOCALTERMFREQ), null, (long[]) deserialize(GLOBALSTATS), distance, true, DBIGRAMINDEX, numThreads);
-            buildStructure(i2, numThreads, DBIGRAMRAW);
-            //Single + HIT
-            i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(LOCALTERMFREQ), (int[]) deserialize(HITSCORES), (long[]) deserialize(GLOBALSTATS), 1, false, UNIGRAMINDEX, numThreads);
-            buildStructure(i2, numThreads, UNIGRAMRAW);
-            BigramIndex.getBigramIndex(UNIGRAMINDEX);
-        }
-        //i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(LOCALTERMFREQ), (int[]) deserialize(HITSCORES), (long[]) deserialize(GLOBALSTATS), 1, false, singleIndex, numThreads);
-        //startBatteria(i2, 0, numThreads);
-        //serialize(i2.missingWords,results+"trueMissingSet");
-        buildFinalStructures();
-        //buildQualityModels();
-        //printQualityModel();
+        PHASE0_CollectMetadata();
+        PHASE1_CollectGobalStatistics();
+        PHASE2_CollectQualityModel();
+        PHASE3_CollectBestChunks();
+    }
 
+    private static void PHASE0_CollectMetadata(){
 
     }
 
-    private static void buildStructure(InvertedIndex i2, int numThreads, String dumpedPostings) throws IOException, ClassNotFoundException, InterruptedException {
-        System.out.println("");
-        startBatteria(i2, 1, numThreads);
-        serialize(Arrays.stream(i2.dmpPost).sum(), dumpedPostings);
+    private static void PHASE1_CollectGobalStatistics() throws IOException, ClassNotFoundException, InterruptedException {
+        i2 = new InvertedIndex(distance, numThreads);
+        startBatteria(i2, 0, numThreads);
+        getLocFreqMap(i2.termFreqArray, i2.uniTerms); //no need
+        //serialize(i2.termFreqArray, termFrequencyArray);
+        serialize(i2.globalStats,   GLOBALSTATS);
     }
 
+    private static void PHASE2_CollectQualityModel() throws InterruptedException, IOException, ClassNotFoundException {
+        PHASE21_CollectUnigramHitModel();
+        PHASE22_CollectBigramModel();
+        PHASE23_CollectDBigramModel();
+    }
+
+    private static void PHASE21_CollectUnigramHitModel() throws IOException, ClassNotFoundException, InterruptedException {
+        i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(LOCALTERMFREQ),
+                (int[]) deserialize(HITSCORES), (long[]) deserialize(GLOBALSTATS),
+                1,
+                false,
+                UNIGRAMINDEX,
+                numThreads);
+        buildStructure(i2, numThreads, UNIGRAMRAW);
+
+        massiveBinaryMerge(new File(UNIGRAMRAW), UNIGRAMINDEX, false);
+        getModel(UNIGRAMINDEX,FILLEDUNIGRAM, UNILENGTHS);
+
+        massiveBinaryMerge(new File(HITRAW), HITINDEX, false);
+        getModel(HITINDEX, FILLEDHIT, HITLENGTHS);
+
+    }
+
+    private static void PHASE22_CollectBigramModel() throws IOException, ClassNotFoundException {
+        BigramIndex.getBigramIndex(UNIGRAMINDEX);
+        massiveBinaryMerge(new File(BIGRAMRAW), BIGRAMINDEX, true);
+        getModel(BIGRAMINDEX, FILLEDBIGRAM, BILENGTHS);
+    }
+
+    private static void PHASE23_CollectDBigramModel() throws InterruptedException, IOException, ClassNotFoundException {
+        i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(LOCALTERMFREQ), null, (long[]) deserialize(GLOBALSTATS), distance, true, DBIGRAMINDEX, numThreads);
+        buildStructure(i2, numThreads, DBIGRAMRAW);
+        massiveBinaryMerge(new File(DBIGRAMRAW), DBIGRAMRAW, true);
+        getModel(DBIGRAMINDEX, FILLEDBIGRAM, DBILENGTHS);
+    }
+
+    private static void PHASE3_CollectBestChunks(){
+        //greedySelection(budget, input, output, );
+    }
 
 
     private static void startBatteria(InvertedIndex i2, int phase, int numThreads) throws InterruptedException {
@@ -77,74 +105,12 @@ public class WWWMain extends WWW {
         }
     }
 
-    private static void buildQualityModels() throws IOException, ClassNotFoundException {
-        if(checkExistence(DBIGRAMQUALITYMODEL)) {
-            //NewQualityModel.getModel(1, DBIGRAMINDEX, DBILENGTHS, DBIGRAMQUALITYMODEL);
-            NewQualityModel.getModel(DBIGRAMINDEX, DBILENGTHS, DBIGRAMQUALITYMODEL,"dw");
-
-        }
-        if(!checkExistence(HITQUALITYMODEL)){
-            UnigramQualityModel.getUnigramQualityModel(1, HITINDEX, HITLENGTHS, HITQUALITYMODEL);
-        }
-        if(!checkExistence(UNIGRAMQUALITYMODEL)) {
-            UnigramQualityModel.getUnigramQualityModel(1, UNIGRAMINDEX, UNILENGTHS, UNIGRAMQUALITYMODEL);
-        }
+    private static void buildStructure(InvertedIndex i2, int numThreads, String dumpedPostings) throws IOException, ClassNotFoundException, InterruptedException {
+        System.out.println("");
+        startBatteria(i2, 1, numThreads);
+        serialize(Arrays.stream(i2.dmpPost).sum(), dumpedPostings);
     }
 
-    private static void printModels() throws IOException, ClassNotFoundException {
-        printQualityModel(DBIGRAMQUALITYMODEL);
-        printQualityModel(HITQUALITYMODEL);
-        printQualityModel(UNIGRAMQUALITYMODEL);
-    }
-
-    private static void buildFinalStructures() throws IOException {
-        if(!checkExistence(UNIGRAMINDEX))
-            ExternalSort.massiveBinaryMerge(new File(UNIGRAMRAW), UNIGRAMINDEX, false);
-        if(!checkExistence(HITINDEX))
-            ExternalSort.massiveBinaryMerge(new File(HITRAW), HITINDEX, false);
-        if(!checkExistence(DBIGRAMINDEX))
-            ExternalSort.massiveBinaryMerge(new File(DBIGRAMRAW), DBIGRAMINDEX, true);
-    }
-
-
-    private static void checkExtraData() throws IOException {
-        if(!checkExistence(HITSCORES))  getHitScore2();
-        if(!checkExistence(BIG_FILTER_SET))  getBigFilterSet();
-        if(!checkExistence(SMALL_FILTER_SET)) getSmallFilterSet();
-        if(!checkExistence(ACCESSMAP))  uniquePairs();
-        if(!checkExistence(SMALL_FILTER_SET)) getUniqueTermsSet();
-
-    }
-
-    private static void finda() throws IOException {
-        int currentTerm = -1;
-        int [] previousBM25 = new int[3];
-        int [] newBM25 = new int[3];
-        int [] posting = new int[3];
-        int max = -99;
-        DataInputStream DIStream = getDIStream(UNIGRAMINDEX);
-
-        //DataOutputStream DOStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(metadata+"PLLength.bin")));
-        while (true) {
-            if ((posting = Selection.getEntry(DIStream, posting)) == null) break;
-
-            newBM25 = posting;
-            //posting[2] = DM.get(posting[2]);
-
-            //System.out.println(Arrays.toString(newBM25));
-            //System.out.println(Arrays.toString(previousBM25) +"d");
-            if(posting[1]>max) max = posting[1];
-            if(newBM25[1] > previousBM25[1] & newBM25[0] == previousBM25[0]){
-                /** While I scan the posting list I the value of the bm25 should decrease with new<old */
-                //System.err.println(posting[0] +" - "+ currentTerm);
-                System.out.println(Arrays.toString(previousBM25));
-                System.out.println(Arrays.toString(newBM25));
-            }
-            previousBM25 = newBM25.clone();
-
-        }
-        System.out.println(max);
-    }
 
 
     private static class MultiThread implements Runnable {
@@ -201,6 +167,36 @@ public class WWWMain extends WWW {
 
        // System.exit(1);
 
+    private static void finda() throws IOException {
+        int currentTerm = -1;
+        int [] previousBM25 = new int[3];
+        int [] newBM25 = new int[3];
+        int [] posting = new int[3];
+        int max = -99;
+        DataInputStream DIStream = getDIStream(UNIGRAMINDEX);
+
+        //DataOutputStream DOStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(metadata+"PLLength.bin")));
+        while (true) {
+            if ((posting = Selection.getEntry(DIStream, posting)) == null) break;
+
+            newBM25 = posting;
+            //posting[2] = DM.get(posting[2]);
+
+            //System.out.println(Arrays.toString(newBM25));
+            //System.out.println(Arrays.toString(previousBM25) +"d");
+            if(posting[1]>max) max = posting[1];
+            if(newBM25[1] > previousBM25[1] & newBM25[0] == previousBM25[0]){
+                /** While I scan the posting list I the value of the bm25 should decrease with new<old */
+                //System.err.println(posting[0] +" - "+ currentTerm);
+                System.out.println(Arrays.toString(previousBM25));
+                System.out.println(Arrays.toString(newBM25));
+            }
+            previousBM25 = newBM25.clone();
+
+        }
+        System.out.println(max);
+    }
+
     public static void elaborateMe(String modelPath) throws IOException {
         Int2LongOpenHashMap posTListLength = (Int2LongOpenHashMap) deserialize(ACCESSMAP);
         BufferedWriter bw = getBuffWriter(METADATA+"me.csv");
@@ -234,6 +230,47 @@ public class WWWMain extends WWW {
         bw.close();
         br.close();
 
+
+    }
+
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private static void buildQualityModels() throws IOException, ClassNotFoundException {
+        if(checkExistence(DBIGRAMQUALITYMODEL)) {
+            //NewQualityModel.getModel(1, DBIGRAMINDEX, DBILENGTHS, DBIGRAMQUALITYMODEL);
+            //NewQualityModel.getModel(DBIGRAMINDEX, DBILENGTHS, DBIGRAMQUALITYMODEL,"dw");
+        }
+        if(!checkExistence(HITQUALITYMODEL)){
+            UnigramQualityModel.getUnigramQualityModel(1, HITINDEX, HITLENGTHS, HITQUALITYMODEL);
+        }
+        if(!checkExistence(UNIGRAMQUALITYMODEL)) {
+            UnigramQualityModel.getUnigramQualityModel(1, UNIGRAMINDEX, UNILENGTHS, UNIGRAMQUALITYMODEL);
+        }
+    }
+
+    private static void printModels() throws IOException, ClassNotFoundException {
+        printQualityModel(DBIGRAMQUALITYMODEL);
+        printQualityModel(HITQUALITYMODEL);
+        printQualityModel(UNIGRAMQUALITYMODEL);
+    }
+
+    private static void buildFinalStructures() throws IOException {
+        if(!checkExistence(UNIGRAMINDEX))
+            ExternalSort.massiveBinaryMerge(new File(UNIGRAMRAW), UNIGRAMINDEX, false);
+        if(!checkExistence(HITINDEX))
+            ExternalSort.massiveBinaryMerge(new File(HITRAW), HITINDEX, false);
+        if(!checkExistence(DBIGRAMINDEX))
+            ExternalSort.massiveBinaryMerge(new File(DBIGRAMRAW), DBIGRAMINDEX, true);
+    }
+
+
+    private static void checkExtraData() throws IOException {
+        if(!checkExistence(HITSCORES))  getHitScore2();
+        if(!checkExistence(BIG_FILTER_SET))  getBigFilterSet();
+        if(!checkExistence(SMALL_FILTER_SET)) getSmallFilterSet();
+        if(!checkExistence(ACCESSMAP))  uniquePairs();
+        if(!checkExistence(SMALL_FILTER_SET)) getUniqueTermsSet();
 
     }
 

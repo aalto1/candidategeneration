@@ -29,13 +29,13 @@ public class NewQualityModel extends Selection {
      * inverted index not sorted => now sorted
      * */
 
-    public static double[][][] getModel(String index, String output, String model, String length) throws IOException, ClassNotFoundException {
+    public static double[][][] getModel(String index, String output, String length) throws IOException, ClassNotFoundException {
         System.out.println("Fast Query Trace fetched!\n Processing Inverted Index...");
         Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>> fastUnigramQueryTrace = (Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>>) deserialize(FILLEDGROUND);
         Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>> emptymodel = (Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>>) deserialize(EMPTYGROUND);
         dumped = (Int2LongOpenHashMap) deserialize(length);
 
-        DataInputStream DIStream = getDIStream(UNIGRAMINDEX);
+        DataInputStream DIStream = getDIStream(index);
         int[] posting = new int[3];                         //
         long currentTerm = -1;
         Int2ObjectOpenHashMap<Int2IntOpenHashMap> documentsToFind = new Int2ObjectOpenHashMap();
