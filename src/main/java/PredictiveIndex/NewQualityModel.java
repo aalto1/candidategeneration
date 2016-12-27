@@ -21,7 +21,7 @@ public class NewQualityModel extends Selection {
     static long hit = 0;
 
 
-    /**Once we process a porocess a posting list the corrispondent array is completly filled up. The only
+    /**Once we process a process a posting list the corrisponding array is completely filled up. The only
      * thing that could change this is a line that you did not process the whole corpora
      *
      * negative number => full index can have negative bm25
