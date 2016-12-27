@@ -35,7 +35,7 @@ public class InvertedIndex extends WWW {
 
     //LongOpenHashSet bigFS ;
     LongOpenHashSet smallFS;
-    Long2LongOpenHashMap dBiMap       = new Long2LongOpenHashMap();          // new Long2LongOpenHashMap[threadNum];
+    Long2IntOpenHashMap DBigramPLLen = new Long2IntOpenHashMap();          // new Long2LongOpenHashMap[threadNum];
     Int2LongOpenHashMap  uniMap = new Int2LongOpenHashMap();
     Int2LongOpenHashMap  hitMap = new Int2LongOpenHashMap();
     IntOpenHashSet missingWords;// = (IntOpenHashSet) deserialize(results+"missingSet");
@@ -238,7 +238,8 @@ public class InvertedIndex extends WWW {
             doc++;
         }
         if(isBigram)
-            sampledSelection(tn, twoTerms, true);
+            //sampledSelection(tn, twoTerms, true);
+            flushBuffer(tn, true);
         else{
             singleFlush(singleComparator, UNIGRAMRAW, twoTerms, 1, true, tn);
             singleFlush(hitComparator, HITRAW, twoTerms, 2, true, tn);
@@ -286,41 +287,37 @@ public class InvertedIndex extends WWW {
                 //System.out.println(Arrays.toString(twoTerms));
                 Arrays.sort(twoTerms);
                 pair = getPair(twoTerms[0], twoTerms[1]);
-                if(noDuplicateSet.add(pair) & smallFS.contains(pair)/*bigFS.contains(pair)*/){
-                    if(smallFS.contains(pair)){
-                        if(pointers[tn] == buffer[tn].length){
-                            sampledSelection(tn, twoTerms, false);
-                            pointers[tn] = keepPointers[tn];
-                        }
-                        incrementPostingList(tn, twoTerms, pair);
+                if(noDuplicateSet.add(pair) & smallFS.contains(pair)){
+                    if(pointers[tn] == buffer[tn].length){
+                        //sampledSelection(tn, twoTerms, false);
+                        flushBuffer(tn, false);
+                        pointers[tn] = keepPointers[tn];
+                    }
+
+                    incrementDBigramPLLength(pair);
 
 
-                        score1 = getBM25(globalStats, docLen, localFrequencyMap.get(twoTerms[0]), localMaxFreq , termFreqMap.get(twoTerms[0]));
-                        score2 = getBM25(globalStats, docLen, localFrequencyMap.get(twoTerms[1]), localMaxFreq , termFreqMap.get(twoTerms[1]));
+                    score1 = getBM25(globalStats, docLen, localFrequencyMap.get(twoTerms[0]), localMaxFreq , termFreqMap.get(twoTerms[0]));
+                    score2 = getBM25(globalStats, docLen, localFrequencyMap.get(twoTerms[1]), localMaxFreq , termFreqMap.get(twoTerms[1]));
 
-                        buffer[tn][pointers[tn]][0] = twoTerms[0];
-                        buffer[tn][pointers[tn]][1] = twoTerms[1];
-                        buffer[tn][pointers[tn]][2] = score1 + score2;
-                        buffer[tn][pointers[tn]][3] = Integer.parseInt(field[1]);
-                        pointers[tn]++;
-                    }else
-                        dmpPost[tn]++;
-                }
+                    buffer[tn][pointers[tn]][0] = twoTerms[0];
+                    buffer[tn][pointers[tn]][1] = twoTerms[1];
+                    buffer[tn][pointers[tn]][2] = score1 + score2;
+                    buffer[tn][pointers[tn]][3] = Integer.parseInt(field[1]);
+                    pointers[tn]++;
+                }else
+                    dmpPost[tn]++;
             }
         }
     }
 
-    private void writeEntry(String pre, int i, int tn) throws IOException {
-        DOS[tn].writeInt(buffer[tn][i][0]);
-
-        if (pre == UNIGRAMRAW)
-            DOS[tn].writeInt(buffer[tn][i][1]);
-        else
-            DOS[tn].writeInt(buffer[tn][i][2]);
-
-        DOS[tn].writeInt(buffer[tn][i][3]);
-
+    private synchronized  void incrementDBigramPLLength(long bigram){
+        if(DBigramPLLen.putIfAbsent(bigram, 1 )!=null){
+            DBigramPLLen.merge(bigram, 1, Integer::sum);
+        }
     }
+
+
 
     private void singleFlush(Comparator c,
                              String pre,
@@ -350,6 +347,18 @@ public class InvertedIndex extends WWW {
         DOS[tn].close();
     }
 
+    private void writeEntry(String pre, int i, int tn) throws IOException {
+        DOS[tn].writeInt(buffer[tn][i][0]);
+
+        if (pre == UNIGRAMRAW)
+            DOS[tn].writeInt(buffer[tn][i][1]);
+        else
+            DOS[tn].writeInt(buffer[tn][i][2]);
+
+        DOS[tn].writeInt(buffer[tn][i][3]);
+
+    }
+
     public void singleBufferedIndex(int[] words,
                                     String [] field,
                                     Int2IntMap localFrequencyMap,
@@ -365,7 +374,7 @@ public class InvertedIndex extends WWW {
                 buffer[tn][pointers[tn]][1] = getBM25(globalStats, Integer.parseInt(field[4]), localFrequencyMap.get(words[wIx]), localFrequencyMap.get(-99), termFreqMap.get(words[wIx]));
                 buffer[tn][pointers[tn]][2] = HITS[Integer.parseInt(field[1])];
                 buffer[tn][pointers[tn]][3] = Integer.parseInt(field[1]);
-                uniIncrementPostingList(tn, twoTerms, words[wIx]);
+                //uniIncrementPostingList(tn, twoTerms, words[wIx]);     //no need because PL-length = term occurences
                 pointers[tn]++;
 
                 if (pointers[tn] == buffer[tn].length) {
@@ -395,21 +404,21 @@ public class InvertedIndex extends WWW {
     }
 
 
-
     //hack of the structure. This justifies the previous code. I can use the same function to do this.
-    private synchronized void incrementPostingList(int tn, int [] t, long pair){
+
+    /* private synchronized void incrementPostingList(int tn, int [] t, long pair){
         t = getTerms(dBiMap.get(pair));
         dBiMap.put(pair,getPair(t[0]++, t[1]));
+    }*/
+
+    private synchronized void incrementDumpCounter(long pair){
+        if(DBigramPLLen.putIfAbsent(pair, 1) != null)
+            DBigramPLLen.merge(pair, 1, Integer::sum);
     }
 
-    private synchronized void incrementDumpCounter(int tn, int [] t, long pair){
-        t = getTerms(dBiMap.get(pair));
-        dBiMap.put(pair,getPair(t[0], t[1]++));
-    }
 
-
-
-    /*private synchronized void incrementMap(long pair){
+    /*
+    private synchronized void incrementMap(long pair){
         dMap.addTo(pair, 1);
     }*/
 
@@ -439,8 +448,8 @@ public class InvertedIndex extends WWW {
                     buffer[tn][keepPointers[tn]++] = buffer[tn][k];
                 }else if (buffer[tn][k][2] > gThreshold){
                     buffer[tn][keepPointers[tn]++] = buffer[tn][k];
-                }else incrementDumpCounter(tn, twoTerms, getPair(buffer[tn][k][0], buffer[tn][k][1]));
-            }else incrementDumpCounter(tn, twoTerms, getPair(buffer[tn][k][0], buffer[tn][k][1]));
+                }else incrementDumpCounter(getPair(buffer[tn][k][0], buffer[tn][k][1]));
+            }else incrementDumpCounter(getPair(buffer[tn][k][0], buffer[tn][k][1]));
         }
 
         if(keepPointers[tn] > (buffer[tn].length/100)*90 | end) flushBuffer(tn, end);
@@ -473,7 +482,7 @@ public class InvertedIndex extends WWW {
         //System.out.println("Processed docs: " + doc + "Sampled Natural Selection:" + (System.currentTimeMillis() - now) + "ms.\tThreshold: " + threshold +"\t MaxBM25: " + maxBM25);
         DOS[tn].close();
         if(end)
-            serialize(dBiMap, DBILENGTHS);
+            serialize(DBigramPLLen, DBILENGTHS);
         else
             DOS[tn]  = getDOStream(prefix+dump.getAndAdd(1));
         keepPointers[tn] = 0;
