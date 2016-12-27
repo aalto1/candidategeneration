@@ -105,7 +105,7 @@ public abstract class WWW {
                 static final String BIG_FILTER_SET                = FILTER_SETS + "bigFilterSet";
             static final String ACCESSMAP	    	= METADATA + "ACCESSMAP";
 
-        static final String INDEXES	    	    = RESULTS + "source/";
+        static final String INDEXES	    	    = RESULTS + "INDEXES/";
             static final String UNIGRAMRAW	    	    = INDEXES + "UNIGRAMRAW/";              //F
             static final String BIGRAMRAW	    	    = INDEXES + "BIGRAMRAW/";               //F
             static final String DBIGRAMRAW	    	    = INDEXES + "DBIGRAMRAW/";              //F
