@@ -1,5 +1,6 @@
 package PredictiveIndex;
 
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
@@ -160,8 +161,17 @@ public class Metadata extends WWW {
         br.close();
         serialize(map, output );
         return map;
+    }
 
-
+    static void getLocFreqMap(int [] locFreqArr, LongOpenHashSet uniTerms) throws IOException, ClassNotFoundException { /***NO-Need***/
+        Int2IntOpenHashMap map = new Int2IntOpenHashMap();
+        int k = 0;
+        for (int i = 0; i < locFreqArr.length ; i++) {
+            if(uniTerms.contains(i)) map.put(i, locFreqArr[i]);
+            k++;
+        }
+        System.out.println(k);
+        serialize(map, LOCALTERMFREQ);
     }
 
 

@@ -354,16 +354,7 @@ class utilsClass extends WWW {
        serialize(mergedMap, DBILENGTHS);
    }
 
-    static void getLocFreqMap(int [] locFreqArr, LongOpenHashSet uniTerms) throws IOException, ClassNotFoundException { /***NO-Need***/
-        Int2IntOpenHashMap mergedMap = new Int2IntOpenHashMap();
-        int k = 0;
-        for (int i = 0; i < locFreqArr.length ; i++) {
-            if(uniTerms.contains(i)) mergedMap.put(i, locFreqArr[i]);
-            k++;
-        }
-        System.out.println(k);
-        serialize(mergedMap, LOCALTERMFREQ);
-    }
+
 
    static float[] scalarPerArray(float scalar, float[] array){
        float [] result = new float[array.length];

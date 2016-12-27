@@ -27,7 +27,7 @@ public class WWWMain extends WWW {
 
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
         PHASE0_CollectMetadata();
-        PHASE1_CollectGobalStatistics();
+        //PHASE1_CollectGobalStatistics();
         PHASE2_CollectQualityModel();
         //PHASE3_CollectBestChunks();
     }
@@ -46,10 +46,10 @@ public class WWWMain extends WWW {
     private static void PHASE1_CollectGobalStatistics() throws IOException, ClassNotFoundException, InterruptedException {
         i2 = new InvertedIndex(numThreads);
         startBatteria(i2, 0, numThreads);
-        getLocFreqMap(i2.termFreqArray, (LongOpenHashSet) deserialize(UNIGRAM_SMALL_FILTER_SET)); //no need
+        getLocFreqMap(i2.termFreqArray, (LongOpenHashSet) deserialize(UNIGRAM_SMALL_FILTER_SET));
         //serialize(i2.termFreqArray, termFrequencyArray);
         serialize(i2.globalStats,  GLOBALSTATS);
-        System.exit(1);
+        //System.exit(1);
     }
 
     private static void PHASE2_CollectQualityModel() throws InterruptedException, IOException, ClassNotFoundException {
@@ -65,7 +65,7 @@ public class WWWMain extends WWW {
                 (long[]) deserialize(GLOBALSTATS),
                 1,
                 false,
-                UNIGRAMINDEX,
+                UNIGRAMRAW,
                 UNIGRAM_SMALL_FILTER_SET,
                 numThreads);
         buildStructure(i2, numThreads, UNIGRAMRAW);
@@ -91,7 +91,7 @@ public class WWWMain extends WWW {
                 (long[]) deserialize(GLOBALSTATS),
                 distance,
                 true,
-                DBIGRAMINDEX,
+                DBIGRAMRAW,
                 BIGRAM_SMALL_FILTER_SET,
                 numThreads);
 

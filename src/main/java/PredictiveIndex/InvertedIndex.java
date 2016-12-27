@@ -370,7 +370,7 @@ public class InvertedIndex extends WWW {
 
                 if (pointers[tn] == buffer[tn].length) {
                     singleFlush(singleComparator, UNIGRAMRAW, twoTerms, 1, false, tn);
-                    //singleFlush(hitComparator, HITIndex, twoTerms, 2, false, tn);
+                    singleFlush(hitComparator, HITRAW, twoTerms, 2, false, tn);
                     pointers[tn]=0;
                 }
             }

@@ -149,7 +149,7 @@ public abstract class WWW {
 
 
         static final String INDEXES	    	    = TEST_RESULTS + "source/";
-            static final String SINGLE	    	    = INDEXES + "source/";
+            static final String UNIGRAM	    	    = INDEXES + "source/";
             static final String BIGRAM	    	    = INDEXES + "source/";
             static final String DBIGRAM	    	    = INDEXES + "source/";
             static final String HIT	    	        = INDEXES + "source/";
