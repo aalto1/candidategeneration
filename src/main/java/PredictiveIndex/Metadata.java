@@ -82,6 +82,9 @@ public class Metadata extends WWW {
     }
 
 
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
     /*SMALLFILTERSET TAKES INTO ACCOUNT JUST THE TERMS THAT ARE PRESENT IN THE QUERYTRACE*/
 
     static LongOpenHashSet getSmallFilterSet(String input, String output) throws IOException {
@@ -173,6 +176,123 @@ public class Metadata extends WWW {
         System.out.println(k);
         serialize(map, LOCALTERMFREQ);
     }
+
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+    /*
+    * Reformatted Query Trace
+    * Long  Int     Int    Int
+    * Pair  DocID   QID    rank
+    *
+    *
+    * Final Structure
+    * QID   aguTerm    topK
+    * Int   Long    Array
+    *
+    * */
+
+    /*
+    * Stopwords are removed from the query trace: How, on, in...and similar terms are removed.
+    * Stopword queries are removed, i.e., 173261. A total of: 10
+    *
+    * Some queries miss in the complex ranker 57287 (440 ranking misses)
+    *
+    * */
+
+    public static void convertANDcleanQueryTrace(String input, String output) throws IOException {
+        BufferedReader br = getBuffReader(input);
+        BufferedWriter bw = getBuffWriter(output);
+        getTerm2IdMap();
+        String line;
+        String [] fields;
+        StringBuffer sb;
+        Boolean empty;
+        int removed = 0;
+        while((line=br.readLine())!= null){
+            empty = true;
+            sb = new StringBuffer();
+            fields = line.split(":");
+            sb.append(fields[0]+":");
+            for(String term : fields[1].split(" ")){
+                if(term2IdMap.get(term) != null){
+                    sb.append(term2IdMap.get(term)+" ");
+                    empty = false;
+                }
+            }
+            if(!empty){
+                bw.write(sb.substring(0,sb.length()-1));
+                bw.newLine();
+            }else{
+                removed++;
+            }
+
+        }
+        System.out.println("Stopword queries removed: " + removed);
+        br.close();
+        bw.close();
+    }
+
+    /**
+     * This functions associate to each queryID the combination of its terms.
+     * It can operate in two functions:
+     *
+     * 1) Total: it add to the combination of words the query terms themself
+     * 2) Not total: it uses just the terms combination
+     *
+     * */
+
+    public static void agumentedQueryTrace(boolean total) throws IOException {
+        BufferedReader br = getBuffReader(QCONVERTED);
+        BufferedWriter bw;
+
+        if(total){
+            bw = getBuffWriter(QAGUMENTED);
+        }else{
+            bw = getBuffWriter(QBIGRAM);
+        }
+
+        String line;
+        String [] fields;
+        long [] agumentedQuery;
+        while((line=br.readLine())!= null){
+            fields = line.split(":");
+            bw.write(fields[0]+":");
+            agumentedQuery = getCombinations(string2IntList(fields[1]," "),2, total);
+            if(agumentedQuery.length>0){
+                for(long aguTerm : agumentedQuery){
+                    bw.write(aguTerm+" ");
+                }
+                bw.newLine();
+            }
+        }
+        br.close();
+        bw.close();
+    }
+
+    /*
+    * Empty Model
+    * QID   Pair    topK
+    * Int   Long    Array
+    *
+    * Total train q: 29186 queryId
+    * Unigram model: 29167 queryId
+    * Bigram model : 28660 queryId
+    *
+    *
+    * Nine duplicates found:
+        Duplicate: 115988
+        Duplicate: 141101
+        Duplicate: 15712
+        Duplicate: 164894
+        Duplicate: 112071
+        Duplicate: 25906
+        Duplicate: 67401
+        Duplicate: 94213
+        Duplicate: 83439
+    *
+    * */
 
 
 

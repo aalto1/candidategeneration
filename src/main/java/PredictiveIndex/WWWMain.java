@@ -28,18 +28,23 @@ public class WWWMain extends WWW {
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
         PHASE0_CollectMetadata();
         //PHASE1_CollectGobalStatistics();
-        PHASE2_CollectQualityModel();
+        //PHASE2_CollectQualityModel();
         //PHASE3_CollectBestChunks();
     }
 
     private static void PHASE0_CollectMetadata() throws IOException {
         //getUnigramLanguageModel();
         //getBigramLanguageModel();
-        getSmallFilterSet(TRAINQCONVERTED, UNIGRAM_SMALL_FILTER_SET);
-        getSmallFilterSet(TRAINQBIGRAM, BIGRAM_SMALL_FILTER_SET);
         //getBigFilterSet(new String[]{UNIGRAMLANGUAGEMODELCONVERTED}, BIG_FILTER_SET);
-        getAccessMap(TRAINQAGUMENTED, ACCESSMAP);
-        //System.exit(1);
+
+        convertANDcleanQueryTrace(Q, QCONVERTED);
+        agumentedQueryTrace(true);
+        agumentedQueryTrace(false);
+
+        getSmallFilterSet(QCONVERTED, UNIGRAM_SMALL_FILTER_SET);
+        getSmallFilterSet(QBIGRAM, BIGRAM_SMALL_FILTER_SET);
+        getAccessMap(QAGUMENTED, ACCESSMAP);
+        System.exit(1);
 
     }
 
@@ -99,6 +104,7 @@ public class WWWMain extends WWW {
         massiveBinaryMerge(new File(DBIGRAMRAW), DBIGRAMRAW, true);
         getModel(DBIGRAMINDEX, FILLEDBIGRAM, DBILENGTHS);
     }
+
 
     private static void PHASE3_CollectBestChunks(){
         //greedySelection(budget, input, output, );

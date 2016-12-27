@@ -26,7 +26,7 @@ public class Extra extends WWW {
 
     public static void uniquePairs() throws IOException {
         Long2IntOpenHashMap accMap = new Long2IntOpenHashMap();
-        BufferedReader br = new BufferedReader(new FileReader(TRAINQAGUMENTED));
+        BufferedReader br = new BufferedReader(new FileReader(QAGUMENTED));
         String line;
         long [] field;
 

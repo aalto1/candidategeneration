@@ -31,7 +31,8 @@ public class NewQualityModel extends Selection {
 
     public static double[][][] getModel(String index, String output, String length) throws IOException, ClassNotFoundException {
         System.out.println("Fast Query Trace fetched!\n Processing Inverted Index...");
-        Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>> fastUnigramQueryTrace = (Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>>) deserialize(FILLEDGROUND);
+        Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>> fastUnigramQueryTrace =
+                (Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>>) deserialize(FILLEDGROUND);
         Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>> emptymodel = (Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>>) deserialize(EMPTYGROUND);
         dumped = (Int2LongOpenHashMap) deserialize(length);
 
@@ -42,17 +43,10 @@ public class NewQualityModel extends Selection {
         Int2IntOpenHashMap scores;
         int counter = 0;
         int postingNumber = 0;
-        int previousBM25 = 0;
-        int newBM25 =0;
         LinkedList<Integer> a = new LinkedList<>();
-        //Int2IntOpenHashMap DM = getDIDMap();
 
-
-        //DataOutputStream DOStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(metadata+"PLLength.bin")));
         while (true) {
             if ((posting = Selection.getEntry(DIStream, posting)) == null) break;
-            //posting[2] = DM.get(posting[2]);
-            //p(posting);
 
             if (posting[0] != currentTerm) {
                 currentTerm = posting[0];
@@ -60,7 +54,6 @@ public class NewQualityModel extends Selection {
                 documentsToFind = fastUnigramQueryTrace.get(posting[0]);
                 postingNumber += counter;
                 counter = 0;
-                newBM25 = posting[1];
             }
             try {
                 if (documentsToFind.size() > 0 & (scores = documentsToFind.remove(posting[2])) != null) {
