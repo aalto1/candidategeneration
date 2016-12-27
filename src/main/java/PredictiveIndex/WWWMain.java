@@ -26,9 +26,9 @@ public class WWWMain extends WWW {
     static int budget = 1000;
 
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
-        PHASE0_CollectMetadata();
+        //PHASE0_CollectMetadata();
         //PHASE1_CollectGobalStatistics();
-        //PHASE2_CollectQualityModel();
+        PHASE2_CollectQualityModel();
         //PHASE3_CollectBestChunks();
     }
 
@@ -59,8 +59,8 @@ public class WWWMain extends WWW {
 
     private static void PHASE2_CollectQualityModel() throws InterruptedException, IOException, ClassNotFoundException {
         PHASE21_CollectUnigramHitModel();
-        PHASE22_CollectBigramModel();
-        PHASE23_CollectDBigramModel();
+        //PHASE22_CollectBigramModel();
+        //PHASE23_CollectDBigramModel();
     }
 
     private static void PHASE21_CollectUnigramHitModel() throws IOException, ClassNotFoundException, InterruptedException {
@@ -76,17 +76,17 @@ public class WWWMain extends WWW {
         buildStructure(i2, numThreads, UNIGRAMRAW);
 
         massiveBinaryMerge(new File(UNIGRAMRAW), UNIGRAMINDEX, false);
-        getModel(UNIGRAMINDEX,FILLEDUNIGRAM, UNILENGTHS);
+        getModel(UNIGRAMINDEX,FILLEDUNIGRAM, UNILENGTHS, 3);
 
         massiveBinaryMerge(new File(HITRAW), HITINDEX, false);
-        getModel(HITINDEX, FILLEDHIT, HITLENGTHS);
+        getModel(HITINDEX, FILLEDHIT, HITLENGTHS, 3);
 
     }
 
     private static void PHASE22_CollectBigramModel() throws IOException, ClassNotFoundException {
         BigramIndex.getBigramIndex(UNIGRAMINDEX);
         massiveBinaryMerge(new File(BIGRAMRAW), BIGRAMINDEX, true);
-        getModel(BIGRAMINDEX, FILLEDBIGRAM, BILENGTHS);
+        getModel(BIGRAMINDEX, FILLEDBIGRAM, BILENGTHS, 4);
     }
 
     private static void PHASE23_CollectDBigramModel() throws InterruptedException, IOException, ClassNotFoundException {
@@ -102,7 +102,7 @@ public class WWWMain extends WWW {
 
         buildStructure(i2, numThreads, DBIGRAMRAW);
         massiveBinaryMerge(new File(DBIGRAMRAW), DBIGRAMRAW, true);
-        getModel(DBIGRAMINDEX, FILLEDBIGRAM, DBILENGTHS);
+        getModel(DBIGRAMINDEX, FILLEDBIGRAM, DBILENGTHS, 4);
     }
 
 

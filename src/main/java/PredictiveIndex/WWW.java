@@ -85,8 +85,8 @@ public abstract class WWW {
 
     //////////////////////////////////////////////////////////////////////////////////////////*
 
-    //static final String RESULTS	    = ROOT + "TRAIN_RESULTS/";                                 //F
-    static final String RESULTS	        = ROOT + "TEST_RESULTS/";
+    static final String RESULTS	    = ROOT + "TRAIN_RESULTS/";                                 //F
+    //static final String RESULTS	        = ROOT + "TEST_RESULTS/";
 
         static final String METADATA	    	= RESULTS + "METADATA/";                    //F
             static final String LENGTHS	    	    = METADATA + "LENGTHS/";                     //F
@@ -111,11 +111,11 @@ public abstract class WWW {
             static final String DBIGRAMRAW	    	    = INDEXES + "DBIGRAMRAW/";              //F
             static final String HITRAW   	            = INDEXES + "HITRAW/";                  //F
             static final String FINAL                   = INDEXES + "FINAL/";                   //F
-                static final String UNIGRAMINDEX	    	= FINAL + "UNIGRAMINDEX/";
-                static final String UNIGRAMINDEX1000  	    = FINAL + "UNIGRAMINDEX1000/";
-                static final String BIGRAMINDEX	    	    = FINAL + "BIGRAMINDEX/";
-                static final String DBIGRAMINDEX	    	= FINAL + "DBIGRAMINDEX/";
-                static final String HITINDEX	    	    = FINAL + "HITINDEX/";
+                static final String UNIGRAMINDEX	    	= FINAL + "UNIGRAMINDEX";
+                static final String UNIGRAMINDEX1000  	    = FINAL + "UNIGRAMINDEX1000";
+                static final String BIGRAMINDEX	    	    = FINAL + "BIGRAMINDEX";
+                static final String DBIGRAMINDEX	    	= FINAL + "DBIGRAMINDEX";
+                static final String HITINDEX	    	    = FINAL + "HITINDEX";
 
         static final String QUERY	    	= RESULTS + "QUERY/";                                             //F
             static final String Q           = QUERY + "Q";
