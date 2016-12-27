@@ -73,7 +73,7 @@ public class WWWMain extends WWW {
                 UNIGRAMRAW,
                 UNIGRAM_SMALL_FILTER_SET,
                 numThreads);
-        buildStructure(i2, numThreads, UNIGRAMRAW);
+        //buildStructure(i2, numThreads, UNIGRAMRAW);
 
         massiveBinaryMerge(new File(UNIGRAMRAW), UNIGRAMINDEX, false);
         getModel(UNIGRAMINDEX,FILLEDUNIGRAM, UNILENGTHS, 3);
