@@ -278,6 +278,7 @@ public class ExternalSort {
             DOStream.writeLong(currentPosting[1]);
             counter++;
         }
+        metadataBW.flush();
     }
 
     static void testMassiveBinaryMerge() throws IOException {

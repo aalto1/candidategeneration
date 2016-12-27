@@ -273,7 +273,7 @@ public class WWWMain extends WWW {
         printQualityModel(HITQUALITYMODEL);
         printQualityModel(UNIGRAMQUALITYMODEL);
     }
-    
+
 
 
     private static void checkExtraData() throws IOException {
