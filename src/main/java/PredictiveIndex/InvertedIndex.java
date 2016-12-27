@@ -33,9 +33,8 @@ public class InvertedIndex extends WWW {
     private String prefix;
     final static int threadNum = 4;
 
-    LongOpenHashSet bigFS ;
+    //LongOpenHashSet bigFS ;
     LongOpenHashSet smallFS;
-    IntOpenHashSet uniTerms;
     Long2LongOpenHashMap dBiMap       = new Long2LongOpenHashMap();          // new Long2LongOpenHashMap[threadNum];
     Int2LongOpenHashMap  uniMap = new Int2LongOpenHashMap();
     Int2LongOpenHashMap  hitMap = new Int2LongOpenHashMap();
@@ -72,12 +71,9 @@ public class InvertedIndex extends WWW {
 
     /*********************************************************** CONSTRUCTORS ***********************************************************/
 
-    public InvertedIndex(int distance, int numThreads) throws IOException, ClassNotFoundException {
+    public InvertedIndex(int numThreads) throws IOException, ClassNotFoundException {
         this.globalStats = new long[2];
         termFreqArray = new int[91553702];
-        this.distance = distance;
-
-        this.uniTerms = (IntOpenHashSet) deserialize(SMALL_FILTER_SET);
 
         for (int i = 0; i < numThreads ; i++) {
             ClueDIS[i]  = getDIStream(CW[i]);
@@ -88,15 +84,17 @@ public class InvertedIndex extends WWW {
     }
 
     public InvertedIndex(Int2IntOpenHashMap termFreqMap,
-                         int [] HITS, long[] globalStats,
-                         int distance, boolean isBgram,
+                         int [] HITS,
+                         long[] globalStats,
+                         int distance,
+                         boolean isBgram,
                          String prefix,
+                         String filterSet,
                          int numThreads)
             throws IOException, ClassNotFoundException {
 
 
         if(!isBgram){
-            this.uniTerms = (IntOpenHashSet) deserialize(SMALL_FILTER_SET);
             this.HITS = HITS;
         }
         this.termFreqMap = termFreqMap;
@@ -104,8 +102,8 @@ public class InvertedIndex extends WWW {
         this.distance = distance;
         this.isBigram = isBgram;
         this.prefix = prefix ;
-        this.bigFS = (LongOpenHashSet) deserialize(BIG_FILTER_SET);
-        this.smallFS = (LongOpenHashSet) deserialize((SMALL_FILTER_SET));
+        //this.bigFS = (LongOpenHashSet) deserialize(BIG_FILTER_SET);
+        this.smallFS = (LongOpenHashSet) deserialize(filterSet);
 
         for (int tn = 0; tn < numThreads ; tn++) {
             ClueDIS[tn]  = getDIStream(CW[tn]);
@@ -362,7 +360,7 @@ public class InvertedIndex extends WWW {
 
         //System.out.println(pointers[tn]);
         for (int wIx = 0; wIx < Integer.parseInt(field[4]); wIx++) {
-            if(noDuplicateSet.add(words[wIx]) & uniTerms.contains(words[wIx])) {
+            if(noDuplicateSet.add(words[wIx]) & smallFS.contains(words[wIx])) {
                 buffer[tn][pointers[tn]][0] = words[wIx];
                 buffer[tn][pointers[tn]][1] = getBM25(globalStats, Integer.parseInt(field[4]), localFrequencyMap.get(words[wIx]), localFrequencyMap.get(-99), termFreqMap.get(words[wIx]));
                 buffer[tn][pointers[tn]][2] = HITS[Integer.parseInt(field[1])];

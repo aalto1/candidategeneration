@@ -31,7 +31,7 @@ public class BigramIndex {
     };
 
     static boolean check= false;
-    static IntOpenHashSet unigram = (IntOpenHashSet) deserialize(SMALL_FILTER_SET);
+    static LongOpenHashSet unigram = (LongOpenHashSet) deserialize(UNIGRAM_SMALL_FILTER_SET);
 
     /*The code has a strange outcome since in the final single inverted index we have just
     * 19752 posting list vs the 20856 terms. 1104 terms missing saved in a set
@@ -102,7 +102,7 @@ public class BigramIndex {
         DataOutputStream DOS = getDOStream(BIGRAMINDEX);
         int intersectionLen;
         int missing = 0;
-        for (long bigram: (LongOpenHashSet) deserialize(SMALL_FILTER_SET)){
+        for (long bigram: (LongOpenHashSet) deserialize(BIGRAM_SMALL_FILTER_SET)){
             bA = getTerms(bigram);
             try {
                 System.arraycopy(top1000I2.get(bA[0]), 0, aux, 0, top1000I2.get(bA[0]).length);
@@ -144,8 +144,8 @@ public class BigramIndex {
 
     //use train and query set togheter
     public static void checkFilterSets(){
-        IntOpenHashSet  terms = (IntOpenHashSet) deserialize(SMALL_FILTER_SET);
-        LongOpenHashSet bigrams = (LongOpenHashSet) deserialize(SMALL_FILTER_SET);
+        LongOpenHashSet  terms = (LongOpenHashSet) deserialize(UNIGRAM_SMALL_FILTER_SET);
+        LongOpenHashSet bigrams = (LongOpenHashSet) deserialize(BIGRAM_SMALL_FILTER_SET);
         int [] aux;
         int counter=0;
         for(long bigram : bigrams){

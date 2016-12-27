@@ -81,61 +81,6 @@ public class Extra extends WWW {
         serialize(fSet, BIG_FILTER_SET);
     }
 
-    /***
-     * TrainQ   = 58513
-     * TestQ    = 5816
-     * TotQ     = 64329
-     *
-     */
-    public static void getSmallFilterSet() throws IOException {
-        if (term2IdMap == null) getTerm2IdMap();
-        LongOpenHashSet smallFS = new LongOpenHashSet();
-        BufferedReader br = new BufferedReader(new FileReader(QUERY_TRACE));
-        String line;
-        String [] field;
-        Integer term;
-        LinkedList<Integer> terms = new LinkedList<>();
-
-        for (line = br.readLine(); line != null; line = br.readLine()) {
-            field = line.split(" ");
-
-            for (int i = 0; i < field.length; i++) {
-                term = term2IdMap.get(field[i]);
-                if (term != null) {
-                    terms.addLast(term);
-                }
-            }
-
-            for (long j : getCombinations(terms, 2, true)) smallFS.add(j);
-            terms.clear();
-        }
-        System.out.println("Small Filter Size: " + smallFS.size());
-        serialize(smallFS, SMALL_FILTER_SET);
-
-    }
-
-    public static void getUniqueTermsSet() throws IOException {
-        if (term2IdMap == null) getTerm2IdMap();
-        IntOpenHashSet uniTerms = new IntOpenHashSet();
-        BufferedReader br = new BufferedReader(new FileReader(TRAIN_TESTQ));
-        String line;
-        String [] field;
-        Integer term;
-        for (line = br.readLine(); line != null; line = br.readLine()) {
-            //field = line.split(":")[1].split(" ");
-            field = line.split(" ");
-
-
-            for (int i = 0; i < field.length; i++) {
-                term = term2IdMap.get(field[i]);
-                if (term != null) {
-                    uniTerms.add(term);
-                }
-            }
-        }
-        serialize(uniTerms, SMALL_FILTER_SET);
-
-    }
 
     static void getDocIDMap() throws IOException {
         BufferedReader br = getBuffReader(DIDNAMEMAP);

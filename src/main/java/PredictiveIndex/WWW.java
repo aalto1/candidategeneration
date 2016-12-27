@@ -10,6 +10,8 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.lang.System.out;
 
@@ -62,14 +64,14 @@ public abstract class WWW {
             static final String COMPLEXRANKERTOP    =   GROUND_TRUTH + "complexRankerResultsTotalNew";
         static final String TRAIN	    	= SOURCE + "TRAIN/";                                            //F
             static final String TRAINQ          = TRAIN + "trainQ";
-            static final String TRAINQAGUMENTED = TRAIN + "trainQconverted";
-            static final String TRAINQBIGRAM    = TRAIN + "trainQBigram";
-            static final String TRAINQCONVERTED = TRAIN + "trainQAgumented";
+            static final String TRAINQCONVERTED = TRAIN + "trainQconverted";
+            static final String TRAINQBIGRAM    = TRAIN + "trainQbigram";
+            static final String TRAINQAGUMENTED = TRAIN + "trainQagumented";
         static final String TEST	    	= SOURCE + "TEST/";                                             //F
             static final String TESTQ           = TEST + "testQ";
-            static final String TESTQAGUMENTED  = TEST + "testQconverted";
-            static final String TESTQBIGRAM     = TEST + "testQBigram";
-            static final String TESTQCONVERTED  = TEST + "trestQAgumented";
+            static final String TESTQCONVERTED  = TEST + "testQconverted";
+            static final String TESTQBIGRAM     = TEST + "testQbigram";
+            static final String TESTQAGUMENTED  = TEST + "trestQagumented";
         static final String TRAIN_TEST	    = SOURCE + "TRAIN_TEST/";                                       //F
             static final String TRAIN_TESTQ               = TRAIN_TEST + "million09_all";
         static final String HITDATA         = SOURCE + "HITDATA/";                                          //F
@@ -83,6 +85,8 @@ public abstract class WWW {
             static final String DIDNAMEMAP      = CLUEWEBDATA + "didNameMap";
             static final String DIDMAP          = CLUEWEBDATA + "didMap";
             static final String DIDMAPSER       = CLUEWEBDATA + "didMapser";
+            static final String LOCALTERMFREQ	= CLUEWEBDATA + "LOCALTERMFREQ";
+            static final String GLOBALSTATS	    = CLUEWEBDATA + "GLOBALSTATS";
 
     //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -98,11 +102,10 @@ public abstract class WWW {
                 static final String BIBUCKET        = LENGTHS + "BIBUCKET";
                 static final String DBIBUCKET       = LENGTHS + "DBIBUCKET";
                 static final String AGUTERMACCES    = LENGTHS + "AGUTERMACCES";
-            static final String FILTER_SETS	    	= METADATA ;                                //F
-                static final String SMALL_FILTER_SET      = FILTER_SETS + "smallFilterSet";
-                static final String BIG_FILTER_SET        = FILTER_SETS + "bigFilterSet";
-            static final String LOCALTERMFREQ	    = METADATA + "LOCALTERMFREQ";
-            static final String GLOBALSTATS	    	= METADATA + "GLOBALSTATS";
+            static final String FILTER_SETS	    	= METADATA + "FILTER_SET/" ;                                //F
+                static final String UNIGRAM_SMALL_FILTER_SET      = FILTER_SETS + "bigramSmallFilterSet";
+                static final String BIGRAM_SMALL_FILTER_SET       = FILTER_SETS + "unigramSmallFilterSet";
+                static final String BIG_FILTER_SET                = FILTER_SETS + "bigFilterSet";
             static final String ACCESSMAP	    	= METADATA + "ACCESSMAP";
         static final String QUERY_TRACE	        = ROOT + "QUERY_TRACE/";                        //F
             static final String FILLEDGROUND        = QUERY_TRACE + "FILLEDGROUND";
@@ -136,8 +139,6 @@ public abstract class WWW {
             static final String FILTER_SETS	    	= METADATA + "source/";
                 static final String SMALL_FILTER_SET      = FILTER_SETS + "smallFilterSet";
                 static final String BIG_FILTER_SET        = FILTER_SETS + "bigFilterSet";
-            static final String TERMFREQ	    	= METADATA + "source/";
-            static final String GLOBALSTATS	    	= METADATA + "source/";
             static final String ACCESSMAP	    	= METADATA + "source/";
 
         static final String SELECTED_CHUNKS	    	= TEST_RESULTS + "source/";
@@ -393,6 +394,36 @@ public abstract class WWW {
         int aBack = (int)(c >> 32);
         int bBack = (int)c;
         return new int[]{aBack,bBack};
+    }
+
+    public static List<Integer> string2IntList(String orginal, String sep){
+        return Stream.of(orginal.split(sep)).mapToInt(Integer::parseInt).boxed().collect(Collectors.toList());
+
+    }
+
+    public static int[] string2IntArray(String orginal, String sep){
+        return Stream.of(orginal.split(sep)).mapToInt(Integer::parseInt).toArray();
+
+    }
+
+    public static List<Long> string2LongList(String orginal, String sep){
+        return Stream.of(orginal.split(sep)).mapToLong(Long::parseLong).boxed().collect(Collectors.toList());
+
+    }
+
+    public static long[] string2LongArray(String orginal, String sep){
+        return Stream.of(orginal.split(sep)).mapToLong(Long::parseLong).toArray();
+
+    }
+
+    public static List<Double> string2DoubleList(String orginal, String sep){
+        return Stream.of(orginal.split(sep)).mapToDouble(Double::parseDouble).boxed().collect(Collectors.toList());
+
+    }
+
+    public static double[] string2DoubleArray(String orginal, String sep){
+        return Stream.of(orginal.split(sep)).mapToDouble(Double::parseDouble).toArray();
+
     }
 }
 

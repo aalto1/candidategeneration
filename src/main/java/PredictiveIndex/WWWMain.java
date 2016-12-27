@@ -2,6 +2,8 @@ package PredictiveIndex;
 
 import it.unimi.dsi.fastutil.ints.*;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+
 import java.io.*;
 import java.util.Arrays;
 import static PredictiveIndex.Extra.*;
@@ -9,6 +11,7 @@ import static PredictiveIndex.Selection.printQualityModel;
 import static PredictiveIndex.utilsClass.*;
 import static PredictiveIndex.NewQualityModel.*;
 import static PredictiveIndex.ExternalSort.*;
+import static PredictiveIndex.Metadata.*;
 import static PredictiveIndex.NewGreedySelection.*;
 
 /**
@@ -21,34 +24,32 @@ public class WWWMain extends WWW {
     static int distance = 5;
     static int numThreads = 4;
     static int budget = 1000;
-        //14k
 
-    //30k
-    /*/home/aalto/IdeaProjects/PredictiveIndex/aux/sort/bin/binsort --size 16 --length 12 --block-size=900000000  ./InvertedIndex.dat ./sortedInvertedIndex.dat*/
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
-        //NewQualityModel.getModel(SINGLEINDEX, UNIGRAMQUALITYMODEL, F2);
-        //Selection.getProbInfo(uniLanModel, uniConvLanModel, uniProbMap);
-        //getLenBucketMap(UNIBUCKET);
-        //buildQualityMatrix(model1);
-        //NewGreedySelection.greedySelection(100000, model1, "chunk");
-        System.exit(1);
-
         PHASE0_CollectMetadata();
         PHASE1_CollectGobalStatistics();
         PHASE2_CollectQualityModel();
-        PHASE3_CollectBestChunks();
+        //PHASE3_CollectBestChunks();
     }
 
-    private static void PHASE0_CollectMetadata(){
+    private static void PHASE0_CollectMetadata() throws IOException {
+        //getUnigramLanguageModel();
+        //getBigramLanguageModel();
+        getSmallFilterSet(TRAINQCONVERTED, UNIGRAM_SMALL_FILTER_SET);
+        getSmallFilterSet(TRAINQBIGRAM, BIGRAM_SMALL_FILTER_SET);
+        //getBigFilterSet(new String[]{UNIGRAMLANGUAGEMODELCONVERTED}, BIG_FILTER_SET);
+        getAccessMap(TRAINQAGUMENTED, ACCESSMAP);
+        //System.exit(1);
 
     }
 
     private static void PHASE1_CollectGobalStatistics() throws IOException, ClassNotFoundException, InterruptedException {
-        i2 = new InvertedIndex(distance, numThreads);
+        i2 = new InvertedIndex(numThreads);
         startBatteria(i2, 0, numThreads);
-        getLocFreqMap(i2.termFreqArray, i2.uniTerms); //no need
+        getLocFreqMap(i2.termFreqArray, (LongOpenHashSet) deserialize(UNIGRAM_SMALL_FILTER_SET)); //no need
         //serialize(i2.termFreqArray, termFrequencyArray);
-        serialize(i2.globalStats,   GLOBALSTATS);
+        serialize(i2.globalStats,  GLOBALSTATS);
+        System.exit(1);
     }
 
     private static void PHASE2_CollectQualityModel() throws InterruptedException, IOException, ClassNotFoundException {
@@ -58,11 +59,14 @@ public class WWWMain extends WWW {
     }
 
     private static void PHASE21_CollectUnigramHitModel() throws IOException, ClassNotFoundException, InterruptedException {
-        i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(LOCALTERMFREQ),
-                (int[]) deserialize(HITSCORES), (long[]) deserialize(GLOBALSTATS),
+        i2 = new InvertedIndex(
+                (Int2IntOpenHashMap) deserialize(LOCALTERMFREQ),
+                (int[]) deserialize(HITSCORES),
+                (long[]) deserialize(GLOBALSTATS),
                 1,
                 false,
                 UNIGRAMINDEX,
+                UNIGRAM_SMALL_FILTER_SET,
                 numThreads);
         buildStructure(i2, numThreads, UNIGRAMRAW);
 
@@ -81,7 +85,16 @@ public class WWWMain extends WWW {
     }
 
     private static void PHASE23_CollectDBigramModel() throws InterruptedException, IOException, ClassNotFoundException {
-        i2 = new InvertedIndex((Int2IntOpenHashMap) deserialize(LOCALTERMFREQ), null, (long[]) deserialize(GLOBALSTATS), distance, true, DBIGRAMINDEX, numThreads);
+        i2 = new InvertedIndex(
+                (Int2IntOpenHashMap) deserialize(LOCALTERMFREQ),
+                null,
+                (long[]) deserialize(GLOBALSTATS),
+                distance,
+                true,
+                DBIGRAMINDEX,
+                BIGRAM_SMALL_FILTER_SET,
+                numThreads);
+
         buildStructure(i2, numThreads, DBIGRAMRAW);
         massiveBinaryMerge(new File(DBIGRAMRAW), DBIGRAMRAW, true);
         getModel(DBIGRAMINDEX, FILLEDBIGRAM, DBILENGTHS);
@@ -268,12 +281,13 @@ public class WWWMain extends WWW {
     private static void checkExtraData() throws IOException {
         if(!checkExistence(HITSCORES))  getHitScore2();
         if(!checkExistence(BIG_FILTER_SET))  getBigFilterSet();
-        if(!checkExistence(SMALL_FILTER_SET)) getSmallFilterSet();
         if(!checkExistence(ACCESSMAP))  uniquePairs();
-        if(!checkExistence(SMALL_FILTER_SET)) getUniqueTermsSet();
 
     }
 
 
+//14k
 
+    //30k
+    /*/home/aalto/IdeaProjects/PredictiveIndex/aux/sort/bin/binsort --size 16 --length 12 --block-size=900000000  ./InvertedIndex.dat ./sortedInvertedIndex.dat*/
 }

@@ -354,7 +354,7 @@ class utilsClass extends WWW {
        serialize(mergedMap, DBILENGTHS);
    }
 
-    static void getLocFreqMap(int [] locFreqArr, IntOpenHashSet uniTerms) throws IOException, ClassNotFoundException { /***NO-Need***/
+    static void getLocFreqMap(int [] locFreqArr, LongOpenHashSet uniTerms) throws IOException, ClassNotFoundException { /***NO-Need***/
         Int2IntOpenHashMap mergedMap = new Int2IntOpenHashMap();
         int k = 0;
         for (int i = 0; i < locFreqArr.length ; i++) {
@@ -402,35 +402,7 @@ class utilsClass extends WWW {
        bw.close();
    }
 
-    public static List<Integer> string2IntList(String orginal, String sep){
-        return Stream.of(orginal.split(sep)).mapToInt(Integer::parseInt).boxed().collect(Collectors.toList());
 
-    }
-
-    public static int[] string2IntArray(String orginal, String sep){
-        return Stream.of(orginal.split(sep)).mapToInt(Integer::parseInt).toArray();
-
-    }
-
-    public static List<Long> string2LongList(String orginal, String sep){
-        return Stream.of(orginal.split(sep)).mapToLong(Long::parseLong).boxed().collect(Collectors.toList());
-
-    }
-
-    public static long[] string2LongArray(String orginal, String sep){
-        return Stream.of(orginal.split(sep)).mapToLong(Long::parseLong).toArray();
-
-    }
-
-    public static List<Double> string2DoubleList(String orginal, String sep){
-        return Stream.of(orginal.split(sep)).mapToDouble(Double::parseDouble).boxed().collect(Collectors.toList());
-
-    }
-
-    public static double[] string2DoubleArray(String orginal, String sep){
-        return Stream.of(orginal.split(sep)).mapToDouble(Double::parseDouble).toArray();
-
-    }
 
     public static void buildDocIDMap() throws IOException {
         BufferedReader br1 = getBuffReader(DIDNAMEMAP);
