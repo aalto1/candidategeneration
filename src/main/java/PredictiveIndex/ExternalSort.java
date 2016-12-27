@@ -250,6 +250,8 @@ public class ExternalSort {
                 metadataBW.write(currentPostingList + " " + counter + "\n");
                 currentPostingList = currentPosting[0];
                 counter = 0;
+            }else if(currentPostingList==-1){
+                currentPostingList=currentPosting[0];
             }
             DOStream.writeLong(currentPosting[1]);
             counter++;
