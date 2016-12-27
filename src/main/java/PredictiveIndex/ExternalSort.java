@@ -28,6 +28,7 @@ public class ExternalSort {
     static BufferedWriter bw;
     static int linesCount = 0;
     static boolean fourFields = false;
+    static BufferedWriter metadataBW;
 
     static Comparator<long[]> comp = new Comparator<long[]>() {
         @Override
@@ -87,7 +88,8 @@ public class ExternalSort {
 
 
 
-    public static void massiveBinaryMerge(File folder, String output, boolean fFields) throws IOException {
+    public static void massiveBinaryMerge(File folder, String output, boolean fFields, String meta) throws IOException {
+        metadataBW = getBuffWriter(meta);
         bw = getBuffWriter(METADATA+"index.csv");
         fourFields = fFields;
 
@@ -195,6 +197,7 @@ public class ExternalSort {
             }
         System.out.println(linesCount);
         bw.close();
+        metadataBW.close();
         DOStream.close();
     }
 
@@ -207,6 +210,10 @@ public class ExternalSort {
             DOStream.writeLong(a[1]);
 
         }
+    }
+
+    private static void Write2(DataOutputStream DOSStream, long posting) throws IOException {
+        DOSStream.writeLong(posting);
     }
 
     private static void UTF8EntryWrite(DataOutputStream DOStream, long [] a) throws IOException {
@@ -224,26 +231,52 @@ public class ExternalSort {
     public static void writeMergeSortedMatrix(long[][] a, long[][] b, DataOutputStream DOStream) throws IOException {
         //for (long[] z : a)  System.out.println(z[0]);
         //System.out.println(a.length+"-"+b.length);
+        int counter = 0;
+        long [] currentPosting;
+        long currentPostingList = -1;
+
         int i = 0, j = 0;
         while (i < a.length && j < b.length) {
             if (comp.compare(a[i], b[j])<0){
                 if(i==0 && j ==0) System.out.print("\t\tFirst Element: " + Arrays.toString(getTerms(a[i][0])));
-                binaryEntryWrite(DOStream, a[i++]);
+                currentPosting= a[i++];
             }
             else{
                 if(i==0 && j ==0) System.out.print("\t\tFirst Element: " + Arrays.toString(getTerms(b[j][0])));
-                binaryEntryWrite(DOStream, b[j++]);
+                currentPosting = b[j++];
             }
+
+            if(currentPosting[0]!=currentPostingList & currentPostingList!=-1){
+                metadataBW.write(currentPostingList + " " + counter + "\n");
+                currentPostingList = currentPosting[0];
+                counter = 0;
+            }
+            DOStream.writeLong(currentPosting[1]);
+            counter++;
+
         }
         while (i < a.length){
             if(i==a.length-1) System.out.print("\tLast Element:" +  Arrays.toString(getTerms(a[i][0])));
-            //System.out.println(i +" i - length" + a.length);
-            binaryEntryWrite(DOStream, a[i++]);
+            currentPosting= a[i++];
+            if(currentPosting[0]!=currentPostingList & currentPostingList!=-1){
+                metadataBW.write(currentPostingList + " " + counter + "\n");
+                currentPostingList = currentPosting[0];
+                counter = 0;
+            }
+            DOStream.writeLong(currentPosting[1]);
+            counter++;
         }
         while (j < b.length) {
-            //System.out.println(j +" j - lenght" + b.length);
             if(j==b.length-1) System.out.print("\tLast Element:" +  Arrays.toString(getTerms(b[j][0])));
-            binaryEntryWrite(DOStream, b[j++]);
+
+            currentPosting = b[j++];
+            if(currentPosting[0]!=currentPostingList & currentPostingList!=-1){
+                metadataBW.write(currentPostingList + " " + counter + "\n");
+                currentPostingList = currentPosting[0];
+                counter = 0;
+            }
+            DOStream.writeLong(currentPosting[1]);
+            counter++;
         }
     }
 

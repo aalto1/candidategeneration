@@ -38,19 +38,23 @@ public class NewQualityModel extends Selection {
 
         DataInputStream DIStream = getDIStream(index);
         int[] posting = new int[fields];
-        long currentTerm = -1;
+        long currentTerm;
+        long currentPostingList = -1;
         Int2ObjectOpenHashMap<Int2IntOpenHashMap> documentsToFind = new Int2ObjectOpenHashMap();
         Int2IntOpenHashMap scores;
         int counter = 0;
         int postingNumber = 0;
-        LinkedList<Integer> a = new LinkedList<>();
 
         while (true) {
             if ((posting = Selection.getEntry(DIStream, posting)) == null) break;
 
-            if (posting[0] != currentTerm) {
+            if(fields == 3)
                 currentTerm = posting[0];
-                //System.out.println(currentTerm);
+            else
+                currentTerm = getPair(posting[0], posting[1]);
+
+            if (currentTerm != currentPostingList) {
+                currentPostingList = currentTerm;
                 documentsToFind = fastUnigramQueryTrace.get(posting[0]);
                 postingNumber += counter;
                 counter = 0;

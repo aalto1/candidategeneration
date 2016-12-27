@@ -116,6 +116,11 @@ public abstract class WWW {
                 static final String BIGRAMINDEX	    	    = FINAL + "BIGRAMINDEX";
                 static final String DBIGRAMINDEX	    	= FINAL + "DBIGRAMINDEX";
                 static final String HITINDEX	    	    = FINAL + "HITINDEX";
+                static final String UNIGRAMMETA	        	= FINAL + "UNIGRAMMETA";
+                static final String UNIGRAM1000META  	    = FINAL + "UNIGRAM1000META";
+                static final String BIGRAMMETA         	    = FINAL + "BIGRAMMETA";
+                static final String DBIGRAMMETA	        	= FINAL + "DBIGRAMMETA";
+                static final String HITMETA	    	        = FINAL + "HITMETA";
 
         static final String QUERY	    	= RESULTS + "QUERY/";                                             //F
             static final String Q           = QUERY + "Q";

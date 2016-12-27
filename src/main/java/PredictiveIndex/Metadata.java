@@ -181,25 +181,6 @@ public class Metadata extends WWW {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-    /*
-    * Reformatted Query Trace
-    * Long  Int     Int    Int
-    * Pair  DocID   QID    rank
-    *
-    *
-    * Final Structure
-    * QID   aguTerm    topK
-    * Int   Long    Array
-    *
-    * */
-
-    /*
-    * Stopwords are removed from the query trace: How, on, in...and similar terms are removed.
-    * Stopword queries are removed, i.e., 173261. A total of: 10
-    *
-    * Some queries miss in the complex ranker 57287 (440 ranking misses)
-    *
-    * */
 
     public static void convertANDcleanQueryTrace(String input, String output) throws IOException {
         BufferedReader br = getBuffReader(input);
@@ -271,28 +252,7 @@ public class Metadata extends WWW {
         bw.close();
     }
 
-    /*
-    * Empty Model
-    * QID   Pair    topK
-    * Int   Long    Array
-    *
-    * Total train q: 29186 queryId
-    * Unigram model: 29167 queryId
-    * Bigram model : 28660 queryId
-    *
-    *
-    * Nine duplicates found:
-        Duplicate: 115988
-        Duplicate: 141101
-        Duplicate: 15712
-        Duplicate: 164894
-        Duplicate: 112071
-        Duplicate: 25906
-        Duplicate: 67401
-        Duplicate: 94213
-        Duplicate: 83439
-    *
-    * */
+
 
 
 

@@ -75,17 +75,17 @@ public class WWWMain extends WWW {
                 numThreads);
         //buildStructure(i2, numThreads, UNIGRAMRAW);
 
-        massiveBinaryMerge(new File(UNIGRAMRAW), UNIGRAMINDEX, false);
+        massiveBinaryMerge(new File(UNIGRAMRAW), UNIGRAMINDEX, false, UNIGRAMMETA);
         getModel(UNIGRAMINDEX,FILLEDUNIGRAM, UNILENGTHS, 3);
 
-        massiveBinaryMerge(new File(HITRAW), HITINDEX, false);
+        massiveBinaryMerge(new File(HITRAW), HITINDEX, false, HITMETA);
         getModel(HITINDEX, FILLEDHIT, HITLENGTHS, 3);
 
     }
 
     private static void PHASE22_CollectBigramModel() throws IOException, ClassNotFoundException {
         BigramIndex.getBigramIndex(UNIGRAMINDEX);
-        massiveBinaryMerge(new File(BIGRAMRAW), BIGRAMINDEX, true);
+        massiveBinaryMerge(new File(BIGRAMRAW), BIGRAMINDEX, true, BIGRAMMETA);
         getModel(BIGRAMINDEX, FILLEDBIGRAM, BILENGTHS, 4);
     }
 
@@ -101,7 +101,7 @@ public class WWWMain extends WWW {
                 numThreads);
 
         buildStructure(i2, numThreads, DBIGRAMRAW);
-        massiveBinaryMerge(new File(DBIGRAMRAW), DBIGRAMRAW, true);
+        massiveBinaryMerge(new File(DBIGRAMRAW), DBIGRAMRAW, true, DBIGRAMMETA);
         getModel(DBIGRAMINDEX, FILLEDBIGRAM, DBILENGTHS, 4);
     }
 
@@ -273,15 +273,7 @@ public class WWWMain extends WWW {
         printQualityModel(HITQUALITYMODEL);
         printQualityModel(UNIGRAMQUALITYMODEL);
     }
-
-    private static void buildFinalStructures() throws IOException {
-        if(!checkExistence(UNIGRAMINDEX))
-            ExternalSort.massiveBinaryMerge(new File(UNIGRAMRAW), UNIGRAMINDEX, false);
-        if(!checkExistence(HITINDEX))
-            ExternalSort.massiveBinaryMerge(new File(HITRAW), HITINDEX, false);
-        if(!checkExistence(DBIGRAMINDEX))
-            ExternalSort.massiveBinaryMerge(new File(DBIGRAMRAW), DBIGRAMINDEX, true);
-    }
+    
 
 
     private static void checkExtraData() throws IOException {
