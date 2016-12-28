@@ -91,6 +91,7 @@ public class NewQualityModel extends Selection {
         int [] posting;
         Int2IntOpenHashMap scores;
         DataInputStream DIS = getDIStream(input);
+        LongOpenHashSet smallFilterSet = (LongOpenHashSet) deserialize(UNIGRAM_SMALL_FILTER_SET) ;
         BufferedReader br = getBuffReader(UNIGRAMMETA);
         Int2ObjectOpenHashMap<Int2IntOpenHashMap> documentsToFind;
 
@@ -100,22 +101,23 @@ public class NewQualityModel extends Selection {
 
         while((line = br.readLine())!=null){
             data = string2LongArray(line, " ");
-
-            documentsToFind = referenceModel.get(data[0]);
-            System.out.println(referenceModel.containsKey(data[0]) +" "+ data[0]);
-            for (int i = 0; i < data[1]; i++) {
-                posting = getTerms(DIS.readLong());
-                if (documentsToFind.size() > 0 & (scores = documentsToFind.remove(posting[0])) != null) {
-                    for (int qID : scores.keySet()) {
-                        try {
-                            emptymodel.get(qID).get(data[0])[scores.get(qID)] = i;
-                            //printResult(emptymodel.get(qID), qID, newBM25, posting[1], scores.get(qID), currentTerm);
-                        }catch (Exception e) {
-                            //System.err.println(e.getMessage());
+            if(smallFilterSet.contains(data[0])){
+                documentsToFind = referenceModel.get(data[0]);
+                System.out.println(referenceModel.containsKey(data[0]) +" "+ data[0]);
+                for (int i = 0; i < data[1]; i++) {
+                    posting = getTerms(DIS.readLong());
+                    if (documentsToFind.size() > 0 & (scores = documentsToFind.remove(posting[0])) != null) {
+                        for (int qID : scores.keySet()) {
+                            try {
+                                emptymodel.get(qID).get(data[0])[scores.get(qID)] = i;
+                                //printResult(emptymodel.get(qID), qID, newBM25, posting[1], scores.get(qID), currentTerm);
+                            }catch (Exception e) {
+                                //System.err.println(e.getMessage());
+                            }
                         }
                     }
-                }
 
+                }
             }
         }
         serialize(emptymodel,output);

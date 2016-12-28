@@ -38,13 +38,12 @@ public class WWWMain extends WWW {
         //getBigramLanguageModel();
         //getBigFilterSet(new String[]{UNIGRAMLANGUAGEMODELCONVERTED}, BIG_FILTER_SET);
 
-        //convertANDcleanQueryTrace(Q, QCONVERTED);
-        //agumentedQueryTrace(true);
-        //agumentedQueryTrace(false);
+        convertANDcleanQueryTrace(Q, QCONVERTED);
+        agumentedQueryTrace(true);
+        agumentedQueryTrace(false);
 
         getEmptyModel(QAGUMENTED, EMPTYMODEL);
         buildReference(QAGUMENTED, REFERENCEMODEL);
-        System.exit(1);
 
         getSmallFilterSet(QCONVERTED, UNIGRAM_SMALL_FILTER_SET);
         getSmallFilterSet(QBIGRAM, BIGRAM_SMALL_FILTER_SET);

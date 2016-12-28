@@ -131,6 +131,7 @@ public abstract class WWW {
     //////////////////////////////////////////////////////////////////////////////////////////
 
         static final String QUERY_TRACE	        = RESULTS + "QUERY_TRACE/";                        //F
+            static final String MISSINGQUERIES      = QUERY_TRACE + "MISSINGQUERIES";
             static final String FILLEDUNIGRAM       = QUERY_TRACE + "FILLEDUNIGRAM";
             static final String FILLEDBIGRAM        = QUERY_TRACE + "FILLEDBIGRAM";
             static final String FILLEDDBIGRAM       = QUERY_TRACE + "FILLEDDBIGRAM";

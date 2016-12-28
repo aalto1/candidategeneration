@@ -106,6 +106,7 @@ public class NestedQueryTrace extends Selection{
 
     public static Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>> buildReference(String input, String output) throws IOException {
         int[][] topKMatrix = getTopDoc(new int[173800][], getBuffReader(COMPLEXRANKERTOP));
+        IntOpenHashSet missingQueries = new IntOpenHashSet();
         reference = new Long2ObjectOpenHashMap<>();
         BufferedReader br= getBuffReader(input);
         String line;
@@ -120,16 +121,18 @@ public class NestedQueryTrace extends Selection{
                 if(topKMatrix[Integer.valueOf(field[0])]!=null)
                     addTopList(bigram, Integer.valueOf(field[0]),topKMatrix[Integer.valueOf(field[0])]);
                 else{
-                    System.out.println(Integer.valueOf(field[0]) + " " + ++counterFail);
+                    System.out.println(line+ " " + ++counterFail);
+                    missingQueries.add(Integer.valueOf(field[0]));
                     break;
 
                 }
             }
         }
         serialize(reference, output);
-        System.out.println(reference.get(1).size());
-        System.out.println(reference.size());
-        System.exit(1);
+        //serialize(missingQueries,MISSINGQUERIES);
+        //System.out.println(reference.get(1).size());
+        //System.out.println(reference.size());
+
         return reference;
     }
 

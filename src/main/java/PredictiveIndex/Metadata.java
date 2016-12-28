@@ -1,6 +1,7 @@
 package PredictiveIndex;
 
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.longs.Long2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
@@ -181,10 +182,12 @@ public class Metadata extends WWW {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+    /**Removes Stopwords and the queries which have no ground truth */
 
     public static void convertANDcleanQueryTrace(String input, String output) throws IOException {
         BufferedReader br = getBuffReader(input);
         BufferedWriter bw = getBuffWriter(output);
+        IntOpenHashSet missingQueries = (IntOpenHashSet) deserialize(MISSINGQUERIES);
         getTerm2IdMap();
         String line;
         String [] fields;
@@ -195,20 +198,21 @@ public class Metadata extends WWW {
             empty = true;
             sb = new StringBuffer();
             fields = line.split(":");
-            sb.append(fields[0]+":");
-            for(String term : fields[1].split(" ")){
-                if(term2IdMap.get(term) != null){
-                    sb.append(term2IdMap.get(term)+" ");
-                    empty = false;
+            if(!missingQueries.contains(Integer.valueOf(fields[0]))){
+                sb.append(fields[0]+":");
+                for(String term : fields[1].split(" ")){
+                    if(term2IdMap.get(term) != null){
+                        sb.append(term2IdMap.get(term)+" ");
+                        empty = false;
+                    }
+                }
+                if(!empty){
+                    bw.write(sb.substring(0,sb.length()-1));
+                    bw.newLine();
+                }else{
+                    removed++;
                 }
             }
-            if(!empty){
-                bw.write(sb.substring(0,sb.length()-1));
-                bw.newLine();
-            }else{
-                removed++;
-            }
-
         }
         System.out.println("Stopword queries removed: " + removed);
         br.close();
