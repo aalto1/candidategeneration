@@ -290,6 +290,7 @@ public class InvertedIndex extends WWW {
                 if(noDuplicateSet.add(pair) & smallFS.contains(pair)){
                     if(pointers[tn] == buffer[tn].length){
                         //sampledSelection(tn, twoTerms, false);
+                        keepPointers[tn] = pointers[tn];
                         flushBuffer(tn, false);
                         pointers[tn] = keepPointers[tn];
                     }
