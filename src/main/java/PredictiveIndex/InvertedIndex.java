@@ -474,12 +474,13 @@ public class InvertedIndex extends WWW {
             java.util.Arrays.sort(buffer[tn], 0, keepPointers[tn], unigramBufferComparator);
 
         for (int k = 0; k < keepPointers[tn]; k++) {
-            for (int elem : buffer[tn][k])
+            for (int elem : buffer[tn][k]){
                 DOS[tn].writeInt(elem);
+                System.out.println(elem);
+            }
         }
 
         System.out.print("Done.");
-        //System.out.println("Processed docs: " + doc + "Sampled Natural Selection:" + (System.currentTimeMillis() - now) + "ms.\tThreshold: " + threshold +"\t MaxBM25: " + maxBM25);
         DOS[tn].close();
         if(end)
             serialize(DBigramPLLen, DBILENGTHS);
