@@ -85,13 +85,13 @@ public class NewQualityModel extends Selection {
         return QM;
     }
 
-    public static void getModel(String input, String metadata) throws IOException {
+    public static void getModel(String input, String output) throws IOException {
         String line;
         long [] data;
         int [] posting;
         Int2IntOpenHashMap scores;
         DataInputStream DIS = getDIStream(input);
-        BufferedReader br = getBuffReader(metadata);
+        BufferedReader br = getBuffReader(FILLEDGROUND);
         Int2ObjectOpenHashMap<Int2IntOpenHashMap> documentsToFind;
 
         Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>> fastUnigramQueryTrace =
@@ -116,6 +116,7 @@ public class NewQualityModel extends Selection {
 
             }
         }
+        serialize(emptymodel,output);
 
     }
 
