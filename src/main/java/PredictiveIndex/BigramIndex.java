@@ -3,12 +3,11 @@ package PredictiveIndex;
 import com.google.common.primitives.Ints;
 import it.unimi.dsi.fastutil.ints.*;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -42,73 +41,28 @@ public class BigramIndex {
     *
     * */
 
-    public static void getBigramIndex(String index) throws IOException, ClassNotFoundException {
-        Int2ObjectOpenHashMap<int[][]> top1000I2 = new Int2ObjectOpenHashMap<>();
-
+    public static void getBigramIndex(String index, int budget) throws IOException, ClassNotFoundException {
+        Int2ObjectOpenHashMap<long[]> top1000I2;
         System.out.println("Build bigram Inverted index...");
-        DataInputStream DIStream = getDIStream(index);
-        LinkedList<Integer> auxPostingList = new LinkedList<>();
-        int[] posting = new int[3];                         //
-        int currentTerm = -1;
-        int [][] auxArray = null;
-        byte [] toskip = new byte[4*3*100];
-        //DataOutputStream DOStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(metadata+"PLLength.bin")));
-        if(!checkExistence(UNIGRAMINDEX1000)) {
-            for (int term = 0, post = 0; true; ) {
-                posting = getEntry(DIStream, posting);
-                if (posting == null) break;
-                if (posting[0] != currentTerm) {
-                    if (currentTerm != -1) {
-                        top1000I2.put(currentTerm, Arrays.copyOf(auxArray, post));
-                        //unigram.remove(currentTerm);
-                        //System.out.println(Arrays.deepToString(top1000I2.get(currentTerm)));
-                    }
-
-                    currentTerm = posting[0];
-                    top1000I2.put(currentTerm, new int[1000][2]);
-                    auxArray = top1000I2.get(currentTerm);
-                    System.out.println((term++) + "-" + post);
-                    post = 0;
-                }
-                if (post < 1000) {
-                    auxArray[post][0] = posting[1];
-                    auxArray[post++][1] = posting[2];
-                    if (post == 1000) check = false;
-                }else{
-                    DIStream.read(toskip);
-                    if(currentTerm!=java.nio.ByteBuffer.wrap(Arrays.copyOfRange(toskip, 4*3*99, (4*3*99)+4)).getInt()) notToSkip(toskip);
-                }
-
-
-            }
-            serialize(top1000I2, UNIGRAMINDEX1000);
-
-        }else{
-            top1000I2 = (Int2ObjectOpenHashMap<int[][]>) deserialize(UNIGRAMINDEX1000);
-        }
-
-        System.out.println(top1000I2.size());
-        //System.out.println(top1000I2.containsKey(185));
-        //serialize(unigram.removeAll(top1000I2.keySet()), results+"missingSet");
-        //serialize(unigram, results+"missingSet");
-        System.out.println(unigram.size());
-        System.out.println(top1000I2.size());
-
-        //System.exit(1);
+        if(!checkExistence(UNIGRAMTOPMAP))
+            getUnigramTopMap(UNIGRAMINDEX,UNIGRAMTOPMAP, budget);
+        top1000I2 = (Int2ObjectOpenHashMap<long[]>) deserialize(UNIGRAMTOPMAP);
+        BufferedWriter bw = getBuffWriter(BIGRAMMETA);
 
 
         int [] bA;
-        int [][] aux = new int[2000][2];
-        DataOutputStream DOS = getDOStream(BIGRAMINDEX);
+        long [] aux = new long[budget*2];
         int intersectionLen;
+        DataOutputStream DOS = getDOStream(BIGRAMINDEX);
         int missing = 0;
         for (long bigram: (LongOpenHashSet) deserialize(BIGRAM_SMALL_FILTER_SET)){
             bA = getTerms(bigram);
             try {
                 System.arraycopy(top1000I2.get(bA[0]), 0, aux, 0, top1000I2.get(bA[0]).length);
                 System.arraycopy(top1000I2.get(bA[1]), 0, aux, top1000I2.get(bA[0]).length, top1000I2.get(bA[1]).length);
-                Arrays.parallelSort(aux, 0, top1000I2.get(bA[0]).length+top1000I2.get(bA[1]).length, c);
-                intersectionLen = min(top1000I2.get(bA[0]).length+top1000I2.get(bA[1]).length, 1000);
+
+                Arrays.parallelSort(aux, 0, top1000I2.get(bA[0]).length+top1000I2.get(bA[1]).length);
+                intersectionLen = min(top1000I2.get(bA[0]).length+top1000I2.get(bA[1]).length, budget);
             }catch (NullPointerException e){
                 System.out.println(bA[0]+"-"+top1000I2.get(bA[0]));
                 System.out.println(bA[1]+"-"+top1000I2.get(bA[1]));
@@ -116,14 +70,13 @@ public class BigramIndex {
                 intersectionLen=0;
 
             }
-
+            bw.write(bigram + " " + intersectionLen);
             for(int i = 0; i< intersectionLen ; i++){
-                DOS.writeLong(bigram);
-                DOS.writeInt(aux[i][0]);
-                DOS.writeInt(aux[i][1]);
+                DOS.writeLong(aux[i]);
             }
         }
         DOS.close();
+        bw.close();
         System.out.println(missing);
     }
 
@@ -162,5 +115,33 @@ public class BigramIndex {
         }
         System.out.println("\n"+counter);
         System.exit(1);
+    }
+
+
+
+    public static void getUnigramTopMap(String input, String output, int budget) throws IOException {
+        String line;
+        long [] data;
+        long posting;
+        long [] top = new long[budget];
+        Long2ObjectOpenHashMap<long[]> unigramTopMap = new Long2ObjectOpenHashMap<>();
+        DataInputStream DIS = getDIStream(input);
+        LongOpenHashSet smallFilterSet = (LongOpenHashSet) deserialize(UNIGRAM_SMALL_FILTER_SET) ;
+        BufferedReader br = getBuffReader(UNIGRAMMETA);
+
+        while((line = br.readLine())!=null){
+            data = string2LongArray(line, " ");
+            if(smallFilterSet.contains(data[0])){                       //THIS SHOULD BE REMOVED IN THE NEXT ITERATIONS
+                for (int i = 0; i < data[1]; i++) {
+                    posting = DIS.readLong();
+                    if(i<budget){
+                        top[i] = posting;
+                    }else if(i==budget){
+                        unigramTopMap.put(posting, top);
+                    }
+                }
+            }
+        }
+        serialize(UNIGRAMTOPMAP,output);
     }
 }

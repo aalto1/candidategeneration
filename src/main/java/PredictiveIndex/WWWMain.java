@@ -62,9 +62,11 @@ public class WWWMain extends WWW {
     }
 
     private static void PHASE2_CollectQualityModel() throws InterruptedException, IOException, ClassNotFoundException {
-        PHASE21_CollectUnigramHitModel();
-        //PHASE22_CollectBigramModel();
-        //PHASE23_CollectDBigramModel();
+        if(!(checkExistence(FILLEDHIT) & checkExistence(FILLEDUNIGRAM)))
+            PHASE21_CollectUnigramHitModel();
+        PHASE23_CollectDBigramModel();
+        PHASE22_CollectBigramModel();
+
     }
 
     private static void PHASE21_CollectUnigramHitModel() throws IOException, ClassNotFoundException, InterruptedException {
@@ -90,7 +92,7 @@ public class WWWMain extends WWW {
     }
 
     private static void PHASE22_CollectBigramModel() throws IOException, ClassNotFoundException {
-        BigramIndex.getBigramIndex(UNIGRAMINDEX);
+        BigramIndex.getBigramIndex(UNIGRAMINDEX, 1000);
         massiveBinaryMerge(new File(BIGRAMRAW), BIGRAMINDEX, true, BIGRAMMETA);
         getModel(BIGRAMINDEX, FILLEDBIGRAM);
     }

@@ -101,7 +101,7 @@ public class NewQualityModel extends Selection {
 
         while((line = br.readLine())!=null){
             data = string2LongArray(line, " ");
-            if(smallFilterSet.contains(data[0])){
+            if(smallFilterSet.contains(data[0])){                       //THIS SHOULD BE REMOVED IN THE NEXT ITERATIONS
                 documentsToFind = referenceModel.get(data[0]);
                 System.out.println(referenceModel.containsKey(data[0]) +" "+ data[0]);
                 for (int i = 0; i < data[1]; i++) {
@@ -121,7 +121,6 @@ public class NewQualityModel extends Selection {
             }
         }
         serialize(emptymodel,output);
-
     }
 
 
