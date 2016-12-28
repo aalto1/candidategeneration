@@ -27,7 +27,7 @@ public class WWWMain extends WWW {
     static int budget = 1000;
 
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
-        //PHASE0_CollectMetadata();
+        PHASE0_CollectMetadata();
         //PHASE1_CollectGobalStatistics();
         PHASE2_CollectQualityModel();
         //PHASE3_CollectBestChunks();
@@ -42,8 +42,8 @@ public class WWWMain extends WWW {
         //agumentedQueryTrace(true);
         //agumentedQueryTrace(false);
 
-        getEmptyModel(QAGUMENTED, EMPTYINDEX);
-        buildReference(QAGUMENTED, FILLEDGROUND);
+        getEmptyModel(QAGUMENTED, EMPTYMODEL);
+        buildReference(QAGUMENTED, REFERENCEMODEL);
         System.exit(1);
 
         getSmallFilterSet(QCONVERTED, UNIGRAM_SMALL_FILTER_SET);

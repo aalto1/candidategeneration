@@ -33,9 +33,9 @@ public class NewQualityModel extends Selection {
 
     public static double[][][] getModel2(String index, String output, String length, int fields) throws IOException, ClassNotFoundException {
         System.out.println("Fast Query Trace fetched!\n Processing Inverted Index...");
-        Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>> fastUnigramQueryTrace =
-                (Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>>) deserialize(FILLEDGROUND);
-        Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>> emptymodel = (Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>>) deserialize(EMPTYGROUND);
+        Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>> referenceModel =
+                (Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>>) deserialize(REFERENCEMODEL);
+        Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>> emptymodel = (Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>>) deserialize(EMPTYMODEL);
         dumped = (Int2LongOpenHashMap) deserialize(length);
 
         DataInputStream DIStream = getDIStream(index);
@@ -57,7 +57,7 @@ public class NewQualityModel extends Selection {
 
             if (currentTerm != currentPostingList) {
                 currentPostingList = currentTerm;
-                documentsToFind = fastUnigramQueryTrace.get(posting[0]);
+                documentsToFind = referenceModel.get(posting[0]);
                 postingNumber += counter;
                 counter = 0;
             }
@@ -94,13 +94,13 @@ public class NewQualityModel extends Selection {
         BufferedReader br = getBuffReader(UNIGRAMMETA);
         Int2ObjectOpenHashMap<Int2IntOpenHashMap> documentsToFind;
 
-        Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>> fastUnigramQueryTrace =
-                (Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>>) deserialize(FILLEDGROUND);
-        Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>> emptymodel = (Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>>) deserialize(EMPTYGROUND);
+        Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>> referenceModel =
+                (Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>>) deserialize(REFERENCEMODEL);
+        Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>> emptymodel = (Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>>) deserialize(EMPTYMODEL);
 
         while((line = br.readLine())!=null){
             data = string2LongArray(line, " ");
-            documentsToFind = fastUnigramQueryTrace.get(data[0]);
+            documentsToFind = referenceModel.get(data[0]);
             for (int i = 0; i < data[1]; i++) {
                 posting = getTerms(DIS.readLong());
                 if (documentsToFind.size() > 0 & (scores = documentsToFind.remove(posting[0])) != null) {

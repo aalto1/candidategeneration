@@ -59,8 +59,8 @@ public abstract class WWW {
                 static final String BIGRAMQUALITYMODEL	    = QUALITY + "BIGRAMQUALITYMODEL";
                 static final String DBIGRAMQUALITYMODEL 	= QUALITY + "DBIGRAMQUALITYMODEL";
              static final String EMPTY          = MODELS + "EMPTY/";                                        //F
-                static final String EMPTYGROUND	            = EMPTY + "EMPTYGROUND";
-                static final String EMPTYINDEX	            = EMPTY + "EMPTYINDEX";
+                static final String EMPTYMODEL	            = EMPTY + "EMPTYMODEL";
+                static final String REFERENCEMODEL	        = EMPTY + "REFERENCEMODEL";
 
         static final String GROUND_TRUTH	= SOURCE + "GROUND_TRUTH/";                                     //F
             static final String COMPLEXRANKERTOP    =   GROUND_TRUTH + "complexRankerResultsTotalNew";
@@ -131,7 +131,6 @@ public abstract class WWW {
     //////////////////////////////////////////////////////////////////////////////////////////
 
         static final String QUERY_TRACE	        = RESULTS + "QUERY_TRACE/";                        //F
-            static final String FILLEDGROUND        = QUERY_TRACE + "FILLEDGROUND";
             static final String FILLEDUNIGRAM       = QUERY_TRACE + "FILLEDUNIGRAM";
             static final String FILLEDBIGRAM        = QUERY_TRACE + "FILLEDBIGRAM";
             static final String FILLEDDBIGRAM       = QUERY_TRACE + "FILLEDDBIGRAM";

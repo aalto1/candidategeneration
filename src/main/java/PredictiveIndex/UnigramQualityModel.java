@@ -30,7 +30,7 @@ public class UnigramQualityModel extends Selection {
         accMap = (Long2IntOpenHashMap) deserialize(ACCESSMAP);
         dumped = (Int2LongOpenHashMap) deserialize(dumpMap);
         //Long2ObjectOpenHashMap<Int2IntMap> fastUnigramQueryTrace = getFQT(10);
-        Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>> fastUnigramQueryTrace = (Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>>) deserialize(FILLEDGROUND);
+        Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>> fastUnigramQueryTrace = (Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>>) deserialize(REFERENCEMODEL);
 
         System.out.println(fastUnigramQueryTrace.size());
 
