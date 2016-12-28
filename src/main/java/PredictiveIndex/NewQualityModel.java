@@ -91,7 +91,7 @@ public class NewQualityModel extends Selection {
         int [] posting;
         Int2IntOpenHashMap scores;
         DataInputStream DIS = getDIStream(input);
-        BufferedReader br = getBuffReader(FILLEDGROUND);
+        BufferedReader br = getBuffReader(UNIGRAMMETA);
         Int2ObjectOpenHashMap<Int2IntOpenHashMap> documentsToFind;
 
         Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>> fastUnigramQueryTrace =

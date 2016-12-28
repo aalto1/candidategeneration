@@ -339,7 +339,7 @@ public class InvertedIndex extends WWW {
             writeEntry(pre, i , tn);
         }
         if(end) {
-            if (pre == UNIGRAMRAW)
+            if (pre.equals(UNIGRAMRAW))
                 serialize(uniMap, UNILENGTHS);
             else
                 serialize(hitMap, HITLENGTHS);
