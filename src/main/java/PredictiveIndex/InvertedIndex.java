@@ -290,7 +290,6 @@ public class InvertedIndex extends WWW {
                 if(noDuplicateSet.add(pair) & smallFS.contains(pair)){
                     if(pointers[tn] == buffer[tn].length){
                         //sampledSelection(tn, twoTerms, false);
-                        keepPointers[tn] = pointers[tn];
                         flushBuffer(tn, false);
                         pointers[tn] = keepPointers[tn];
                     }
@@ -474,7 +473,7 @@ public class InvertedIndex extends WWW {
         else
             java.util.Arrays.sort(buffer[tn], 0, keepPointers[tn], unigramBufferComparator);
 
-        for (int k = 0; k < keepPointers[tn]; k++) {
+        for (int k = 0; k < pointers[tn]/*keepPointers[tn]*/; k++) {
             for (int elem : buffer[tn][k]){
                 DOS[tn].writeInt(elem);
                 System.out.println(elem);
