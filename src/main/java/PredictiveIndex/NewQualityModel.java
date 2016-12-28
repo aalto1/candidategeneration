@@ -103,6 +103,7 @@ public class NewQualityModel extends Selection {
             documentsToFind = referenceModel.get(data[0]);
             for (int i = 0; i < data[1]; i++) {
                 posting = getTerms(DIS.readLong());
+                System.out.println(documentsToFind);
                 if (documentsToFind.size() > 0 & (scores = documentsToFind.remove(posting[0])) != null) {
                     for (int qID : scores.keySet()) {
                         try {
