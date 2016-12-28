@@ -7,7 +7,9 @@ import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 
+import java.io.BufferedReader;
 import java.io.DataInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 
@@ -29,7 +31,7 @@ public class NewQualityModel extends Selection {
      * inverted index not sorted => now sorted
      * */
 
-    public static double[][][] getModel(String index, String output, String length, int fields) throws IOException, ClassNotFoundException {
+    public static double[][][] getModel2(String index, String output, String length, int fields) throws IOException, ClassNotFoundException {
         System.out.println("Fast Query Trace fetched!\n Processing Inverted Index...");
         Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>> fastUnigramQueryTrace =
                 (Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>>) deserialize(FILLEDGROUND);
@@ -82,6 +84,41 @@ public class NewQualityModel extends Selection {
         //printQualityModel(model);
         return QM;
     }
+
+    public static void getModel(String input, String metadata) throws IOException {
+        String line;
+        long [] data;
+        int [] posting;
+        Int2IntOpenHashMap scores;
+        DataInputStream DIS = getDIStream(input);
+        BufferedReader br = getBuffReader(metadata);
+        Int2ObjectOpenHashMap<Int2IntOpenHashMap> documentsToFind;
+
+        Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>> fastUnigramQueryTrace =
+                (Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>>) deserialize(FILLEDGROUND);
+        Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>> emptymodel = (Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>>) deserialize(EMPTYGROUND);
+
+        while((line = br.readLine())!=null){
+            data = string2LongArray(line, " ");
+            documentsToFind = fastUnigramQueryTrace.get(data[0]);
+            for (int i = 0; i < data[1]; i++) {
+                posting = getTerms(DIS.readLong());
+                if (documentsToFind.size() > 0 & (scores = documentsToFind.remove(posting[0])) != null) {
+                    for (int qID : scores.keySet()) {
+                        try {
+                            emptymodel.get(qID).get(data[0])[scores.get(qID)] = i;
+                            //printResult(emptymodel.get(qID), qID, newBM25, posting[1], scores.get(qID), currentTerm);
+                        }catch (Exception e) {
+                            //System.err.println(e.getMessage());
+                        }
+                    }
+                }
+
+            }
+        }
+
+    }
+
 
     public static void printResult(Long2ObjectOpenHashMap<long[]> m, int qID, int topBm25, int bm25, int pos, long term){
         System.out.println(qID);

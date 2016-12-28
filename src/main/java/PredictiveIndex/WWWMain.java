@@ -11,6 +11,7 @@ import static PredictiveIndex.Selection.printQualityModel;
 import static PredictiveIndex.utilsClass.*;
 import static PredictiveIndex.NewQualityModel.*;
 import static PredictiveIndex.ExternalSort.*;
+import static PredictiveIndex.NestedQueryTrace.*;
 import static PredictiveIndex.Metadata.*;
 import static PredictiveIndex.NewGreedySelection.*;
 
@@ -26,7 +27,7 @@ public class WWWMain extends WWW {
     static int budget = 1000;
 
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
-        //PHASE0_CollectMetadata();
+        PHASE0_CollectMetadata();
         //PHASE1_CollectGobalStatistics();
         PHASE2_CollectQualityModel();
         //PHASE3_CollectBestChunks();
@@ -37,9 +38,13 @@ public class WWWMain extends WWW {
         //getBigramLanguageModel();
         //getBigFilterSet(new String[]{UNIGRAMLANGUAGEMODELCONVERTED}, BIG_FILTER_SET);
 
-        convertANDcleanQueryTrace(Q, QCONVERTED);
-        agumentedQueryTrace(true);
-        agumentedQueryTrace(false);
+        //convertANDcleanQueryTrace(Q, QCONVERTED);
+        //agumentedQueryTrace(true);
+        //agumentedQueryTrace(false);
+
+        getEmptyModel(QAGUMENTED, EMPTYINDEX);
+        buildReference(QAGUMENTED, FILLEDGROUND);
+        System.exit(1);
 
         getSmallFilterSet(QCONVERTED, UNIGRAM_SMALL_FILTER_SET);
         getSmallFilterSet(QBIGRAM, BIGRAM_SMALL_FILTER_SET);
@@ -75,18 +80,20 @@ public class WWWMain extends WWW {
                 numThreads);
         //buildStructure(i2, numThreads, UNIGRAMRAW);
 
-        massiveBinaryMerge(new File(UNIGRAMRAW), UNIGRAMINDEX, false, UNIGRAMMETA);
-        getModel(UNIGRAMINDEX,FILLEDUNIGRAM, UNILENGTHS, 3);
+        if(!checkExistence(UNIGRAMINDEX))
+            massiveBinaryMerge(new File(UNIGRAMRAW), UNIGRAMINDEX, false, UNIGRAMMETA);
+        getModel(UNIGRAMINDEX,FILLEDUNIGRAM);
 
-        massiveBinaryMerge(new File(HITRAW), HITINDEX, false, HITMETA);
-        getModel(HITINDEX, FILLEDHIT, HITLENGTHS, 3);
+        if(!checkExistence(HITINDEX))
+            massiveBinaryMerge(new File(HITRAW), HITINDEX, false, HITMETA);
+        getModel(HITINDEX, FILLEDHIT);
 
     }
 
     private static void PHASE22_CollectBigramModel() throws IOException, ClassNotFoundException {
         BigramIndex.getBigramIndex(UNIGRAMINDEX);
         massiveBinaryMerge(new File(BIGRAMRAW), BIGRAMINDEX, true, BIGRAMMETA);
-        getModel(BIGRAMINDEX, FILLEDBIGRAM, BILENGTHS, 4);
+        getModel(BIGRAMINDEX, FILLEDBIGRAM);
     }
 
     private static void PHASE23_CollectDBigramModel() throws InterruptedException, IOException, ClassNotFoundException {
@@ -102,7 +109,7 @@ public class WWWMain extends WWW {
 
         buildStructure(i2, numThreads, DBIGRAMRAW);
         massiveBinaryMerge(new File(DBIGRAMRAW), DBIGRAMRAW, true, DBIGRAMMETA);
-        getModel(DBIGRAMINDEX, FILLEDBIGRAM, DBILENGTHS, 4);
+        getModel(DBIGRAMINDEX, FILLEDBIGRAM);
     }
 
 
