@@ -472,7 +472,7 @@ public class InvertedIndex extends WWW {
             java.util.Arrays.sort(buffer[tn], 0, keepPointers[tn], bigramBufferComparator); //testComparator); //
         else
             java.util.Arrays.sort(buffer[tn], 0, keepPointers[tn], unigramBufferComparator);
-
+        System.out.println("wewewe");
         for (int k = 0; k < pointers[tn]/*keepPointers[tn]*/; k++) {
             System.out.println("wewewe");
             for (int elem : buffer[tn][k]){
