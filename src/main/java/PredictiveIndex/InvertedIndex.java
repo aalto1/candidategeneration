@@ -296,7 +296,6 @@ public class InvertedIndex extends WWW {
 
                     incrementDBigramPLLength(pair);
 
-
                     score1 = getBM25(globalStats, docLen, localFrequencyMap.get(twoTerms[0]), localMaxFreq , termFreqMap.get(twoTerms[0]));
                     score2 = getBM25(globalStats, docLen, localFrequencyMap.get(twoTerms[1]), localMaxFreq , termFreqMap.get(twoTerms[1]));
 
@@ -472,9 +471,7 @@ public class InvertedIndex extends WWW {
             java.util.Arrays.sort(buffer[tn], 0, keepPointers[tn], bigramBufferComparator); //testComparator); //
         else
             java.util.Arrays.sort(buffer[tn], 0, keepPointers[tn], unigramBufferComparator);
-        System.out.println("wewewe");
         for (int k = 0; k < pointers[tn]/*keepPointers[tn]*/; k++) {
-            System.out.println("wewewe");
             for (int elem : buffer[tn][k]){
                 DOS[tn].writeInt(elem);
             }
