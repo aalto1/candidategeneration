@@ -27,7 +27,7 @@ public class WWWMain extends WWW {
     static int budget = 1000;
 
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
-        PHASE0_CollectMetadata();
+        //PHASE0_CollectMetadata();
         //PHASE1_CollectGobalStatistics();
         PHASE2_CollectQualityModel();
         //PHASE3_CollectBestChunks();
