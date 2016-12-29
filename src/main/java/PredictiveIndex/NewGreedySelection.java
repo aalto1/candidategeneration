@@ -83,8 +83,8 @@ public class NewGreedySelection extends Selection {
     //the greedy selection select up to the moment when it doesn't find anything new, than take the top-limitBudget
     public static void initCounters(){
         counterMap = new Long2IntOpenHashMap();
-        IntOpenHashSet trainAguTerms = (IntOpenHashSet) deserialize(UNIGRAM_SMALL_FILTER_SET);
-        for (int aguTerm : trainAguTerms) {
+        LongOpenHashSet trainAguTerms = (LongOpenHashSet) deserialize(UNIGRAM_SMALL_FILTER_SET);
+        for (long aguTerm : trainAguTerms) {
             counterMap.put(aguTerm, 0);
         }
     }
