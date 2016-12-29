@@ -83,18 +83,18 @@ public class WWWMain extends WWW {
 
         if(!checkExistence(UNIGRAMINDEX))
             massiveBinaryMerge(new File(UNIGRAMRAW), UNIGRAMINDEX, false, UNIGRAMMETA);
-        getModel(UNIGRAMINDEX,FILLEDUNIGRAM);
+        getModel(UNIGRAMINDEX,FILLEDUNIGRAM, UNIGRAMMETA);
 
         if(!checkExistence(HITINDEX))
             massiveBinaryMerge(new File(HITRAW), HITINDEX, false, HITMETA);
-        getModel(HITINDEX, FILLEDHIT);
+        getModel(HITINDEX, FILLEDHIT, HITMETA);
 
     }
 
     private static void PHASE22_CollectBigramModel() throws IOException, ClassNotFoundException {
         BigramIndex.getBigramIndex(UNIGRAMINDEX, 1000);
         massiveBinaryMerge(new File(BIGRAMRAW), BIGRAMINDEX, true, BIGRAMMETA);
-        getModel(BIGRAMINDEX, FILLEDBIGRAM);
+        getModel(BIGRAMINDEX, FILLEDBIGRAM, DBIGRAMMETA);
     }
 
     private static void PHASE23_CollectDBigramModel() throws InterruptedException, IOException, ClassNotFoundException {
@@ -107,10 +107,9 @@ public class WWWMain extends WWW {
                 DBIGRAMRAW,
                 BIGRAM_SMALL_FILTER_SET,
                 numThreads);
-
-        buildStructure(i2, numThreads, DBIGRAMRAW);
-        massiveBinaryMerge(new File(DBIGRAMRAW), DBIGRAMINDEX, true, DBIGRAMMETA);
-        getModel(DBIGRAMINDEX, FILLEDBIGRAM);
+        //buildStructure(i2, numThreads, DBIGRAMRAW);
+        //massiveBinaryMerge(new File(DBIGRAMRAW), DBIGRAMINDEX, true, DBIGRAMMETA);
+        getModel(DBIGRAMINDEX, FILLEDBIGRAM, BIGRAMMETA);
     }
 
 

@@ -85,14 +85,14 @@ public class NewQualityModel extends Selection {
         return QM;
     }
 
-    public static void getModel(String input, String output) throws IOException {
+    public static void getModel(String input, String output, String metadata) throws IOException {
         String line;
         long [] data;
         int [] posting;
         Int2IntOpenHashMap scores;
         DataInputStream DIS = getDIStream(input);
         LongOpenHashSet smallFilterSet = (LongOpenHashSet) deserialize(UNIGRAM_SMALL_FILTER_SET) ;
-        BufferedReader br = getBuffReader(UNIGRAMMETA);
+        BufferedReader br = getBuffReader(metadata);
         Int2ObjectOpenHashMap<Int2IntOpenHashMap> documentsToFind;
 
         Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>> referenceModel =
@@ -103,7 +103,7 @@ public class NewQualityModel extends Selection {
             data = string2LongArray(line, " ");
             if(smallFilterSet.contains(data[0])){                       //THIS SHOULD BE REMOVED IN THE NEXT ITERATIONS
                 documentsToFind = referenceModel.get(data[0]);
-                System.out.println(referenceModel.containsKey(data[0]) +" "+ data[0]);
+                System.out.println(referenceModel.containsKey(data[0]) + " " + data[0]);
                 for (int i = 0; i < data[1]; i++) {
                     posting = getTerms(DIS.readLong());
                     if (documentsToFind.size() > 0 & (scores = documentsToFind.remove(posting[0])) != null) {

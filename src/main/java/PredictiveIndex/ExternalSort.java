@@ -261,7 +261,7 @@ public class ExternalSort {
         }
         while (i < a.length){
             if(i==a.length-1) System.out.print("\tLast Element:" +  Arrays.toString(getTerms(a[i][0])));
-            currentPosting= a[i++];
+            currentPosting = a[i++];
             if(currentPosting[0]!=currentPostingList & currentPostingList!=-1){
                 metadataBW.write(currentPostingList + " " + counter + "\n");
                 currentPostingList = currentPosting[0];
@@ -270,6 +270,7 @@ public class ExternalSort {
             DOStream.writeLong(currentPosting[1]);
             counter++;
         }
+
         while (j < b.length) {
             if(j==b.length-1) System.out.print("\tLast Element:" +  Arrays.toString(getTerms(b[j][0])));
 
