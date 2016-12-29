@@ -71,7 +71,7 @@ public class BigramIndex {
                 intersectionLen=0;
 
             }
-            bw.write(bigram + " " + intersectionLen);
+            bw.write(bigram + " " + intersectionLen + "\n");
             for(int i = 0; i< intersectionLen ; i++){
                 DOS.writeLong(aux[i]);
             }
