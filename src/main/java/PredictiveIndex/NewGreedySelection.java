@@ -103,7 +103,7 @@ public class NewGreedySelection extends Selection {
         for (long term: lenMap.keySet()) {
             bucketMap.put(term, getLenBucket(lenMap.get(term)));
         }
-        serialize(lenMap, output);
+        serialize(bucketMap, output);
     }
 
     public static void generateBucketMap2(String input, String output){
@@ -112,7 +112,7 @@ public class NewGreedySelection extends Selection {
         for (int term: lenMap.keySet()) {
             bucketMap.put(term, getLenBucket((int)lenMap.get(term)));
         }
-        serialize(lenMap, output);
+        serialize(bucketMap, output);
     }
 
 }
