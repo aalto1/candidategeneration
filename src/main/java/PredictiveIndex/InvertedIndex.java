@@ -97,6 +97,7 @@ public class InvertedIndex extends WWW {
         if(!isBgram){
             this.HITS = HITS;
         }
+
         this.termFreqMap = termFreqMap;
         this.globalStats = globalStats;
         this.distance = distance;
@@ -288,10 +289,12 @@ public class InvertedIndex extends WWW {
                 Arrays.sort(twoTerms);
                 pair = getPair(twoTerms[0], twoTerms[1]);
                 if(noDuplicateSet.add(pair) & smallFS.contains(pair)){
+
                     if(pointers[tn] == buffer[tn].length){
                         //sampledSelection(tn, twoTerms, false);
                         flushBuffer(tn, false);
-                        pointers[tn] = keepPointers[tn];
+                        pointers[tn] = 0;
+                        //pointers[tn] = keepPointers[tn];
                     }
 
                     incrementDBigramPLLength(pair);
@@ -471,6 +474,7 @@ public class InvertedIndex extends WWW {
             java.util.Arrays.sort(buffer[tn], 0, keepPointers[tn], bigramBufferComparator); //testComparator); //
         else
             java.util.Arrays.sort(buffer[tn], 0, keepPointers[tn], unigramBufferComparator);
+
         for (int k = 0; k < pointers[tn]/*keepPointers[tn]*/; k++) {
             for (int elem : buffer[tn][k]){
                 DOS[tn].writeInt(elem);
@@ -507,3 +511,5 @@ public class InvertedIndex extends WWW {
 
 
 
+/*git pull origin master ; mvn package ; java -Xms31g -XX:+UseParallelGC -XX:GCTimeRatio=99 -XX:+PrintGCDetails -cp
+target/PredictiveIndex-1.0-SNAPSHOT.jar PredictiveIndex.WWWMain*/

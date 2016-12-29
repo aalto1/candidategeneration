@@ -27,7 +27,7 @@ public class ExternalSort {
 
     static BufferedWriter bw;
     static int linesCount = 0;
-    static boolean fourFields = false;
+    static boolean fourFields = true;
     static BufferedWriter metadataBW;
 
     static Comparator<long[]> comp = new Comparator<long[]>() {
