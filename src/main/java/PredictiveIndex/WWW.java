@@ -100,8 +100,8 @@ public abstract class WWW {
                 static final String DBIBUCKET       = LENGTHS + "DBIBUCKET";
                 static final String AGUTERMACCES    = LENGTHS + "AGUTERMACCES";
             static final String FILTER_SETS	    	= METADATA + "FILTER_SET/" ;                                //F
-                static final String UNIGRAM_SMALL_FILTER_SET      = FILTER_SETS + "bigramSmallFilterSet";
-                static final String BIGRAM_SMALL_FILTER_SET       = FILTER_SETS + "unigramSmallFilterSet";
+                static final String UNIGRAM_SMALL_FILTER_SET      = FILTER_SETS + "unigramSmallFilterSet";
+                static final String BIGRAM_SMALL_FILTER_SET       = FILTER_SETS + "bigramSmallFilterSet";
                 static final String BIG_FILTER_SET                = FILTER_SETS + "bigFilterSet";
             static final String ACCESSMAP	    	= METADATA + "ACCESSMAP";
 
