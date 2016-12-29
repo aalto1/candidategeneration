@@ -109,7 +109,7 @@ public class WWWMain extends WWW {
                 numThreads);
         //buildStructure(i2, numThreads, DBIGRAMRAW);
         //massiveBinaryMerge(new File(DBIGRAMRAW), DBIGRAMINDEX, true, DBIGRAMMETA);
-        getModel(DBIGRAMINDEX, FILLEDBIGRAM, DBIGRAMMETA);
+        getModel(DBIGRAMINDEX, FILLEDDBIGRAM, DBIGRAMMETA);
     }
 
 
