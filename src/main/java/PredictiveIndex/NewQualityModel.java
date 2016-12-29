@@ -188,9 +188,13 @@ public class NewQualityModel extends Selection {
 
     public static void generateModels() throws IOException {
         buildQualityMatrix(FILLEDUNIGRAM, UNIGRAMQUALITYMODEL);
+        System.out.println("\n\n\n\n");
         buildQualityMatrix(FILLEDHIT, HITQUALITYMODEL);
+        System.out.println("\n\n\n\n");
         buildQualityMatrix(FILLEDDBIGRAM, DBIGRAMQUALITYMODEL);
+        System.out.println("\n\n\n\n");
         buildQualityMatrix(FILLEDBIGRAM, BIGRAMQUALITYMODEL);
+        System.out.println("\n\n\n\n");
 
     }
 
