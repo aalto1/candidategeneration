@@ -42,11 +42,12 @@ public class BigramIndex {
     * */
 
     public static void getBigramIndex(String index, int budget) throws IOException, ClassNotFoundException {
-        Int2ObjectOpenHashMap<long[]> top1000I2;
+        Long2ObjectOpenHashMap<long[]> top1000I2;
         System.out.println("Build bigram Inverted index...");
         if(!checkExistence(UNIGRAMTOPMAP))
-            getUnigramTopMap(UNIGRAMINDEX,UNIGRAMTOPMAP, budget);
-        top1000I2 = (Int2ObjectOpenHashMap<long[]>) deserialize(UNIGRAMTOPMAP);
+            top1000I2 = getUnigramTopMap(UNIGRAMINDEX,UNIGRAMTOPMAP, budget);
+        else
+            top1000I2 = (Long2ObjectOpenHashMap<long[]>) deserialize(UNIGRAMTOPMAP);
         BufferedWriter bw = getBuffWriter(BIGRAMMETA);
 
 
@@ -119,7 +120,7 @@ public class BigramIndex {
 
 
 
-    public static void getUnigramTopMap(String input, String output, int budget) throws IOException {
+    public static Long2ObjectOpenHashMap<long[]> getUnigramTopMap(String input, String output, int budget) throws IOException {
         String line;
         long [] data;
         long posting;
@@ -143,5 +144,6 @@ public class BigramIndex {
             }
         }
         serialize(UNIGRAMTOPMAP,output);
+        return unigramTopMap;
     }
 }
