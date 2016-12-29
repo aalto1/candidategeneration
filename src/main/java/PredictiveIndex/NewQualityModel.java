@@ -99,6 +99,7 @@ public class NewQualityModel extends Selection {
                 (Long2ObjectOpenHashMap<Int2ObjectOpenHashMap<Int2IntOpenHashMap>>) deserialize(REFERENCEMODEL);
         Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>> emptymodel = (Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>>) deserialize(EMPTYMODEL);
 
+        System.out.println("ciao, ciao");
         while((line = br.readLine())!=null){
             data = string2LongArray(line, " ");
             if(smallFilterSet.contains(data[0])){                       //THIS SHOULD BE REMOVED IN THE NEXT ITERATIONS
