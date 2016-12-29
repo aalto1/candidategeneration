@@ -143,7 +143,7 @@ public class BigramIndex {
                 }
             }
         }
-        serialize(UNIGRAMTOPMAP,output);
+        serialize(unigramTopMap,output);
         return unigramTopMap;
     }
 }
