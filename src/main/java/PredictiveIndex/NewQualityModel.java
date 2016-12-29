@@ -85,13 +85,13 @@ public class NewQualityModel extends Selection {
         return QM;
     }
 
-    public static void getModel(String input, String output, String metadata) throws IOException {
+    public static void getModel(String input, String output, String metadata, String filterSet) throws IOException {
         String line;
         long [] data;
         int [] posting;
         Int2IntOpenHashMap scores;
         DataInputStream DIS = getDIStream(input);
-        LongOpenHashSet smallFilterSet = (LongOpenHashSet) deserialize(UNIGRAM_SMALL_FILTER_SET) ;
+        LongOpenHashSet smallFilterSet = (LongOpenHashSet) deserialize(filterSet) ;
         BufferedReader br = getBuffReader(metadata);
         Int2ObjectOpenHashMap<Int2IntOpenHashMap> documentsToFind;
 
