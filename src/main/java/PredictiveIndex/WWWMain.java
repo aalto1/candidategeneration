@@ -98,7 +98,7 @@ public class WWWMain extends WWW {
     }
 
     private static void PHASE23_CollectDBigramModel() throws InterruptedException, IOException, ClassNotFoundException {
-        /*i2 = new InvertedIndex(
+        i2 = new InvertedIndex(
                 (Int2IntOpenHashMap) deserialize(LOCALTERMFREQ),
                 null,
                 (long[]) deserialize(GLOBALSTATS),
@@ -106,9 +106,9 @@ public class WWWMain extends WWW {
                 true,
                 DBIGRAMRAW,
                 BIGRAM_SMALL_FILTER_SET,
-                numThreads);o*/
+                numThreads);
 
-        //buildStructure(i2, numThreads, DBIGRAMRAW);
+        buildStructure(i2, numThreads, DBIGRAMRAW);
         massiveBinaryMerge(new File(DBIGRAMRAW), DBIGRAMINDEX, true, DBIGRAMMETA);
         getModel(DBIGRAMINDEX, FILLEDBIGRAM);
     }
