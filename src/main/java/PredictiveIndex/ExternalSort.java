@@ -122,8 +122,10 @@ public class ExternalSort {
                     try{
                         buffLong = buffer.get(i);
                         if(buffLong == null){
-                            if(fourFields)
+                            if(fourFields){
                                 buffLong = new long[]{DIStreams.get(i).readLong(), DIStreams.get(i).readLong()};
+                                System.out.println("ciao");
+                            }
                             else
                                 buffLong = new long[]{(long) DIStreams.get(i).readInt(), DIStreams.get(i).readLong()};
                             //linesCount++; //sometimes reading from the stream fails
