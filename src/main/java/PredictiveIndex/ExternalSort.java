@@ -113,7 +113,7 @@ public class ExternalSort {
             partialNow = System.currentTimeMillis();
             for (int i = 0; i < DIStreams.size(); i++) {
                 if(LL.size()%50 !=0 & LL.size()!=0){
-                    System.out.print(" " + LL.size());
+                    System.out.print(LL.size() + " ");
                 }else{
                     System.out.println(" "+LL.size());
                 }
