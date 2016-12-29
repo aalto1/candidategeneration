@@ -137,14 +137,14 @@ public class NewQualityModel extends Selection {
     }
 
 
-    public static void buildQualityMatrix(String output) throws IOException {
+    public static void buildQualityMatrix(String input, String output) throws IOException {
         double [][] finMod = new double[QM.length][QM[0].length];
         Int2IntOpenHashMap lenMap = (Int2IntOpenHashMap) deserialize(LOCALTERMFREQ);
         accMap = (Long2IntOpenHashMap) deserialize(ACCESSMAP);
         double value = 0;
         int x,y;
         int [] gapExtremes;
-        Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>> model = (Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>>) deserialize(UNIGRAMQUALITYMODEL);
+        Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>> model = (Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>>) deserialize(input);
 
         for (Long2ObjectOpenHashMap<long[]> aguTerms: model.values()) {
             for(long aguTerm: aguTerms.keySet()){
@@ -183,6 +183,14 @@ public class NewQualityModel extends Selection {
             System.out.println();
         }
         serialize(QM,output);
+
+    }
+
+    public static void generateModels() throws IOException {
+        buildQualityMatrix(FILLEDUNIGRAM, UNIGRAMQUALITYMODEL);
+        buildQualityMatrix(FILLEDHIT, HITQUALITYMODEL);
+        buildQualityMatrix(FILLEDDBIGRAM, DBIGRAMQUALITYMODEL);
+        buildQualityMatrix(FILLEDBIGRAM, BIGRAMQUALITYMODEL);
 
     }
 

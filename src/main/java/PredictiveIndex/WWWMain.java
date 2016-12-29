@@ -29,8 +29,8 @@ public class WWWMain extends WWW {
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
         //PHASE0_CollectMetadata();
         //PHASE1_CollectGobalStatistics();
-        PHASE2_CollectQualityModel();
-        //PHASE3_CollectBestChunks();
+        //PHASE2_CollectQualityModel();
+        PHASE3_CollectBestChunks();
     }
 
     private static void PHASE0_CollectMetadata() throws IOException {
@@ -117,7 +117,8 @@ public class WWWMain extends WWW {
     }
 
 
-    private static void PHASE3_CollectBestChunks(){
+    private static void PHASE3_CollectBestChunks() throws IOException {
+        generateModels();
         //greedySelection(budget, input, output, );
     }
 
