@@ -106,7 +106,7 @@ public class WWWMain extends WWW {
                 true,
                 DBIGRAMRAW,
                 BIGRAM_SMALL_FILTER_SET,
-                numThreads);*/
+                numThreads);o*/
 
         //buildStructure(i2, numThreads, DBIGRAMRAW);
         massiveBinaryMerge(new File(DBIGRAMRAW), DBIGRAMRAW, true, DBIGRAMMETA);
