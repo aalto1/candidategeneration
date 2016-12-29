@@ -480,7 +480,7 @@ public class InvertedIndex extends WWW {
         }
 
         for (int k = 0; k < pointers[tn]/*keepPointers[tn]*/; k++) {
-            System.out.println(Arrays.toString(buffer[tn][k]));
+            //System.out.println(Arrays.toString(buffer[tn][k]));
             for (int elem : buffer[tn][k]){
                 DOS[tn].writeInt(elem);
             }
