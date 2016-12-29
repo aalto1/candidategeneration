@@ -1,6 +1,7 @@
 package PredictiveIndex;
 
 import it.unimi.dsi.fastutil.doubles.Double2ObjectRBTreeMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.longs.*;
 
@@ -88,8 +89,8 @@ public class NewGreedySelection extends Selection {
     }
 
     public static void getBucketMaps(){
-        generateBucketMap(UNILENGTHS, UNIBUCKET);
-        generateBucketMap(HITLENGTHS, HITBUCKET);
+        generateBucketMap2(UNILENGTHS, UNIBUCKET);
+        generateBucketMap2(HITLENGTHS, HITBUCKET);
         generateBucketMap(BILENGTHS, BIBUCKET);
         generateBucketMap(DBILENGTHS, DBIBUCKET);
     }
@@ -99,6 +100,15 @@ public class NewGreedySelection extends Selection {
         Long2IntOpenHashMap lenMap = (Long2IntOpenHashMap) deserialize(input);
         Long2IntOpenHashMap bucketMap = new Long2IntOpenHashMap();
         for (long term: lenMap.keySet()) {
+            bucketMap.put(term, getLenBucket(lenMap.get(term)));
+        }
+        serialize(lenMap, output);
+    }
+
+    public static void generateBucketMap2(String input, String output){
+        Int2IntOpenHashMap lenMap = (Int2IntOpenHashMap) deserialize(input);
+        Long2IntOpenHashMap bucketMap = new Long2IntOpenHashMap();
+        for (int term: lenMap.keySet()) {
             bucketMap.put(term, getLenBucket(lenMap.get(term)));
         }
         serialize(lenMap, output);

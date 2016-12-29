@@ -36,8 +36,8 @@ public class InvertedIndex extends WWW {
     //LongOpenHashSet bigFS ;
     LongOpenHashSet smallFS;
     Long2IntOpenHashMap DBigramPLLen = new Long2IntOpenHashMap();          // new Long2LongOpenHashMap[threadNum];
-    Int2LongOpenHashMap  uniMap = new Int2LongOpenHashMap();
-    Int2LongOpenHashMap  hitMap = new Int2LongOpenHashMap();
+    Long2IntOpenHashMap  uniMap = new Long2IntOpenHashMap();
+    Long2IntOpenHashMap  hitMap = new Long2IntOpenHashMap();
     IntOpenHashSet missingWords;// = (IntOpenHashSet) deserialize(results+"missingSet");
 
     Int2IntOpenHashMap [] auxFMap   = new Int2IntOpenHashMap[threadNum];
@@ -387,14 +387,14 @@ public class InvertedIndex extends WWW {
             }
         }
     }
-
+/*
     private synchronized void uniIncrementDumpCounter(String pre, int tn, int [] t, int term){
         if (pre == UNIGRAMRAW) {
             t = getTerms(uniMap.get(term));
             uniMap.put(term, getPair(t[0], t[1]++));
         }else {
             t = getTerms(hitMap.get(term));
-            hitMap.put(term, getPair(t[0], t[1])); /**?no increment*/
+            hitMap.put(term, getPair(t[0], t[1])); ?no increment
         }
     }
 
@@ -403,7 +403,7 @@ public class InvertedIndex extends WWW {
             uniMap.merge(term, 1L, Long::sum);
         if(hitMap.putIfAbsent(term, 1L) != null)
             hitMap.merge(term, 1L, Long::sum);
-    }
+    }*/
 
 
     //hack of the structure. This justifies the previous code. I can use the same function to do this.
