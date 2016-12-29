@@ -471,9 +471,9 @@ public class InvertedIndex extends WWW {
     private void flushBuffer(int tn, boolean end) throws IOException {
         System.out.print("Flushing Buffer...\t");
         if (isBigram)
-            java.util.Arrays.sort(buffer[tn], 0, keepPointers[tn], bigramBufferComparator); //testComparator); //
+            java.util.Arrays.sort(buffer[tn], 0, pointers[tn] /*keepPointers[tn]*/, bigramBufferComparator); //testComparator); //
         else
-            java.util.Arrays.sort(buffer[tn], 0, keepPointers[tn], unigramBufferComparator);
+            java.util.Arrays.sort(buffer[tn], 0, pointers[tn] /*keepPointers[tn]*/, unigramBufferComparator);
 
         for (int k = 0; k < pointers[tn]/*keepPointers[tn]*/; k++) {
             System.out.println(Arrays.toString(buffer[tn][k]));
