@@ -94,7 +94,7 @@ public class WWWMain extends WWW {
     private static void PHASE22_CollectBigramModel() throws IOException, ClassNotFoundException {
         BigramIndex.getBigramIndex(UNIGRAMINDEX, 1000);
         massiveBinaryMerge(new File(BIGRAMRAW), BIGRAMINDEX, true, BIGRAMMETA);
-        getModel(BIGRAMINDEX, FILLEDBIGRAM, DBIGRAMMETA);
+        getModel(BIGRAMINDEX, FILLEDBIGRAM, BIGRAMMETA);
     }
 
     private static void PHASE23_CollectDBigramModel() throws InterruptedException, IOException, ClassNotFoundException {
@@ -109,7 +109,7 @@ public class WWWMain extends WWW {
                 numThreads);
         //buildStructure(i2, numThreads, DBIGRAMRAW);
         //massiveBinaryMerge(new File(DBIGRAMRAW), DBIGRAMINDEX, true, DBIGRAMMETA);
-        getModel(DBIGRAMINDEX, FILLEDBIGRAM, BIGRAMMETA);
+        getModel(DBIGRAMINDEX, FILLEDBIGRAM, DBIGRAMMETA);
     }
 
 
