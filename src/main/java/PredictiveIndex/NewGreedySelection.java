@@ -17,9 +17,9 @@ public class NewGreedySelection extends Selection {
 
 
 
-    public static void greedySelection(String input, String output, String lanMap, String bucketmap, int limitBudget){
+    public static void greedySelection(String modelName, String output, String lanMap, String bucketmap, int limitBudget){
 
-        double [][][] model = (double[][][]) deserialize(input);
+        double [][][] model = (double[][][]) deserialize(modelName);
         Long2DoubleOpenHashMap probMap = (Long2DoubleOpenHashMap) deserialize(lanMap);
         Long2IntOpenHashMap bukMap  = (Long2IntOpenHashMap) deserialize(bucketmap);
         initCounters();
@@ -85,6 +85,23 @@ public class NewGreedySelection extends Selection {
         for (int aguTerm : trainAguTerms) {
             counterMap.put(aguTerm, 0);
         }
+    }
+
+    public static void getBucketMaps(){
+        generateBucketMap(UNILENGTHS, UNIBUCKET);
+        generateBucketMap(HITLENGTHS, HITBUCKET);
+        generateBucketMap(BILENGTHS, BIBUCKET);
+        generateBucketMap(DBILENGTHS, DBIBUCKET);
+    }
+
+
+    public static void generateBucketMap(String input, String output){
+        Long2IntOpenHashMap lenMap = (Long2IntOpenHashMap) deserialize(input);
+        Long2IntOpenHashMap bucketMap = new Long2IntOpenHashMap();
+        for (long term: lenMap.keySet()) {
+            bucketMap.put(term, getLenBucket(lenMap.get(term)));
+        }
+        serialize(lenMap, output);
     }
 
 }

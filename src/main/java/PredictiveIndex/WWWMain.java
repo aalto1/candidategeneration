@@ -118,14 +118,33 @@ public class WWWMain extends WWW {
 
 
     private static void PHASE3_CollectBestChunks() throws IOException, ClassNotFoundException {
-        BigramIndex.getBigramIndex(UNIGRAMINDEX, 1000);
         //generateMatrixModels();
-        /*
-        greedySelection(budget, , , );
-        greedySelection(budget, , , );
-        greedySelection(budget, , , );
-        greedySelection(budget, , , );
-        */
+        getBucketMaps();
+
+        greedySelection(UNIGRAMQUALITYMODEL,
+                SELECTED_CHUNKS_UNIGRAM,
+                UNIGRAMLANGUAGEMODELMAPPING,
+                UNIBUCKET,
+                1000);
+
+        greedySelection(HITQUALITYMODEL,
+                SELECTED_CHUNKS_HIT,
+                UNIGRAMLANGUAGEMODELMAPPING,
+                HITBUCKET,
+                1000 );
+
+        greedySelection(BIGRAMQUALITYMODEL,
+                SELECTED_CHUNKS_BIGRAM,
+                BIGRAMLANGUAGEMODELMAPPING,
+                BIBUCKET,
+                1000);
+
+        greedySelection(DBIGRAMQUALITYMODEL,
+                SELECTED_CHUNKS_DBIGRAM,
+                BIGRAMLANGUAGEMODELMAPPING,
+                DBIBUCKET,
+                1000);
+
 
 
     }
