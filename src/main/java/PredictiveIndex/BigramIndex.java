@@ -44,6 +44,7 @@ public class BigramIndex {
     public static void getBigramIndex(String index, int budget) throws IOException, ClassNotFoundException {
         Long2ObjectOpenHashMap<long[]> top1000I2;
         System.out.println("Build bigram Inverted index...");
+        Long2IntOpenHashMap bigramPostLen = new Long2IntOpenHashMap();
         if(!checkExistence(UNIGRAMTOPMAP))
             top1000I2 = getUnigramTopMap(UNIGRAMINDEX,UNIGRAMTOPMAP, budget);
         else
@@ -72,12 +73,14 @@ public class BigramIndex {
 
             }
             bw.write(bigram + " " + intersectionLen + "\n");
+            bigramPostLen.put(bigram, intersectionLen);
             for(int i = 0; i< intersectionLen ; i++){
                 DOS.writeLong(aux[i]);
             }
         }
         DOS.close();
         bw.close();
+        serialize(bigramPostLen, BILENGTHS);
         System.out.println(missing);
     }
 

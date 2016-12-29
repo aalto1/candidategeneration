@@ -17,7 +17,7 @@ public class NewGreedySelection extends Selection {
 
 
 
-    public static void greedySelection(int limitBudget, String input, String output, String lanMap ,String bucketmap){
+    public static void greedySelection(String input, String output, String lanMap, String bucketmap, int limitBudget){
 
         double [][][] model = (double[][][]) deserialize(input);
         Long2DoubleOpenHashMap probMap = (Long2DoubleOpenHashMap) deserialize(lanMap);

@@ -117,9 +117,17 @@ public class WWWMain extends WWW {
     }
 
 
-    private static void PHASE3_CollectBestChunks() throws IOException {
-        generateModels();
-        //greedySelection(budget, input, output, );
+    private static void PHASE3_CollectBestChunks() throws IOException, ClassNotFoundException {
+        BigramIndex.getBigramIndex(UNIGRAMINDEX, 1000);
+        //generateMatrixModels();
+        /*
+        greedySelection(budget, , , );
+        greedySelection(budget, , , );
+        greedySelection(budget, , , );
+        greedySelection(budget, , , );
+        */
+
+
     }
 
 
