@@ -124,7 +124,7 @@ public class ExternalSort {
                         if(buffLong == null){
                             if(fourFields){
                                 buffLong = new long[]{DIStreams.get(i).readLong(), DIStreams.get(i).readLong()};
-                                System.out.println("ciao");
+                                System.out.println(Arrays.toString(getTerms(buffLong[0])));
                             }
                             else
                                 buffLong = new long[]{(long) DIStreams.get(i).readInt(), DIStreams.get(i).readLong()};
