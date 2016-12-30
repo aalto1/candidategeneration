@@ -32,9 +32,7 @@ public class WWWMain extends WWW {
         //PHASE0_CollectMetadata();
         //PHASE1_CollectGobalStatistics();
         //PHASE2_CollectQualityModel();
-        getBestChuncks(UNIGRAMINDEX, UNIGRAMMETA, SEPARATED_UNIGRAM, UNIFIED_UNIGRAM_META, SELECTED_CHUNKS_UNIGRAM);
-
-        //PHASE3_CollectBestChunks();
+        PHASE3_CollectBestChunks();
     }
 
     private static void PHASE0_CollectMetadata() throws IOException {
@@ -134,7 +132,7 @@ public class WWWMain extends WWW {
                 UNIGRAMLANGUAGEMODELMAPPING,
                 UNIBUCKET,
                 1000);
-        getBestChuncks(UNIGRAMINDEX, UNIGRAMMETA, SEPARATED_UNIGRAM, UNIFIED_UNIGRAM_META, SELECTED_CHUNKS_UNIGRAM);
+        getBestChuncks(UNIGRAMINDEX, UNIGRAMMETA, SEPARATED_UNIGRAM, SEPARATED_UNIGRAM_META, SELECTED_CHUNKS_UNIGRAM);
 
 
         greedySelection(HITQUALITYMODEL,
@@ -143,17 +141,26 @@ public class WWWMain extends WWW {
                 HITBUCKET,
                 1000 );
 
+        getBestChuncks(HITINDEX, HITMETA, SEPARATED_HIT, SEPARATED_HIT_META, SELECTED_CHUNKS_HIT);
+
+
         greedySelection(BIGRAMQUALITYMODEL,
                 SELECTED_CHUNKS_BIGRAM,
                 BIGRAMLANGUAGEMODELMAPPING,
                 BIBUCKET,
                 1000);
 
+        getBestChuncks(BIGRAMINDEX, BIGRAMMETA, SEPARATED_BIGRAM, SEPARATED_BIGRAM_META, SELECTED_CHUNKS_BIGRAM);
+
+
         greedySelection(DBIGRAMQUALITYMODEL,
                 SELECTED_CHUNKS_DBIGRAM,
                 BIGRAMLANGUAGEMODELMAPPING,
                 DBIBUCKET,
                 1000);
+
+        getBestChuncks(DBIGRAMINDEX, UNIGRAMMETA, SEPARATED_DBIGRAM, SEPARATED_DBIGRAM_META, SELECTED_CHUNKS_DBIGRAM);
+
 
     }
 

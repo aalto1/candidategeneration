@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.ints.Int2LongOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.longs.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -65,17 +66,21 @@ public class NewGreedySelection extends Selection {
 
 
     /** */
-    private static Long2LongOpenHashMap getSubMap(int limitBudget, Double2ObjectRBTreeMap<long[]> heap){
-        Long2LongOpenHashMap result = new Long2LongOpenHashMap();
-        LinkedList<Long> list = new LinkedList<>();
+    private static Long2ObjectOpenHashMap getSubMap(int limitBudget, Double2ObjectRBTreeMap<long[]> heap){
+        Long2ObjectOpenHashMap<ArrayList<Long>> result = new Long2ObjectOpenHashMap<>();
+        ArrayList<Long> list;
         int budget = 0;
         for (long [] value: heap.values()){
-            result.put(value[0], value[1]);
+            if((list=result.get(value[0]))==null)
+                list = new ArrayList<>();
+            list.add(value[1]);
+            result.put(value[0],list);
+
             budget+=value[1];
             list.add(value[1]);
             if(budget>limitBudget) break;
         }
-        System.out.println(Arrays.toString(getTerms(list.getFirst())));
+        //System.out.println(Arrays.toString(getTerms(list.getFirst())));
         //System.out.println(result.toString());
         return result;
     }

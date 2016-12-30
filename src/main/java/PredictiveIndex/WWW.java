@@ -145,34 +145,34 @@ public abstract class WWW {
 
     //////////////////////////////////////////////////////////////////////////////////////////
 
-    static final String FINAL_LAYER     = ROOT + "FINAL_LAYER";
-        static final String UNIFIED         = FINAL_LAYER + "FINAL_LAYER";
+    static final String FINAL_LAYER     = ROOT + "FINAL_LAYER/";
+        static final String UNIFIED         = FINAL_LAYER + "UNIFIED/";
             static final String UNIFIED_UNIGRAM         = UNIFIED + "UNIFIED_UNIGRAM";
             static final String UNIFIED_HIT             = UNIFIED + "UNIFIED_HIT";
             static final String UNIFIED_BIGRAM          = UNIFIED + "UNIFIED_BIGRAM";
             static final String UNIFIED_DBIGRAM         = UNIFIED + "UNIFIED_DBIGRAM";
-            static final String UNIFIED_UNIGRAM_META         = UNIFIED + "UNIFIED_UNIGRAM";
-            static final String UNIFIED_HIT_META             = UNIFIED + "UNIFIED_HIT";
-            static final String UNIFIED_BIGRAM_META          = UNIFIED + "UNIFIED_BIGRAM";
-            static final String UNIFIED_DBIGRAM_META         = UNIFIED + "UNIFIED_DBIGRAM";
-        static final String UNIFIED_BOOSTED = FINAL_LAYER + "FINAL_LAYER";
-            static final String UNIFIED_BOOSTED_UNIGRAM = UNIFIED_BOOSTED + "UNIFIED_BOOSTED_UNIGRAM";
-            static final String UNIFIED_BOOSTED_HIT     = UNIFIED_BOOSTED + "UNIFIED_BOOSTED_HIT";
-            static final String UNIFIED_BOOSTED_BIGRAM  = UNIFIED_BOOSTED + "UNIFIED_BOOSTED_BIGRAM";
-            static final String UNIFIED_BOOSTED_DBIGRAM = UNIFIED_BOOSTED + "UNIFIED_BOOSTED_DBIGRAM";
-            static final String UNIFIED_BOOSTED_UNIGRAM_META = UNIFIED_BOOSTED + "UNIFIED_BOOSTED_UNIGRAM";
-            static final String UNIFIED_BOOSTED_HIT_META     = UNIFIED_BOOSTED + "UNIFIED_BOOSTED_HIT";
-            static final String UNIFIED_BOOSTED_BIGRAM_META  = UNIFIED_BOOSTED + "UNIFIED_BOOSTED_BIGRAM";
-            static final String UNIFIED_BOOSTED_DBIGRAM_META = UNIFIED_BOOSTED + "UNIFIED_BOOSTED_DBIGRAM";
-        static final String SEPARATED     = ROOT + "FINAL_LAYER";
-            static final String SEPARATED_UNIGRAM       = SEPARATED + "SEPARATED_UNIGRAM";
-            static final String SEPARATED_HIT           = SEPARATED + "SEPARATED_HIT";
-            static final String SEPARATED_BIGRAM        = SEPARATED + "SEPARATED_BIGRAM";
-            static final String SEPARATED_DBIGRAM       = SEPARATED + "SEPARATED_DBIGRAM";
-            static final String SEPARATED_UNIGRAM_META = UNIFIED_BOOSTED + "UNIFIED_BOOSTED_UNIGRAM";
-            static final String SEPARATED_HIT_META     = UNIFIED_BOOSTED + "UNIFIED_BOOSTED_HIT";
-            static final String SEPARATED_BIGRAM_META  = UNIFIED_BOOSTED + "UNIFIED_BOOSTED_BIGRAM";
-            static final String SEPARATED_DBIGRAM_META = UNIFIED_BOOSTED + "UNIFIED_BOOSTED_DBIGRAM";
+            static final String UNIFIED_UNIGRAM_META                = UNIFIED + "UNIFIED_UNIGRAM_META";
+            static final String UNIFIED_HIT_META                = UNIFIED + "UNIFIED_HIT_META";
+            static final String UNIFIED_BIGRAM_META             = UNIFIED + "UNIFIED_BIGRAM_META";
+            static final String UNIFIED_DBIGRAM_META            = UNIFIED + "UNIFIED_DBIGRAM_META";
+        static final String UNIFIED_BOOSTED = FINAL_LAYER + "UNIFIED_BOOSTED/";
+            static final String UNIFIED_BOOSTED_UNIGRAM         = UNIFIED_BOOSTED + "UNIFIED_BOOSTED_UNIGRAM";
+            static final String UNIFIED_BOOSTED_HIT             = UNIFIED_BOOSTED + "UNIFIED_BOOSTED_HIT";
+            static final String UNIFIED_BOOSTED_BIGRAM          = UNIFIED_BOOSTED + "UNIFIED_BOOSTED_BIGRAM";
+            static final String UNIFIED_BOOSTED_DBIGRAM         = UNIFIED_BOOSTED + "UNIFIED_BOOSTED_DBIGRAM";
+            static final String UNIFIED_BOOSTED_UNIGRAM_META    = UNIFIED_BOOSTED + "UNIFIED_BOOSTED_UNIGRAM_META";
+            static final String UNIFIED_BOOSTED_HIT_META        = UNIFIED_BOOSTED + "UNIFIED_BOOSTED_HIT_META";
+            static final String UNIFIED_BOOSTED_BIGRAM_META     = UNIFIED_BOOSTED + "UNIFIED_BOOSTED_BIGRAM_META";
+            static final String UNIFIED_BOOSTED_DBIGRAM_META    = UNIFIED_BOOSTED + "UNIFIED_BOOSTED_DBIGRAM_META";
+        static final String SEPARATED     = FINAL_LAYER + "SEPARATED/";
+            static final String SEPARATED_UNIGRAM               = SEPARATED + "SEPARATED_UNIGRAM";
+            static final String SEPARATED_HIT                   = SEPARATED + "SEPARATED_HIT";
+            static final String SEPARATED_BIGRAM                = SEPARATED + "SEPARATED_BIGRAM";
+            static final String SEPARATED_DBIGRAM               = SEPARATED + "SEPARATED_DBIGRAM";
+            static final String SEPARATED_UNIGRAM_META          = SEPARATED + "SEPARATED_UNIGRAM_META";
+            static final String SEPARATED_HIT_META              = SEPARATED + "SEPARATED_HIT_META";
+            static final String SEPARATED_BIGRAM_META           = SEPARATED + "SEPARATED_BIGRAM_META";
+            static final String SEPARATED_DBIGRAM_META          = SEPARATED + "SEPARATED_DBIGRAM_META";
 
     //////////////////////////////////////////////////////////////////////////////////////////
 
