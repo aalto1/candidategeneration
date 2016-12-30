@@ -37,7 +37,6 @@ public class NewGreedySelection extends Selection {
             change = false;
             for (long aguTerm : counterMap.keySet()) {
                 x = counterMap.merge(aguTerm, 1, Integer::sum);
-                System.out.println(model);
                 if(x<model[0].length) {
                     y = bukMap.get(aguTerm);
                     score = -probMap.get(aguTerm) * model[y][x][0];
