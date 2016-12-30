@@ -15,6 +15,7 @@ import static PredictiveIndex.ExternalSort.*;
 import static PredictiveIndex.NestedQueryTrace.*;
 import static PredictiveIndex.Metadata.*;
 import static PredictiveIndex.NewGreedySelection.*;
+import static PredictiveIndex.SelectChuncks.*;
 
 /**
  * Created by aalto on 10/1/16.
@@ -31,7 +32,9 @@ public class WWWMain extends WWW {
         //PHASE0_CollectMetadata();
         //PHASE1_CollectGobalStatistics();
         //PHASE2_CollectQualityModel();
-        PHASE3_CollectBestChunks();
+        getBestChuncks(UNIGRAMINDEX, UNIGRAMMETA, SEPARATED_UNIGRAM, UNIFIED_UNIGRAM_META, SELECTED_CHUNKS_UNIGRAM);
+
+        //PHASE3_CollectBestChunks();
     }
 
     private static void PHASE0_CollectMetadata() throws IOException {
@@ -131,6 +134,8 @@ public class WWWMain extends WWW {
                 UNIGRAMLANGUAGEMODELMAPPING,
                 UNIBUCKET,
                 1000);
+        getBestChuncks(UNIGRAMINDEX, UNIGRAMMETA, SEPARATED_UNIGRAM, UNIFIED_UNIGRAM_META, SELECTED_CHUNKS_UNIGRAM);
+
 
         greedySelection(HITQUALITYMODEL,
                 SELECTED_CHUNKS_HIT,
