@@ -45,7 +45,7 @@ public class InvertedIndex extends WWW {
     public long doc = 1;
     int []  termFreqArray;
     int [] HITS;
-    Int2IntMap termFreqMap;
+    Long2IntOpenHashMap termFreqMap;
     static AtomicInteger dump = new AtomicInteger(0);
     static int gThreshold = 0;
     long [] dmpPost = new long[4];
@@ -83,7 +83,7 @@ public class InvertedIndex extends WWW {
         }
     }
 
-    public InvertedIndex(Int2IntOpenHashMap termFreqMap,
+    public InvertedIndex(Long2IntOpenHashMap termFreqMap,
                          int [] HITS,
                          long[] globalStats,
                          int distance,

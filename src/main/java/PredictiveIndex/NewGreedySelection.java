@@ -37,6 +37,7 @@ public class NewGreedySelection extends Selection {
             change = false;
             for (long aguTerm : counterMap.keySet()) {
                 x = counterMap.merge(aguTerm, 1, Integer::sum);
+                System.out.println(model);
                 if(x<model[0].length) {
                     y = bukMap.get(aguTerm);
                     score = -probMap.get(aguTerm) * model[y][x][0];
@@ -90,8 +91,8 @@ public class NewGreedySelection extends Selection {
     }
 
     public static void getBucketMaps(){
-        generateBucketMap2(UNILENGTHS, UNIBUCKET);
-        generateBucketMap2(HITLENGTHS, HITBUCKET);
+        generateBucketMap(UNILENGTHS, UNIBUCKET);
+        generateBucketMap(HITLENGTHS, HITBUCKET);
         generateBucketMap(BILENGTHS, BIBUCKET);
         generateBucketMap(DBILENGTHS, DBIBUCKET);
     }

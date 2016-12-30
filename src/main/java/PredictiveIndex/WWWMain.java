@@ -1,6 +1,7 @@
 package PredictiveIndex;
 
 import it.unimi.dsi.fastutil.ints.*;
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 
@@ -48,20 +49,21 @@ public class WWWMain extends WWW {
         getSmallFilterSet(QCONVERTED, UNIGRAM_SMALL_FILTER_SET);
         getSmallFilterSet(QBIGRAM, BIGRAM_SMALL_FILTER_SET);
         getAccessMap(QAGUMENTED, ACCESSMAP);
-        System.exit(1);
+        //System.exit(1);
 
     }
 
     private static void PHASE1_CollectGobalStatistics() throws IOException, ClassNotFoundException, InterruptedException {
         i2 = new InvertedIndex(numThreads);
         startBatteria(i2, 0, numThreads);
-        getLocFreqMap(i2.termFreqArray, (LongOpenHashSet) deserialize(UNIGRAM_SMALL_FILTER_SET));
+        serialize(i2.termFreqArray, LOCALTERMFREQ);
         //serialize(i2.termFreqArray, termFrequencyArray);
         serialize(i2.globalStats,  GLOBALSTATS);
         //System.exit(1);
     }
 
     private static void PHASE2_CollectQualityModel() throws InterruptedException, IOException, ClassNotFoundException {
+        getLocFreqMap();
         if(!(checkExistence(FILLEDHIT) & checkExistence(FILLEDUNIGRAM)))
             PHASE21_CollectUnigramHitModel();
         if(!checkExistence(FILLEDDBIGRAM))
@@ -73,7 +75,7 @@ public class WWWMain extends WWW {
 
     private static void PHASE21_CollectUnigramHitModel() throws IOException, ClassNotFoundException, InterruptedException {
         i2 = new InvertedIndex(
-                (Int2IntOpenHashMap) deserialize(LOCALTERMFREQ),
+                (Long2IntOpenHashMap) deserialize(LOCALTERMFREQMAP),
                 (int[]) deserialize(HITSCORES),
                 (long[]) deserialize(GLOBALSTATS),
                 1,
@@ -81,27 +83,27 @@ public class WWWMain extends WWW {
                 UNIGRAMRAW,
                 UNIGRAM_SMALL_FILTER_SET,
                 numThreads);
-        //buildStructure(i2, numThreads, UNIGRAMRAW);
+        buildStructure(i2, numThreads, UNIGRAMRAW);
 
         if(!checkExistence(UNIGRAMINDEX))
             massiveBinaryMerge(new File(UNIGRAMRAW), UNIGRAMINDEX, false, UNIGRAMMETA);
-        getModel(UNIGRAMINDEX,FILLEDUNIGRAM, UNIGRAMMETA, UNIGRAM_SMALL_FILTER_SET);
+        //getModel(UNIGRAMINDEX,FILLEDUNIGRAM, UNIGRAMMETA, UNIGRAM_SMALL_FILTER_SET);
 
         if(!checkExistence(HITINDEX))
             massiveBinaryMerge(new File(HITRAW), HITINDEX, false, HITMETA);
-        getModel(HITINDEX, FILLEDHIT, HITMETA, UNIGRAM_SMALL_FILTER_SET);
+        //getModel(HITINDEX, FILLEDHIT, HITMETA, UNIGRAM_SMALL_FILTER_SET);
 
     }
 
     private static void PHASE22_CollectBigramModel() throws IOException, ClassNotFoundException {
         BigramIndex.getBigramIndex(UNIGRAMINDEX, 1000);
         //massiveBinaryMerge(new File(BIGRAMRAW), BIGRAMINDEX, true, BIGRAMMETA);
-        getModel(BIGRAMINDEX, FILLEDBIGRAM, BIGRAMMETA, BIGRAM_SMALL_FILTER_SET);
+        //getModel(BIGRAMINDEX, FILLEDBIGRAM, BIGRAMMETA, BIGRAM_SMALL_FILTER_SET);
     }
 
     private static void PHASE23_CollectDBigramModel() throws InterruptedException, IOException, ClassNotFoundException {
         i2 = new InvertedIndex(
-                (Int2IntOpenHashMap) deserialize(LOCALTERMFREQ),
+                (Long2IntOpenHashMap) deserialize(LOCALTERMFREQMAP),
                 null,
                 (long[]) deserialize(GLOBALSTATS),
                 distance,
@@ -109,13 +111,16 @@ public class WWWMain extends WWW {
                 DBIGRAMRAW,
                 BIGRAM_SMALL_FILTER_SET,
                 numThreads);
-        //buildStructure(i2, numThreads, DBIGRAMRAW);
-        //massiveBinaryMerge(new File(DBIGRAMRAW), DBIGRAMINDEX, true, DBIGRAMMETA);
-        //getModel(DBIGRAMINDEX, FILLEDDBIGRAM, DBIGRAMMETA, BIGRAM_SMALL_FILTER_SET);
-        getModel(DBIGRAMINDEX, FILLEDDBIGRAM, DBIGRAMMETA, BIGRAM_SMALL_FILTER_SET);
+        buildStructure(i2, numThreads, DBIGRAMRAW);
+        massiveBinaryMerge(new File(DBIGRAMRAW), DBIGRAMINDEX, true, DBIGRAMMETA);
+       // getModel(DBIGRAMINDEX, FILLEDDBIGRAM, DBIGRAMMETA, BIGRAM_SMALL_FILTER_SET);
+       // getModel(DBIGRAMINDEX, FILLEDDBIGRAM, DBIGRAMMETA, BIGRAM_SMALL_FILTER_SET);
 
     }
 
+    /** Using the quality and language model select the best chuncks of the inverted index
+     *
+     * NOTICE: remember to load the quality models produced by the train procedure*/
 
     private static void PHASE3_CollectBestChunks() throws IOException, ClassNotFoundException {
         //generateMatrixModels();

@@ -167,15 +167,18 @@ public class Metadata extends WWW {
         return map;
     }
 
-    static void getLocFreqMap(int [] locFreqArr, LongOpenHashSet uniTerms) throws IOException, ClassNotFoundException { /***NO-Need***/
-        Int2IntOpenHashMap map = new Int2IntOpenHashMap();
+    static Long2IntOpenHashMap getLocFreqMap() throws IOException, ClassNotFoundException { /***NO-Need***/
+        Long2IntOpenHashMap map = new Long2IntOpenHashMap();
+        LongOpenHashSet filterSet = (LongOpenHashSet) deserialize(UNIGRAM_SMALL_FILTER_SET);
+        int [] locFreqArr = (int[]) deserialize(LOCALTERMFREQ);
         int k = 0;
         for (int i = 0; i < locFreqArr.length ; i++) {
-            if(uniTerms.contains(i)) map.put(i, locFreqArr[i]);
+            if(filterSet.contains(i)) map.put(i, locFreqArr[i]);
             k++;
         }
         System.out.println(k);
-        serialize(map, LOCALTERMFREQ);
+        serialize(map, LOCALTERMFREQMAP);
+        return map;
     }
 
 
@@ -187,7 +190,8 @@ public class Metadata extends WWW {
     public static void convertANDcleanQueryTrace(String input, String output) throws IOException {
         BufferedReader br = getBuffReader(input);
         BufferedWriter bw = getBuffWriter(output);
-        IntOpenHashSet missingQueries = (IntOpenHashSet) deserialize(MISSINGQUERIES);
+        //IntOpenHashSet missingQueries = (IntOpenHashSet) deserialize(MISSINGQUERIES);        //to use in the train phase
+        IntOpenHashSet missingQueries = new IntOpenHashSet();                                  //to use in test phase
         getTerm2IdMap();
         String line;
         String [] fields;
