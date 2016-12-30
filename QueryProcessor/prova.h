@@ -1,0 +1,8 @@
+//
+// Created by aalto on 12/30/16.
+//
+
+#ifndef CANDIDATEGENERATION_PROVA_H
+#define CANDIDATEGENERATION_PROVA_H
+
+#endif //CANDIDATEGENERATION_PROVA_H
