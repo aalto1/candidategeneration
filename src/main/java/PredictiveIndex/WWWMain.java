@@ -26,7 +26,7 @@ public class WWWMain extends WWW {
     static InvertedIndex i2;
     static int distance = 5;
     static int numThreads = 4;
-    static int budget = 1000000;
+    static int budget = 10000000;
 
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
         //PHASE0_CollectMetadata();
@@ -131,19 +131,20 @@ public class WWWMain extends WWW {
                 SELECTED_CHUNKS_UNIGRAM,
                 UNIGRAMLANGUAGEMODELMAPPING,
                 UNIBUCKET,
-                1000);
+                budget);
         getBestChuncks(UNIGRAMINDEX, UNIGRAMMETA, SEPARATED_UNIGRAM, SEPARATED_UNIGRAM_META, SELECTED_CHUNKS_UNIGRAM);
 
+        System.exit(1);
 
         greedySelection(HITQUALITYMODEL,
                 SELECTED_CHUNKS_HIT,
                 UNIGRAMLANGUAGEMODELMAPPING,
                 HITBUCKET,
-                1000 );
+                budget );
 
         getBestChuncks(HITINDEX, HITMETA, SEPARATED_HIT, SEPARATED_HIT_META, SELECTED_CHUNKS_HIT);
 
-
+        /*
         greedySelection(BIGRAMQUALITYMODEL,
                 SELECTED_CHUNKS_BIGRAM,
                 BIGRAMLANGUAGEMODELMAPPING,
@@ -160,7 +161,7 @@ public class WWWMain extends WWW {
                 1000);
 
         getBestChuncks(DBIGRAMINDEX, UNIGRAMMETA, SEPARATED_DBIGRAM, SEPARATED_DBIGRAM_META, SELECTED_CHUNKS_DBIGRAM);
-
+        */
 
     }
 

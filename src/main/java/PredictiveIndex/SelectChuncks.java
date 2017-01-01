@@ -44,7 +44,7 @@ public class SelectChuncks extends WWW {
                 counter = 0;
 
             }catch (NullPointerException e){
-                System.out.println("No chuncks of this posting list have been selected by the greedy algorithm");
+                //System.out.println("No chuncks of this posting list have been selected by the greedy algorithm");
             }
 
         }

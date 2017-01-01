@@ -45,21 +45,23 @@ public class NewGreedySelection extends Selection {
 
                     if (budget < limitBudget) {
                         heap.put(score, new long[]{aguTerm, range});
-                        budget+=range;
+                        budget += (getTerms(range)[1] - getTerms(range)[0]);
                     } else if ((last = heap.lastDoubleKey()) > score) {
                         heap.remove(last);
                         heap.put(score, new long[]{aguTerm, range});
-                        budget+=range;
+                        budget += (getTerms(range)[1] - getTerms(range)[0]);
                         change = true;
                     }
+                    System.out.println(score);
                     if(++counter%10000==0){
                         System.out.println(counter);
                         System.out.println(heap.lastDoubleKey());
+                        System.out.println("Heap size: " + heap.size());
+
                     }
                 }
             }
         }
-        System.out.println(heap.size());
         System.out.println(Arrays.toString(deltaRanges));
         serialize(getSubMap(limitBudget, heap), output);
     }
@@ -76,9 +78,13 @@ public class NewGreedySelection extends Selection {
             list.add(value[1]);
             result.put(value[0],list);
 
-            budget+=value[1];
+            budget+= (getTerms(value[1])[1] - getTerms(value[1])[0]);
+
             list.add(value[1]);
-            if(budget>limitBudget) break;
+            if(budget>limitBudget){
+                System.out.println("final: " + budget);
+                break;
+            }
         }
         //System.out.println(Arrays.toString(getTerms(list.getFirst())));
         //System.out.println(result.toString());
