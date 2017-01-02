@@ -26,7 +26,7 @@ public class WWWMain extends WWW {
     static InvertedIndex i2;
     static int distance = 5;
     static int numThreads = 4;
-    static int budget = 10000000;
+    static int budget = 1000000;
 
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
         //PHASE0_CollectMetadata();
@@ -126,6 +126,10 @@ public class WWWMain extends WWW {
     private static void PHASE3_CollectBestChunks() throws IOException, ClassNotFoundException {
         //generateMatrixModels();
         //getBucketMaps();
+        getUnigramLanguageModel();
+
+        getSmallFilterSet(QCONVERTED, UNIGRAM_SMALL_FILTER_SET);
+
 
         greedySelection(UNIGRAMQUALITYMODEL,
                 SELECTED_CHUNKS_UNIGRAM,

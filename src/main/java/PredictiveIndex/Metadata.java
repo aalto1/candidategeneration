@@ -47,6 +47,7 @@ public class Metadata extends WWW {
             try{
                 entry = line.split(" ");
                 map.put(Long.valueOf(entry[0]).longValue(),Double.valueOf(entry[1]).doubleValue());
+                //System.out.println(map.get(Long.valueOf(entry[0]).longValue())*1);
             }catch (NumberFormatException e){
                 k++;
             }

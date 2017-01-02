@@ -24,7 +24,9 @@ public class NewGreedySelection extends Selection {
 
         double [][][] model = (double[][][]) deserialize(modelName);
         Long2DoubleOpenHashMap probMap = (Long2DoubleOpenHashMap) deserialize(lanMap);
+
         Long2IntOpenHashMap bukMap  = (Long2IntOpenHashMap) deserialize(bucketmap);
+        probMap.defaultReturnValue(0);
         initCounters();
         heap = new Double2ObjectRBTreeMap<>();
         int x, y;
@@ -41,18 +43,21 @@ public class NewGreedySelection extends Selection {
                 if(x<model[0].length) {
                     y = bukMap.get(aguTerm);
                     score = -probMap.get(aguTerm) * model[y][x][0];
+                    //System.out.println(model[y][x][0] + " " + aguTerm);
                     range = deltaRanges[(int) model[y][x][1]];
 
                     if (budget < limitBudget) {
+                        if(heap.containsKey(score))
+                            System.out.println("azz..." + (getTerms(range)[1] - getTerms(range)[0]));
                         heap.put(score, new long[]{aguTerm, range});
                         budget += (getTerms(range)[1] - getTerms(range)[0]);
                     } else if ((last = heap.lastDoubleKey()) > score) {
-                        heap.remove(last);
+                        //heap.remove(last);
                         heap.put(score, new long[]{aguTerm, range});
                         budget += (getTerms(range)[1] - getTerms(range)[0]);
                         change = true;
                     }
-                    System.out.println(score);
+                    System.out.println(budget);
                     if(++counter%10000==0){
                         System.out.println(counter);
                         System.out.println(heap.lastDoubleKey());
@@ -62,6 +67,9 @@ public class NewGreedySelection extends Selection {
                 }
             }
         }
+        System.out.println("budgettone : " +  budget);
+        System.out.println("mappettone : " +  heap.size());
+
         System.out.println(Arrays.toString(deltaRanges));
         serialize(getSubMap(limitBudget, heap), output);
     }
@@ -72,12 +80,13 @@ public class NewGreedySelection extends Selection {
         Long2ObjectOpenHashMap<ArrayList<Long>> result = new Long2ObjectOpenHashMap<>();
         ArrayList<Long> list;
         int budget = 0;
+        System.out.println("Building stuff..." + heap.size());
         for (long [] value: heap.values()){
             if((list=result.get(value[0]))==null)
                 list = new ArrayList<>();
             list.add(value[1]);
             result.put(value[0],list);
-
+            System.out.println(budget);
             budget+= (getTerms(value[1])[1] - getTerms(value[1])[0]);
 
             list.add(value[1]);
@@ -95,6 +104,7 @@ public class NewGreedySelection extends Selection {
     public static void initCounters(){
         counterMap = new Long2IntOpenHashMap();
         LongOpenHashSet trainAguTerms = (LongOpenHashSet) deserialize(UNIGRAM_SMALL_FILTER_SET);
+        System.out.println("mappa size: " + trainAguTerms.size());
         for (long aguTerm : trainAguTerms) {
             counterMap.put(aguTerm, 0);
         }
