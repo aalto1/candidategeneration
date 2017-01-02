@@ -6,6 +6,8 @@ import it.unimi.dsi.fastutil.ints.Int2LongOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.longs.*;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -20,14 +22,14 @@ public class NewGreedySelection extends Selection {
 
 
 
-    public static void greedySelection(String modelName, String output, String lanMap, String bucketmap, int limitBudget){
+    public static void greedySelection(String modelName, String output, String lanMap, String bucketmap, String inputMeta, int limitBudget) throws IOException, ClassNotFoundException {
 
         double [][][] model = (double[][][]) deserialize(modelName);
         Long2DoubleOpenHashMap probMap = (Long2DoubleOpenHashMap) deserialize(lanMap);
 
         Long2IntOpenHashMap bukMap  = (Long2IntOpenHashMap) deserialize(bucketmap);
         probMap.defaultReturnValue(0);
-        initCounters();
+        initCounters(inputMeta);
         heap = new Double2ObjectRBTreeMap<>();
         int x, y;
         double score, last;
@@ -35,30 +37,36 @@ public class NewGreedySelection extends Selection {
         boolean change = true;
         int budget =0;
         int counter =0;
+        NewQualityModel.buildQualityMatrix(FILLEDUNIGRAM, UNIGRAMQUALITYMODEL);
 
+        System.exit(1);
         while(budget < limitBudget | change) {
             change = false;
             for (long aguTerm : counterMap.keySet()) {
                 x = counterMap.merge(aguTerm, 1, Integer::sum);
-                if(x<model[0].length) {
+                if (x < model[0].length) {
                     y = bukMap.get(aguTerm);
                     score = -probMap.get(aguTerm) * model[y][x][0];
                     //System.out.println(model[y][x][0] + " " + aguTerm);
                     range = deltaRanges[(int) model[y][x][1]];
 
-                    if (budget < limitBudget) {
-                        if(heap.containsKey(score))
-                            System.out.println("azz..." + (getTerms(range)[1] - getTerms(range)[0]));
-                        heap.put(score, new long[]{aguTerm, range});
-                        budget += (getTerms(range)[1] - getTerms(range)[0]);
-                    } else if ((last = heap.lastDoubleKey()) > score) {
-                        //heap.remove(last);
-                        heap.put(score, new long[]{aguTerm, range});
-                        budget += (getTerms(range)[1] - getTerms(range)[0]);
-                        change = true;
+                    if (score > 0) {
+                        if (budget < limitBudget) {
+                            if (heap.containsKey(score))
+                                System.out.println("azz..." + (score));
+                            heap.put(score, new long[]{aguTerm, range});
+                            budget += (getTerms(range)[1] - getTerms(range)[0]);
+                        } else if ((last = heap.lastDoubleKey()) > score) {
+                            //heap.remove(last);
+                            heap.put(score, new long[]{aguTerm, range});
+                            budget += (getTerms(range)[1] - getTerms(range)[0]);
+                            change = true;
+                        }
                     }
+
+
                     System.out.println(budget);
-                    if(++counter%10000==0){
+                    if (++counter % 10000 == 0) {
                         System.out.println(counter);
                         System.out.println(heap.lastDoubleKey());
                         System.out.println("Heap size: " + heap.size());
@@ -66,12 +74,14 @@ public class NewGreedySelection extends Selection {
                     }
                 }
             }
+            System.exit(1);
+
         }
         System.out.println("budgettone : " +  budget);
         System.out.println("mappettone : " +  heap.size());
 
         System.out.println(Arrays.toString(deltaRanges));
-        serialize(getSubMap(limitBudget, heap), output);
+        //serialize(getSubMap(limitBudget, heap), output);
     }
 
 
@@ -101,13 +111,14 @@ public class NewGreedySelection extends Selection {
     }
 
     //the greedy selection select up to the moment when it doesn't find anything new, than take the top-limitBudget
-    public static void initCounters(){
+    public static void initCounters(String inputMeta) throws IOException {
         counterMap = new Long2IntOpenHashMap();
-        LongOpenHashSet trainAguTerms = (LongOpenHashSet) deserialize(UNIGRAM_SMALL_FILTER_SET);
-        System.out.println("mappa size: " + trainAguTerms.size());
-        for (long aguTerm : trainAguTerms) {
-            counterMap.put(aguTerm, 0);
+        String line;
+        BufferedReader br = getBuffReader(inputMeta);
+        while((line=br.readLine())!=null){
+            counterMap.put(Double.valueOf(line.split(" ")[0]).longValue(), 0);
         }
+        br.close();
     }
 
     public static void getBucketMaps(){

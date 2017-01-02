@@ -26,7 +26,7 @@ public class WWWMain extends WWW {
     static InvertedIndex i2;
     static int distance = 5;
     static int numThreads = 4;
-    static int budget = 1000000;
+    static int budget = 10000;
 
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
         //PHASE0_CollectMetadata();
@@ -58,9 +58,7 @@ public class WWWMain extends WWW {
         i2 = new InvertedIndex(numThreads);
         startBatteria(i2, 0, numThreads);
         serialize(i2.termFreqArray, LOCALTERMFREQ);
-        //serialize(i2.termFreqArray, termFrequencyArray);
         serialize(i2.globalStats,  GLOBALSTATS);
-        //System.exit(1);
     }
 
     private static void PHASE2_CollectQualityModel() throws InterruptedException, IOException, ClassNotFoundException {
@@ -75,47 +73,60 @@ public class WWWMain extends WWW {
     }
 
     private static void PHASE21_CollectUnigramHitModel() throws IOException, ClassNotFoundException, InterruptedException {
-        i2 = new InvertedIndex(
-                (Long2IntOpenHashMap) deserialize(LOCALTERMFREQMAP),
-                (int[]) deserialize(HITSCORES),
-                (long[]) deserialize(GLOBALSTATS),
-                1,
-                false,
-                UNIGRAMRAW,
-                UNIGRAM_SMALL_FILTER_SET,
-                numThreads);
-        buildStructure(i2, numThreads, UNIGRAMRAW);
+        if(!checkExistence(UNIGRAMRAW+FINISH)){
+            massiveBinaryMerge(new File(UNIGRAMRAW), UNIGRAMINDEX, false, UNIGRAMMETA);
+            i2 = new InvertedIndex(
+                    (Long2IntOpenHashMap) deserialize(LOCALTERMFREQMAP),
+                    (int[]) deserialize(HITSCORES),
+                    (long[]) deserialize(GLOBALSTATS),
+                    1,
+                    false,
+                    UNIGRAMRAW,
+                    UNIGRAM_SMALL_FILTER_SET,
+                    numThreads);
+            buildStructure(i2, numThreads, UNIGRAMRAW);
+        }
 
+        //UNIGRAM_INDEX
         if(!checkExistence(UNIGRAMINDEX))
             massiveBinaryMerge(new File(UNIGRAMRAW), UNIGRAMINDEX, false, UNIGRAMMETA);
-        //getModel(UNIGRAMINDEX,FILLEDUNIGRAM, UNIGRAMMETA, UNIGRAM_SMALL_FILTER_SET);
 
         if(!checkExistence(HITINDEX))
             massiveBinaryMerge(new File(HITRAW), HITINDEX, false, HITMETA);
+
+        //HIT_INDEX
+        if(!checkExistence(FILLEDUNIGRAM))
+            getModel(UNIGRAMINDEX,FILLEDUNIGRAM, UNIGRAMMETA, UNIGRAM_SMALL_FILTER_SET);
+
+        if(!checkExistence(FILLEDHIT))
+            getModel(HITINDEX,FILLEDHIT, HITMETA, UNIGRAM_SMALL_FILTER_SET);
+
         //getModel(HITINDEX, FILLEDHIT, HITMETA, UNIGRAM_SMALL_FILTER_SET);
 
     }
 
     private static void PHASE22_CollectBigramModel() throws IOException, ClassNotFoundException {
         BigramIndex.getBigramIndex(UNIGRAMINDEX, 1000);
-        //massiveBinaryMerge(new File(BIGRAMRAW), BIGRAMINDEX, true, BIGRAMMETA);
-        //getModel(BIGRAMINDEX, FILLEDBIGRAM, BIGRAMMETA, BIGRAM_SMALL_FILTER_SET);
+        massiveBinaryMerge(new File(BIGRAMRAW), BIGRAMINDEX, true, BIGRAMMETA);
+        getModel(BIGRAMINDEX, FILLEDBIGRAM, BIGRAMMETA, BIGRAM_SMALL_FILTER_SET);
     }
 
     private static void PHASE23_CollectDBigramModel() throws InterruptedException, IOException, ClassNotFoundException {
-        i2 = new InvertedIndex(
-                (Long2IntOpenHashMap) deserialize(LOCALTERMFREQMAP),
-                null,
-                (long[]) deserialize(GLOBALSTATS),
-                distance,
-                true,
-                DBIGRAMRAW,
-                BIGRAM_SMALL_FILTER_SET,
-                numThreads);
-        buildStructure(i2, numThreads, DBIGRAMRAW);
-        massiveBinaryMerge(new File(DBIGRAMRAW), DBIGRAMINDEX, true, DBIGRAMMETA);
-       // getModel(DBIGRAMINDEX, FILLEDDBIGRAM, DBIGRAMMETA, BIGRAM_SMALL_FILTER_SET);
-       // getModel(DBIGRAMINDEX, FILLEDDBIGRAM, DBIGRAMMETA, BIGRAM_SMALL_FILTER_SET);
+        if(!checkExistence(UNIGRAMRAW+FINISH)){
+            i2 = new InvertedIndex(
+                    (Long2IntOpenHashMap) deserialize(LOCALTERMFREQMAP),
+                    null,
+                    (long[]) deserialize(GLOBALSTATS),
+                    distance,
+                    true,
+                    DBIGRAMRAW,
+                    BIGRAM_SMALL_FILTER_SET,
+                    numThreads);
+            buildStructure(i2, numThreads, DBIGRAMRAW);
+        }
+        if(!checkExistence(DBIGRAMINDEX))
+            massiveBinaryMerge(new File(DBIGRAMRAW), DBIGRAMINDEX, true, DBIGRAMMETA);
+       getModel(DBIGRAMINDEX, FILLEDDBIGRAM, DBIGRAMMETA, BIGRAM_SMALL_FILTER_SET);
 
     }
 
@@ -126,7 +137,7 @@ public class WWWMain extends WWW {
     private static void PHASE3_CollectBestChunks() throws IOException, ClassNotFoundException {
         //generateMatrixModels();
         //getBucketMaps();
-        getUnigramLanguageModel();
+        //getUnigramLanguageModel();
 
         getSmallFilterSet(QCONVERTED, UNIGRAM_SMALL_FILTER_SET);
 
@@ -135,7 +146,9 @@ public class WWWMain extends WWW {
                 SELECTED_CHUNKS_UNIGRAM,
                 UNIGRAMLANGUAGEMODELMAPPING,
                 UNIBUCKET,
+                UNIGRAMMETA,
                 budget);
+
         getBestChuncks(UNIGRAMINDEX, UNIGRAMMETA, SEPARATED_UNIGRAM, SEPARATED_UNIGRAM_META, SELECTED_CHUNKS_UNIGRAM);
 
         System.exit(1);
@@ -144,6 +157,7 @@ public class WWWMain extends WWW {
                 SELECTED_CHUNKS_HIT,
                 UNIGRAMLANGUAGEMODELMAPPING,
                 HITBUCKET,
+                HITMETA,
                 budget );
 
         getBestChuncks(HITINDEX, HITMETA, SEPARATED_HIT, SEPARATED_HIT_META, SELECTED_CHUNKS_HIT);

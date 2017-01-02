@@ -139,7 +139,7 @@ public class NewQualityModel extends Selection {
 
     public static void buildQualityMatrix(String input, String output) throws IOException {
         double [][] finMod = new double[QM.length][QM[0].length];
-        Int2IntOpenHashMap lenMap = (Int2IntOpenHashMap) deserialize(LOCALTERMFREQ);
+        Long2IntOpenHashMap lenMap = (Long2IntOpenHashMap) deserialize(LOCALTERMFREQMAP);
         accMap = (Long2IntOpenHashMap) deserialize(ACCESSMAP);
         double value = 0;
         int x,y;

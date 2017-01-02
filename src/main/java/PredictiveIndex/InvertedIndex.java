@@ -488,10 +488,11 @@ public class InvertedIndex extends WWW {
 
         System.out.print("Done.");
         DOS[tn].close();
-        if(end)
+        if(end & isBigram)
             serialize(DBigramPLLen, DBILENGTHS);
-        else
-            DOS[tn]  = getDOStream(prefix+dump.getAndAdd(1));
+        else if(end)
+            serialize(FINISH, prefix+FINISH);
+        DOS[tn]  = getDOStream(prefix+dump.getAndAdd(1));
         keepPointers[tn] = 0;
 
     }

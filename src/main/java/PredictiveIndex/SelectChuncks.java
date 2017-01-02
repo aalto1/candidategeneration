@@ -25,20 +25,28 @@ public class SelectChuncks extends WWW {
         int counter = 0;
         int globalCounter = 0;
         Long2ObjectOpenHashMap<ArrayList<Long>> map  = (Long2ObjectOpenHashMap<ArrayList<Long>>) deserialize(ranges2Select);
+        System.out.println("AK: " + map.size());
+        System.out.println("Set: " + map.keySet());
 
         int [] range;
+        int hit =0;
         while((line = br.readLine())!=null){
             data = string2LongArray(line, " ");
             for (int i = 0; i < data[1]; i++)
                 aux[i] = DIS.readLong();
+            System.out.println(map.get(Long.valueOf(data[0]).longValue()));
             try{
                 for (long e : map.get(Long.valueOf(data[0]).longValue())) {
                     range = getTerms(e);
                     for (int i = range[0]; i < range[1] ; i++) {
-                        DOS.writeLong(aux[i]);
+                        DOS.writeInt(getTerms(aux[i])[0]);
                         counter++;
                     }
+                    for (int i = range[0]; i < range[1] ; i++) {
+                        DOS.writeInt(getTerms(aux[i])[1]);
+                    }
                 }
+                //System.out.println("Number of hits: " + hit++);
                 globalCounter += counter;
                 bw.write(data[0] + " " + counter + " " + globalCounter + "\n");
                 counter = 0;
@@ -49,6 +57,7 @@ public class SelectChuncks extends WWW {
 
         }
         bw.close();
+        br.close();
         DOS.close();
     }
 }

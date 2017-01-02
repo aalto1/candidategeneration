@@ -85,8 +85,8 @@ public abstract class WWW {
 
     //////////////////////////////////////////////////////////////////////////////////////////*
 
-    //static final String RESULTS	    = ROOT + "TRAIN_RESULTS/";                                 //F
-    static final String RESULTS	        = ROOT + "TEST_RESULTS/";
+    static final String RESULTS	    = ROOT + "TRAIN_RESULTS/";                                 //F
+    //static final String RESULTS	        = ROOT + "TEST_RESULTS/";
 
         static final String METADATA	    	= RESULTS + "METADATA/";                    //F
             static final String LENGTHS	    	    = METADATA + "LENGTHS/";                     //F
@@ -176,6 +176,7 @@ public abstract class WWW {
 
     //////////////////////////////////////////////////////////////////////////////////////////
 
+    static String FINISH = "FINISH";
 
 
 
