@@ -30,6 +30,10 @@ public abstract class WWW {
 
     static final String ROOT        = System.getProperty("user.dir")+"/data/";
 
+    //static final String RESULTS	    = ROOT + "TRAIN_RESULTS/";                                 //F
+    static final String RESULTS	        = ROOT + "TEST_RESULTS/";
+
+
     //folders
     static final String [] FOLDER  = new String[]{
             ROOT + 0 +"/",
@@ -84,9 +88,6 @@ public abstract class WWW {
             static final String GLOBALSTATS	    = CLUEWEBDATA + "GLOBALSTATS";
 
     //////////////////////////////////////////////////////////////////////////////////////////*
-
-    static final String RESULTS	    = ROOT + "TRAIN_RESULTS/";                                 //F
-    //static final String RESULTS	        = ROOT + "TEST_RESULTS/";
 
         static final String METADATA	    	= RESULTS + "METADATA/";                    //F
             static final String LENGTHS	    	    = METADATA + "LENGTHS/";                     //F
@@ -275,6 +276,10 @@ public abstract class WWW {
             id2TermMap.put(k++, record[1]);
         }
         System.out.println("Map fetched!");
+    }
+
+    public static void k(){
+        System.exit(1);
     }
 
 

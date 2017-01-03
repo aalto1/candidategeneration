@@ -37,9 +37,8 @@ public class NewGreedySelection extends Selection {
         boolean change = true;
         int budget =0;
         int counter =0;
-        NewQualityModel.buildQualityMatrix(FILLEDUNIGRAM, UNIGRAMQUALITYMODEL);
+        //NewQualityModel.buildQualityMatrix(FILLEDUNIGRAM, UNIGRAMQUALITYMODEL);
 
-        System.exit(1);
         while(budget < limitBudget | change) {
             change = false;
             for (long aguTerm : counterMap.keySet()) {
@@ -50,22 +49,22 @@ public class NewGreedySelection extends Selection {
                     //System.out.println(model[y][x][0] + " " + aguTerm);
                     range = deltaRanges[(int) model[y][x][1]];
 
-                    if (score > 0) {
-                        if (budget < limitBudget) {
-                            if (heap.containsKey(score))
-                                System.out.println("azz..." + (score));
-                            heap.put(score, new long[]{aguTerm, range});
-                            budget += (getTerms(range)[1] - getTerms(range)[0]);
-                        } else if ((last = heap.lastDoubleKey()) > score) {
-                            //heap.remove(last);
-                            heap.put(score, new long[]{aguTerm, range});
-                            budget += (getTerms(range)[1] - getTerms(range)[0]);
-                            change = true;
-                        }
+
+                    if (budget < limitBudget) {
+                        if (heap.containsKey(score))
+                            System.out.println("azz..." + (score));
+                        heap.put(score, new long[]{aguTerm, range});
+                        budget += (getTerms(range)[1] - getTerms(range)[0]);
+                    } else if ((last = heap.lastDoubleKey()) > score) {
+                        heap.remove(last);
+                        heap.put(score, new long[]{aguTerm, range});
+                        budget += (getTerms(range)[1] - getTerms(range)[0]);
+                        change = true;
                     }
 
 
-                    System.out.println(budget);
+
+                    //System.out.println(budget);
                     if (++counter % 10000 == 0) {
                         System.out.println(counter);
                         System.out.println(heap.lastDoubleKey());
@@ -74,14 +73,13 @@ public class NewGreedySelection extends Selection {
                     }
                 }
             }
-            System.exit(1);
 
         }
         System.out.println("budgettone : " +  budget);
         System.out.println("mappettone : " +  heap.size());
 
         System.out.println(Arrays.toString(deltaRanges));
-        //serialize(getSubMap(limitBudget, heap), output);
+        serialize(getSubMap(limitBudget, heap), output);
     }
 
 

@@ -26,7 +26,7 @@ public class WWWMain extends WWW {
     static InvertedIndex i2;
     static int distance = 5;
     static int numThreads = 4;
-    static int budget = 10000;
+    static int budget = Integer.MAX_VALUE;
 
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
         //PHASE0_CollectMetadata();
@@ -65,6 +65,7 @@ public class WWWMain extends WWW {
         getLocFreqMap();
         if(!(checkExistence(FILLEDHIT) & checkExistence(FILLEDUNIGRAM)))
             PHASE21_CollectUnigramHitModel();
+        k();
         if(!checkExistence(FILLEDDBIGRAM))
             PHASE23_CollectDBigramModel();
         if(!checkExistence(FILLEDBIGRAM))
@@ -73,7 +74,7 @@ public class WWWMain extends WWW {
     }
 
     private static void PHASE21_CollectUnigramHitModel() throws IOException, ClassNotFoundException, InterruptedException {
-        if(!checkExistence(UNIGRAMRAW+FINISH)){
+        if(false & !checkExistence(UNIGRAMRAW+FINISH)){
             massiveBinaryMerge(new File(UNIGRAMRAW), UNIGRAMINDEX, false, UNIGRAMMETA);
             i2 = new InvertedIndex(
                     (Long2IntOpenHashMap) deserialize(LOCALTERMFREQMAP),
@@ -87,6 +88,8 @@ public class WWWMain extends WWW {
             buildStructure(i2, numThreads, UNIGRAMRAW);
         }
 
+
+
         //UNIGRAM_INDEX
         if(!checkExistence(UNIGRAMINDEX))
             massiveBinaryMerge(new File(UNIGRAMRAW), UNIGRAMINDEX, false, UNIGRAMMETA);
@@ -94,14 +97,14 @@ public class WWWMain extends WWW {
         if(!checkExistence(HITINDEX))
             massiveBinaryMerge(new File(HITRAW), HITINDEX, false, HITMETA);
 
-        //HIT_INDEX
+/*        //HIT_INDEX
         if(!checkExistence(FILLEDUNIGRAM))
             getModel(UNIGRAMINDEX,FILLEDUNIGRAM, UNIGRAMMETA, UNIGRAM_SMALL_FILTER_SET);
 
         if(!checkExistence(FILLEDHIT))
             getModel(HITINDEX,FILLEDHIT, HITMETA, UNIGRAM_SMALL_FILTER_SET);
 
-        //getModel(HITINDEX, FILLEDHIT, HITMETA, UNIGRAM_SMALL_FILTER_SET);
+        */
 
     }
 
