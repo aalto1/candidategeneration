@@ -74,6 +74,7 @@ public class WWWMain extends WWW {
     private static void PHASE2_CollectQualityModel() throws InterruptedException, IOException, ClassNotFoundException {
         getLocFreqMap();
         if(true | !(checkExistence(FILLEDHIT) & checkExistence(FILLEDUNIGRAM)))
+            System.out.println(ANSI_RED + "BUILDING HIT AND SINGLE INDEX" + checkExistence(UNIGRAMRAW+FINISH) + ANSI_RESET);
             PHASE21_CollectUnigramHitModel();
         k();
         if(!checkExistence(FILLEDDBIGRAM))
