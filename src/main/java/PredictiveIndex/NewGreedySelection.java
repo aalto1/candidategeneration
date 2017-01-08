@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2LongOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.longs.*;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -17,7 +18,7 @@ import java.util.LinkedList;
  * Created by aalto on 12/7/16.
  */
 public class NewGreedySelection extends Selection {
-    static Double2ObjectRBTreeMap<long[]> heap;
+    static Double2ObjectRBTreeMap<ObjectArrayList<long[]>> heap;
     static Long2IntOpenHashMap counterMap;
 
 
@@ -37,6 +38,7 @@ public class NewGreedySelection extends Selection {
         boolean change = true;
         int budget =0;
         int counter =0;
+        ObjectArrayList<long[]> auxList;
         //NewQualityModel.buildQualityMatrix(FILLEDUNIGRAM, UNIGRAMQUALITYMODEL);
 
         while(budget < limitBudget | change) {
@@ -51,13 +53,17 @@ public class NewGreedySelection extends Selection {
 
 
                     if (budget < limitBudget) {
-                        if (heap.containsKey(score))
-                            System.out.println("azz..." + (score));
-                        heap.put(score, new long[]{aguTerm, range});
+                        if((auxList=heap.get(score))==null)
+                            auxList = new ObjectArrayList<>();
+                        auxList.add(new long[]{aguTerm, range});
+                        heap.put(score, auxList);
                         budget += (getTerms(range)[1] - getTerms(range)[0]);
                     } else if ((last = heap.lastDoubleKey()) > score) {
                         heap.remove(last);
-                        heap.put(score, new long[]{aguTerm, range});
+                        if((auxList=heap.get(score))==null)
+                            auxList = new ObjectArrayList<>();
+                        auxList.add(new long[]{aguTerm, range});
+                        heap.put(score, auxList);
                         budget += (getTerms(range)[1] - getTerms(range)[0]);
                         change = true;
                     }
@@ -84,23 +90,25 @@ public class NewGreedySelection extends Selection {
 
 
     /** */
-    private static Long2ObjectOpenHashMap getSubMap(int limitBudget, Double2ObjectRBTreeMap<long[]> heap){
+    private static Long2ObjectOpenHashMap getSubMap(int limitBudget, Double2ObjectRBTreeMap<ObjectArrayList<long[]>> heap){
         Long2ObjectOpenHashMap<ArrayList<Long>> result = new Long2ObjectOpenHashMap<>();
         ArrayList<Long> list;
         int budget = 0;
         System.out.println("Building stuff..." + heap.size());
-        for (long [] value: heap.values()){
-            if((list=result.get(value[0]))==null)
-                list = new ArrayList<>();
-            list.add(value[1]);
-            result.put(value[0],list);
-            System.out.println(budget);
-            budget+= (getTerms(value[1])[1] - getTerms(value[1])[0]);
+        for (ObjectArrayList<long[]> l: heap.values()){
+            for(long [] value: l) {
+                if ((list = result.get(value[0])) == null)
+                    list = new ArrayList<>();
+                list.add(value[1]);
+                result.put(value[0], list);
+                System.out.println(budget);
+                budget += (getTerms(value[1])[1] - getTerms(value[1])[0]);
 
-            list.add(value[1]);
-            if(budget>limitBudget){
-                System.out.println("final: " + budget);
-                break;
+                list.add(value[1]);
+                if (budget > limitBudget) {
+                    System.out.println("final: " + budget);
+                    break;
+                }
             }
         }
         //System.out.println(Arrays.toString(getTerms(list.getFirst())));

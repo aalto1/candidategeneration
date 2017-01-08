@@ -26,7 +26,7 @@ public class WWWMain extends WWW {
     static InvertedIndex i2;
     static int distance = 5;
     static int numThreads = 4;
-    static int budget = Integer.MAX_VALUE;
+    static int budget = 10000000;
 
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
         //PHASE0_CollectMetadata();
