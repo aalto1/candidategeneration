@@ -116,6 +116,7 @@ public class ExternalSort {
                     System.out.print(LL.size() + " ");
                 }else{
                     System.out.println(" "+LL.size());
+                    System.out.print("\33[1A\33[2K");
                 }
                 bucketsAux = new long[section][2];
                 for (int z = 0; z < section2; z++){
