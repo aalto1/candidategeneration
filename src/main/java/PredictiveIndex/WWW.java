@@ -178,6 +178,7 @@ public abstract class WWW {
     //////////////////////////////////////////////////////////////////////////////////////////
 
     static String FINISH = "FINISH";
+    static String CHUNKSIZE   = "CHUNKSIZE :";
 
 
 

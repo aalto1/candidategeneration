@@ -233,7 +233,7 @@ public class ExternalSort {
     public static void writeMergeSortedMatrix(long[][] a, long[][] b, DataOutputStream DOStream) throws IOException {
         //for (long[] z : a)  System.out.println(z[0]);
         //System.out.println(a.length+"-"+b.length);
-        int counter = 0;
+        int counter = 0, totalCounter = 0;
         long [] currentPosting;
         long currentPostingList = -1;
 
@@ -251,6 +251,7 @@ public class ExternalSort {
             if(currentPosting[0]!=currentPostingList & currentPostingList!=-1){
                 metadataBW.write(currentPostingList + " " + counter + "\n");
                 currentPostingList = currentPosting[0];
+                totalCounter += counter;
                 counter = 0;
             }else if(currentPostingList==-1){
                 currentPostingList=currentPosting[0];
@@ -265,6 +266,7 @@ public class ExternalSort {
             if(currentPosting[0]!=currentPostingList & currentPostingList!=-1){
                 metadataBW.write(currentPostingList + " " + counter + "\n");
                 currentPostingList = currentPosting[0];
+                totalCounter += counter;
                 counter = 0;
             }
             DOStream.writeLong(currentPosting[1]);
@@ -278,11 +280,13 @@ public class ExternalSort {
             if(currentPosting[0]!=currentPostingList & currentPostingList!=-1){
                 metadataBW.write(currentPostingList + " " + counter + "\n");
                 currentPostingList = currentPosting[0];
+                totalCounter += counter;
                 counter = 0;
             }
             DOStream.writeLong(currentPosting[1]);
             counter++;
         }
+        metadataBW.write(CHUNKSIZE + totalCounter + "\n");
         metadataBW.flush();
     }
 
