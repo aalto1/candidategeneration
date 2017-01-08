@@ -31,13 +31,16 @@ public class WWWMain extends WWW {
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
         //init();
         //PHASE0_CollectMetadata();
-        PHASE1_CollectGobalStatistics();
+        //PHASE1_CollectGobalStatistics();
         PHASE2_CollectQualityModel();
         //PHASE3_CollectBestChunks();
     }
 
     private static void init() throws IOException {
-        checkSortingRoutine(UNIGRAMMETA);
+        getSmallFilterSet(QCONVERTED, UNIGRAM_SMALL_FILTER_SET);
+        getSmallFilterSet(QBIGRAM, BIGRAM_SMALL_FILTER_SET);
+        getAccessMap(QAGUMENTED, ACCESSMAP);
+
         System.exit(1);
 
     }
