@@ -73,7 +73,7 @@ public class WWWMain extends WWW {
 
     private static void PHASE2_CollectQualityModel() throws InterruptedException, IOException, ClassNotFoundException {
         getLocFreqMap();
-        if(!(checkExistence(FILLEDHIT) & checkExistence(FILLEDUNIGRAM)))
+        if(true | !(checkExistence(FILLEDHIT) & checkExistence(FILLEDUNIGRAM)))
             PHASE21_CollectUnigramHitModel();
         k();
         if(!checkExistence(FILLEDDBIGRAM))
