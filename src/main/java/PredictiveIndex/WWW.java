@@ -30,8 +30,8 @@ public abstract class WWW {
 
     static final String ROOT        = System.getProperty("user.dir")+"/data/";
 
-    //static final String RESULTS	    = ROOT + "TRAIN_RESULTS/";                                 //F
-    static final String RESULTS	        = ROOT + "TEST_RESULTS/";
+    static final String RESULTS	    = ROOT + "TRAIN_RESULTS/";                                 //F
+    //static final String RESULTS	        = ROOT + "TEST_RESULTS/";
 
 
     //folders

@@ -29,10 +29,17 @@ public class WWWMain extends WWW {
     static int budget = 10000000;
 
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
+        //init();
         //PHASE0_CollectMetadata();
         //PHASE1_CollectGobalStatistics();
-        //PHASE2_CollectQualityModel();
+        PHASE2_CollectQualityModel();
         PHASE3_CollectBestChunks();
+    }
+
+    private static void init() throws IOException {
+        checkSortingRoutine(UNIGRAMMETA);
+        System.exit(1);
+
     }
 
     private static void PHASE0_CollectMetadata() throws IOException {

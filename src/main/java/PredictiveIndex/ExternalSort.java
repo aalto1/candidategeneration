@@ -330,10 +330,8 @@ public class ExternalSort {
                     break;
                 }
             }
-
         }
     }
-
 
 
     static void sortSmallInvertedIndex() throws IOException {
@@ -363,6 +361,23 @@ public class ExternalSort {
             DOS.writeLong(x[1]);
         }
         DOS.close();
+    }
+
+    static void checkSortingRoutine(String input) throws IOException {
+        String line;
+        int [] entry;
+        int previous = 0, k = 0;
+        BufferedReader br = getBuffReader(input);
+        while((line=br.readLine())!=null){
+            entry = string2IntArray(line, " ");
+            if(entry[0]<previous){
+                System.out.println("Counter: " + k++ + "\t Previous: " + previous + "\t Now: " + entry[0]);
+            }else{
+                previous = entry[0];
+            }
+            previous = entry[0];
+        }
+        br.close();
     }
 
 
