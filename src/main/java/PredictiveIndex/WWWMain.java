@@ -85,7 +85,7 @@ public class WWWMain extends WWW {
     }
 
     private static void PHASE21_CollectUnigramHitModel() throws IOException, ClassNotFoundException, InterruptedException {
-        if(!checkExistence(UNIGRAMRAW+FINISH)){
+        if(false & !checkExistence(UNIGRAMRAW+FINISH)){
             i2 = new InvertedIndex(
                     (Long2IntOpenHashMap) deserialize(LOCALTERMFREQMAP),
                     (int[]) deserialize(HITSCORES),

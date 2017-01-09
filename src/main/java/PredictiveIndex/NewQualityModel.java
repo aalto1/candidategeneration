@@ -100,6 +100,14 @@ public class NewQualityModel extends Selection {
         Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>> emptymodel = (Int2ObjectOpenHashMap<Long2ObjectOpenHashMap<long[]>>) deserialize(EMPTYMODEL);
 
         while((line = br.readLine())!=null){
+
+            if(line.equals(CHUNKSIZE)){
+                line = br.readLine();
+                if(line == null){
+                    break;
+                }
+            }
+
             data = string2LongArray(line, " ");
             if(true/*smallFilterSet.contains(data[0])*/){                       //THIS SHOULD BE REMOVED IN THE NEXT ITERATIONS
                 documentsToFind = referenceModel.get(data[0]);
