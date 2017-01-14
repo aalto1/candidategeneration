@@ -21,6 +21,8 @@ import static PredictiveIndex.SelectChuncks.*;
  * Created by aalto on 10/1/16.
  *
  * Minimum Distance is 1: this value takes into account just the prox term.
+ * This functions builds the inverted index both for the unigram and bigram version. For the bigram version the d value
+ * is the one that is used in order to evaluate the distance.
  */
 public class WWWMain extends WWW {
     static InvertedIndex i2;
