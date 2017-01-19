@@ -86,7 +86,7 @@ public class ExternalSort {
         return answer;
     }
 
-
+    //must be rewritten from scratch...
 
     public static void massiveBinaryMerge(File folder, String output, boolean fFields, String meta) throws IOException {
         metadataBW = getBuffWriter(meta);
