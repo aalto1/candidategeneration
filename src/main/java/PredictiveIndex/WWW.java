@@ -21,7 +21,8 @@ import static java.lang.System.out;
  * Created by aalto on 10/1/16.
  */
 public abstract class WWW {
-    /**This interface of the project
+    /**This interface of the project, it need to be restructured, using some kind of desing pattern.
+     * Moreover the external sort class need to be re-implemented since is a little buggy and hardcoded.
      *
      * git diff --stat 4b825dc642cb6eb9a060e54bf8d69288fbee4904 6235 lines
      *
